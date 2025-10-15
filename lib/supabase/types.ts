@@ -18,6 +18,32 @@ export type Database = {
           created_at?: string;
         };
       };
+      user_profiles: {
+        Row: {
+          id: string;
+          user_id: string;
+          username: string | null;
+          avatar_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          username?: string | null;
+          avatar_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          username?: string | null;
+          avatar_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       vocabulary_lists: {
         Row: {
           id: string;

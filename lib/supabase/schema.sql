@@ -7,6 +7,32 @@ create extension if not exists "uuid-ossp";
 -- Users table (automatically created by Supabase Auth)
 -- We'll use the auth.users table
 
+-- User Profiles table
+create table user_profiles (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null unique,
+  username text,
+  avatar_url text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable Row Level Security
+alter table user_profiles enable row level security;
+
+-- Policies for user_profiles
+create policy "Users can view their own profile"
+  on user_profiles for select
+  using (auth.uid() = user_id);
+
+create policy "Users can update their own profile"
+  on user_profiles for update
+  using (auth.uid() = user_id);
+
+create policy "Users can insert their own profile"
+  on user_profiles for insert
+  with check (auth.uid() = user_id);
+
 -- Vocabulary Lists table
 create table vocabulary_lists (
   id uuid default uuid_generate_v4() primary key,

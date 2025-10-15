@@ -1,10 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Filter } from 'lucide-react';
+import { Filter, ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 import { WordListItem } from '@/components/WordListItem';
 import { WordDetailsCard, type Word } from '@/components/WordDetailsCard';
 import { Header } from '@/components/Header';
@@ -17,7 +18,16 @@ interface UserProgress {
   is_mastered: boolean;
 }
 
-export default function Home() {
+interface VocabularyList {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
+export default function ListDetailPage() {
+  const params = useParams();
+  const listId = params.id as string;
+  const [list, setList] = useState<VocabularyList | null>(null);
   const [words, setWords] = useState<Word[]>([]);
   const [progress, setProgress] = useState<Record<string, UserProgress>>({});
   const [filter, setFilter] = useState<FilterType>('all');
@@ -27,9 +37,9 @@ export default function Home() {
 
   useEffect(() => {
     checkUser();
-    fetchWordsAndProgress();
+    fetchListAndWords();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [listId]);
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -38,16 +48,29 @@ export default function Home() {
     }
   };
 
-  const fetchWordsAndProgress = async () => {
+  const fetchListAndWords = async () => {
     try {
+      // Fetch list details
+      const { data: listData, error: listError } = await supabase
+        .from('vocabulary_lists')
+        .select('*')
+        .eq('id', listId)
+        .single();
+
+      if (listError) throw listError;
+      setList(listData);
+
+      // Fetch words for this list
       const { data: wordsData, error: wordsError } = await supabase
         .from('vocabulary_words')
         .select('*')
+        .eq('list_id', listId)
         .order('created_at', { ascending: true });
 
       if (wordsError) throw wordsError;
       setWords(wordsData || []);
 
+      // Fetch user progress
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         const { data: progressData, error: progressError } = await supabase
@@ -109,11 +132,44 @@ export default function Home() {
     );
   }
 
+  if (!list) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">List not found</p>
+          <Link href="/lists" className="text-blue-600 hover:underline">
+            Back to Lists
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Header />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Back button and list title */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <Link
+            href="/lists"
+            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Lists
+          </Link>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">{list.name}</h2>
+          {list.description && (
+            <p className="text-gray-600">{list.description}</p>
+          )}
+        </motion.div>
+
+        {/* Filter section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -146,6 +202,7 @@ export default function Home() {
           </div>
         </motion.div>
 
+        {/* Words grid */}
         {filteredWords.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
@@ -180,6 +237,7 @@ export default function Home() {
         )}
       </main>
 
+      {/* Word details modal */}
       {selectedWord && (
         <WordDetailsCard
           word={selectedWord}

@@ -1,11 +1,12 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { LogOut, Home, BookOpen } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Header } from '@/components/Header';
 
 interface VocabularyList {
   id: string;
@@ -65,11 +66,6 @@ export default function ListsPage() {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -80,35 +76,7 @@ export default function ListsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-900">Lexora</h1>
-            <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 transition-colors"
-              >
-                <Home className="w-5 h-5" />
-                <span className="font-medium">Home</span>
-              </Link>
-              <Link
-                href="/quiz"
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-              >
-                Start Quiz
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="p-2 text-gray-700 hover:text-red-600 transition-colors"
-                aria-label="Logout"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
