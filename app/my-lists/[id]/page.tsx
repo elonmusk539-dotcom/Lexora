@@ -18,16 +18,16 @@ interface UserProgress {
   is_mastered: boolean;
 }
 
-interface VocabularyList {
+interface CustomList {
   id: string;
   name: string;
   description: string | null;
 }
 
-export default function ListDetailPage() {
+export default function CustomListDetailPage() {
   const params = useParams();
   const listId = params.id as string;
-  const [list, setList] = useState<VocabularyList | null>(null);
+  const [list, setList] = useState<CustomList | null>(null);
   const [words, setWords] = useState<Word[]>([]);
   const [progress, setProgress] = useState<Record<string, UserProgress>>({});
   const [filter, setFilter] = useState<FilterType>('all');
@@ -50,19 +50,23 @@ export default function ListDetailPage() {
 
   const fetchListAndWords = async () => {
     try {
-      // Fetch list details
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // Fetch custom list details
       const { data: listData, error: listError } = await supabase
-        .from('vocabulary_lists')
+        .from('user_custom_lists')
         .select('*')
         .eq('id', listId)
+        .eq('user_id', session.user.id)
         .single();
 
       if (listError) throw listError;
       setList(listData);
 
-      // Fetch words for this list
+      // Fetch words for this custom list from user_custom_list_words
       const { data: wordsData, error: wordsError } = await supabase
-        .from('vocabulary_words')
+        .from('user_custom_list_words')
         .select('*')
         .eq('list_id', listId)
         .order('created_at', { ascending: true });
@@ -70,26 +74,23 @@ export default function ListDetailPage() {
       if (wordsError) throw wordsError;
       setWords(wordsData || []);
 
-      // Fetch user progress
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: progressData, error: progressError } = await supabase
-          .from('user_progress')
-          .select('*')
-          .eq('user_id', session.user.id);
+      // Fetch user progress for these custom words
+      const { data: progressData, error: progressError } = await supabase
+        .from('user_progress')
+        .select('*')
+        .eq('user_id', session.user.id);
 
-        if (progressError) throw progressError;
+      if (progressError) throw progressError;
 
-        const progressMap: Record<string, UserProgress> = {};
-        (progressData || []).forEach((p: { word_id: string; correct_streak: number; is_mastered: boolean }) => {
-          progressMap[p.word_id] = {
-            word_id: p.word_id,
-            correct_streak: p.correct_streak,
-            is_mastered: p.is_mastered,
-          };
-        });
-        setProgress(progressMap);
-      }
+      const progressMap: Record<string, UserProgress> = {};
+      (progressData || []).forEach((p: { word_id: string; correct_streak: number; is_mastered: boolean }) => {
+        progressMap[p.word_id] = {
+          word_id: p.word_id,
+          correct_streak: p.correct_streak,
+          is_mastered: p.is_mastered,
+        };
+      });
+      setProgress(progressMap);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -136,9 +137,9 @@ export default function ListDetailPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-400 mb-4">List not found</p>
-          <Link href="/lists" className="text-blue-600 dark:text-blue-400 hover:underline">
-            Back to Lists
+          <p className="text-gray-600 dark:text-gray-400 mb-4">Custom list not found</p>
+          <Link href="/my-lists" className="text-blue-600 dark:text-blue-400 hover:underline">
+            Back to My Lists
           </Link>
         </div>
       </div>
@@ -157,15 +158,20 @@ export default function ListDetailPage() {
           className="mb-8"
         >
           <Link
-            href="/lists"
+            href="/my-lists"
             className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Lists
+            Back to My Lists
           </Link>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{list.name}</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{list.name}</h2>
+            <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-sm font-medium rounded-full">
+              Custom
+            </span>
+          </div>
           {list.description && (
-            <p className="text-gray-600 dark:text-gray-400">{list.description}</p>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">{list.description}</p>
           )}
         </motion.div>
 

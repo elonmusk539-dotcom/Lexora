@@ -12,11 +12,18 @@ interface QuizWord extends Word {
   correctAnswer: string;
 }
 
+interface UserSettings {
+  mcq: {
+    showFurigana: boolean;
+    showRomaji: boolean;
+  };
+}
+
 export default function MCQQuizPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const duration = parseInt(searchParams.get('duration') || '10');
-  const listId = searchParams.get('listId');
+  const listIdsParam = searchParams.get('lists');
 
   const [words, setWords] = useState<QuizWord[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -26,6 +33,7 @@ export default function MCQQuizPage() {
   const [answers, setAnswers] = useState<Array<{ wordId: string; correct: boolean }>>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
+  const [settings, setSettings] = useState<UserSettings | null>(null);
 
   useEffect(() => {
     checkUserAndFetchWords();
@@ -39,24 +47,60 @@ export default function MCQQuizPage() {
       return;
     }
     setUserId(session.user.id);
+    
+    // Fetch user settings
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('settings')
+      .eq('user_id', session.user.id)
+      .single();
+    
+    if (profile && profile.settings) {
+      setSettings(profile.settings as UserSettings);
+    }
+    
     await fetchWords();
   };
 
   const fetchWords = async () => {
     try {
-      let query = supabase
-        .from('vocabulary_words')
-        .select('*');
+      let allWords: any[] = [];
 
-      if (listId) {
-        query = query.eq('list_id', listId);
+      if (listIdsParam) {
+        const listIds = listIdsParam.split(',');
+        
+        // Separate default and custom list IDs (custom lists have different structure)
+        // For simplicity, we'll fetch from vocabulary_words and custom list words separately
+        
+        // Fetch from default lists
+        const { data: defaultWords } = await supabase
+          .from('vocabulary_words')
+          .select('*')
+          .in('list_id', listIds);
+
+        // Fetch from custom lists
+        const { data: customListWords } = await supabase
+          .from('user_custom_list_words')
+          .select(`
+            word_id,
+            vocabulary_words (*)
+          `)
+          .in('list_id', listIds);
+
+        // Combine words
+        allWords = [
+          ...(defaultWords || []),
+          ...(customListWords || []).map((item: any) => item.vocabulary_words)
+        ].filter(word => word != null);
+      } else {
+        // Fetch all words if no lists specified
+        const { data } = await supabase
+          .from('vocabulary_words')
+          .select('*');
+        allWords = data || [];
       }
 
-      const { data: allWords, error } = await query;
-
-      if (error) throw error;
-
-      if (!allWords || allWords.length === 0) {
+      if (allWords.length === 0) {
         alert('No words available for quiz');
         router.push('/');
         return;
@@ -121,13 +165,37 @@ export default function MCQQuizPage() {
   };
 
   const finishQuiz = async () => {
-    // Update progress for each word
-    for (const answer of answers) {
-      await updateWordProgress(answer.wordId, answer.correct);
+    // Update streak
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Update user streak
+        await supabase.rpc('update_user_streak', { p_user_id: user.id });
+        
+        // Log quiz activity
+        const today = new Date().toISOString().split('T')[0];
+        await supabase.from('user_activity_log').insert({
+          user_id: user.id,
+          activity_date: today,
+          activity_type: 'quiz_completed',
+          details: { 
+            quiz_type: 'mcq',
+            score: score.correct,
+            total: words.length
+          }
+        } as any);
+      }
+    } catch (error) {
+      console.error('Error updating streak:', error);
     }
 
     // Navigate to results page
     router.push(`/quiz/results?correct=${score.correct}&total=${words.length}`);
+    
+    // Update progress in background
+    for (const answer of answers) {
+      updateWordProgress(answer.wordId, answer.correct).catch(console.error);
+    }
   };
 
   const updateWordProgress = async (wordId: string, correct: boolean) => {
@@ -178,8 +246,8 @@ export default function MCQQuizPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
       </div>
     );
   }
@@ -192,19 +260,19 @@ export default function MCQQuizPage() {
   const progress = ((currentIndex + 1) / words.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
       <div className="max-w-3xl mx-auto py-8">
         {/* Progress bar */}
         <div className="mb-8">
-          <div className="flex justify-between text-sm text-gray-600 mb-2">
+          <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
             <span>Question {currentIndex + 1} of {words.length}</span>
             <span>{score.correct} correct</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
-              className="bg-blue-600 h-2 rounded-full"
+              className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full"
               transition={{ duration: 0.3 }}
             />
           </div>
@@ -217,27 +285,32 @@ export default function MCQQuizPage() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
-            className="bg-white rounded-2xl shadow-xl p-8"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
           >
             {/* Word */}
             <div className="text-center mb-8">
               <div className="flex items-center justify-center gap-3 mb-2">
-                <h2 className="text-5xl font-bold text-gray-900">{currentWord.word}</h2>
+                <h2 className="text-5xl font-bold text-gray-900 dark:text-white">{currentWord.kanji || currentWord.word}</h2>
                 <button
                   onClick={playPronunciation}
-                  className="p-3 rounded-full hover:bg-blue-50 text-blue-600 transition-colors"
+                  className="p-3 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 transition-colors"
                   aria-label="Play pronunciation"
                 >
                   <Volume2 className="w-6 h-6" />
                 </button>
               </div>
-              {currentWord.reading && (
-                <p className="text-xl text-gray-600">{currentWord.reading}</p>
+              {/* Conditionally show furigana based on settings */}
+              {settings?.mcq?.showFurigana && currentWord.furigana && (
+                <p className="text-2xl text-gray-600 dark:text-gray-400 mb-1">{currentWord.furigana}</p>
+              )}
+              {/* Conditionally show romaji based on settings */}
+              {settings?.mcq?.showRomaji && (currentWord.romaji || currentWord.reading) && (
+                <p className="text-xl text-gray-500 dark:text-gray-500">{currentWord.romaji || currentWord.reading}</p>
               )}
             </div>
 
             {/* Question */}
-            <p className="text-center text-lg text-gray-700 mb-6">
+            <p className="text-center text-lg text-gray-700 dark:text-gray-300 mb-6">
               What does this word mean?
             </p>
 
@@ -258,21 +331,21 @@ export default function MCQQuizPage() {
                     disabled={showResult}
                     className={`p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${
                       showCorrect
-                        ? 'border-green-500 bg-green-50'
+                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
                         : showIncorrect
-                        ? 'border-red-500 bg-red-50'
+                        ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
                         : isSelected
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-200 hover:border-blue-300'
+                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500'
                     }`}
                   >
                     <span className={`font-medium ${
-                      showCorrect ? 'text-green-700' : showIncorrect ? 'text-red-700' : 'text-gray-900'
+                      showCorrect ? 'text-green-700 dark:text-green-400' : showIncorrect ? 'text-red-700 dark:text-red-400' : 'text-gray-900 dark:text-white'
                     }`}>
                       {option}
                     </span>
-                    {showCorrect && <Check className="w-6 h-6 text-green-600" />}
-                    {showIncorrect && <X className="w-6 h-6 text-red-600" />}
+                    {showCorrect && <Check className="w-6 h-6 text-green-600 dark:text-green-400" />}
+                    {showIncorrect && <X className="w-6 h-6 text-red-600 dark:text-red-400" />}
                   </motion.button>
                 );
               })}

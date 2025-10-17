@@ -1,18 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
-import { User, Mail, Image as ImageIcon, Save, LogOut } from 'lucide-react';
+import { User, Mail, Image as ImageIcon, Save, LogOut, Upload } from 'lucide-react';
 import Link from 'next/link';
+import imageCompression from 'browser-image-compression';
 
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -115,18 +118,82 @@ export default function ProfilePage() {
     router.push('/login');
   }
 
+  async function handleAvatarUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    try {
+      setError('');
+      setUploading(true);
+
+      if (!event.target.files || event.target.files.length === 0) {
+        return;
+      }
+
+      const file = event.target.files[0];
+
+      // Check file size (max 1MB)
+      if (file.size > 1024 * 1024) {
+        setError('File size must be less than 1MB');
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please upload an image file');
+        return;
+      }
+
+      // Compress image to 100-200KB
+      const options = {
+        maxSizeMB: 0.2, // 200KB max
+        maxWidthOrHeight: 400,
+        useWebWorker: true,
+      };
+
+      const compressedFile = await imageCompression(file, options);
+
+      // Upload to Supabase Storage with user folder structure
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${user?.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, compressedFile, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      setAvatarUrl(publicUrl);
+      setSuccess('Avatar uploaded successfully! Don\'t forget to save your changes.');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Error uploading avatar';
+      setError(errorMessage);
+    } finally {
+      setUploading(false);
+    }
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="text-gray-600 dark:text-gray-400">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
+      <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/">
@@ -135,13 +202,13 @@ export default function ProfilePage() {
               </h1>
             </Link>
             <nav className="flex items-center gap-6">
-              <Link href="/" className="text-gray-600 hover:text-gray-900">
+              <Link href="/" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
                 Home
               </Link>
-              <Link href="/lists" className="text-gray-600 hover:text-gray-900">
+              <Link href="/lists" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
                 Lists
               </Link>
-              <Link href="/quiz" className="text-gray-600 hover:text-gray-900">
+              <Link href="/quiz" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
                 Quiz
               </Link>
             </nav>
@@ -157,11 +224,11 @@ export default function ProfilePage() {
           transition={{ duration: 0.5 }}
           className="max-w-2xl mx-auto"
         >
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
             {/* Page Title */}
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">My Profile</h2>
-              <p className="text-gray-600">Manage your account settings</p>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">My Profile</h2>
+              <p className="text-gray-600 dark:text-gray-400">Manage your account settings</p>
             </div>
 
             {/* Avatar Preview */}
@@ -178,6 +245,26 @@ export default function ProfilePage() {
                     <User className="w-16 h-16 text-white" />
                   </div>
                 )}
+                {/* Upload button overlay */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="absolute bottom-0 right-0 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                >
+                  {uploading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <Upload className="w-5 h-5" />
+                  )}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                />
               </div>
             </div>
 
@@ -186,7 +273,7 @@ export default function ProfilePage() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm"
+                className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-600 dark:text-green-400 text-sm"
               >
                 {success}
               </motion.div>
@@ -197,7 +284,7 @@ export default function ProfilePage() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm"
+                className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm"
               >
                 {error}
               </motion.div>
@@ -207,7 +294,7 @@ export default function ProfilePage() {
             <form onSubmit={handleSave} className="space-y-6">
               {/* Email (read-only) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <Mail className="inline w-4 h-4 mr-2" />
                   Email
                 </label>
@@ -215,14 +302,14 @@ export default function ProfilePage() {
                   type="email"
                   value={user?.email || ''}
                   disabled
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-500 cursor-not-allowed"
                 />
-                <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Email cannot be changed</p>
               </div>
 
               {/* Username */}
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <User className="inline w-4 h-4 mr-2" />
                   Username
                 </label>
@@ -232,27 +319,21 @@ export default function ProfilePage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter your username"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900 dark:text-white dark:bg-gray-700"
                 />
               </div>
 
-              {/* Avatar URL */}
-              <div>
-                <label htmlFor="avatarUrl" className="block text-sm font-medium text-gray-700 mb-2">
-                  <ImageIcon className="inline w-4 h-4 mr-2" />
-                  Avatar URL
-                </label>
-                <input
-                  id="avatarUrl"
-                  type="url"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  placeholder="https://example.com/avatar.jpg"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Paste a direct link to your avatar image
-                </p>
+              {/* Avatar Upload Info */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <div className="flex items-start gap-2">
+                  <ImageIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-1">Avatar Upload</p>
+                    <p className="text-xs text-blue-700 dark:text-blue-400">
+                      Click the upload button on your avatar to change it. Maximum file size: 1MB. Images will be automatically compressed to 100-200KB for optimal performance.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Action Buttons */}
@@ -273,7 +354,7 @@ export default function ProfilePage() {
                   onClick={handleSignOut}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="py-3 px-6 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors flex items-center gap-2"
+                  className="py-3 px-6 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
                 >
                   <LogOut className="w-5 h-5" />
                   Sign Out

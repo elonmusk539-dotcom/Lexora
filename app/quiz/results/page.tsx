@@ -15,11 +15,11 @@ export default function QuizResultsPage() {
   const passed = percentage >= 70;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full"
+        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-2xl w-full"
       >
         {/* Trophy Icon */}
         <motion.div
@@ -27,10 +27,10 @@ export default function QuizResultsPage() {
           animate={{ scale: 1 }}
           transition={{ delay: 0.2, type: 'spring' }}
           className={`w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center ${
-            passed ? 'bg-green-100' : 'bg-blue-100'
+            passed ? 'bg-green-100 dark:bg-green-900/30' : 'bg-blue-100 dark:bg-blue-900/30'
           }`}
         >
-          <Trophy className={`w-12 h-12 ${passed ? 'text-green-600' : 'text-blue-600'}`} />
+          <Trophy className={`w-12 h-12 ${passed ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'}`} />
         </motion.div>
 
         {/* Title */}
@@ -38,7 +38,7 @@ export default function QuizResultsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="text-4xl font-bold text-gray-900 text-center mb-2"
+          className="text-4xl font-bold text-gray-900 dark:text-white text-center mb-2"
         >
           {passed ? 'Great Job!' : 'Quiz Complete!'}
         </motion.h1>
@@ -47,7 +47,7 @@ export default function QuizResultsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="text-gray-600 text-center mb-8"
+          className="text-gray-600 dark:text-gray-400 text-center mb-8"
         >
           {passed ? 'You did amazing! Keep it up!' : 'Keep practicing to improve your score!'}
         </motion.p>
@@ -57,13 +57,13 @@ export default function QuizResultsPage() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.5 }}
-          className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-8 mb-8"
+          className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-8 mb-8"
         >
           <div className="text-center">
-            <div className="text-7xl font-bold text-blue-600 mb-2">
+            <div className="text-7xl font-bold text-blue-600 dark:text-blue-400 mb-2">
               {percentage}%
             </div>
-            <div className="text-xl text-gray-700">
+            <div className="text-xl text-gray-700 dark:text-gray-300">
               {correct} out of {total} correct
             </div>
           </div>
@@ -76,13 +76,13 @@ export default function QuizResultsPage() {
           transition={{ delay: 0.6 }}
           className="grid grid-cols-2 gap-4 mb-8"
         >
-          <div className="bg-green-50 rounded-xl p-4 text-center border-2 border-green-200">
-            <div className="text-3xl font-bold text-green-600 mb-1">{correct}</div>
-            <div className="text-sm text-gray-600">Correct</div>
+          <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-center border-2 border-green-200 dark:border-green-800">
+            <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">{correct}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Correct</div>
           </div>
-          <div className="bg-red-50 rounded-xl p-4 text-center border-2 border-red-200">
-            <div className="text-3xl font-bold text-red-600 mb-1">{total - correct}</div>
-            <div className="text-sm text-gray-600">Incorrect</div>
+          <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-4 text-center border-2 border-red-200 dark:border-red-800">
+            <div className="text-3xl font-bold text-red-600 dark:text-red-400 mb-1">{total - correct}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Incorrect</div>
           </div>
         </motion.div>
 
@@ -95,7 +95,7 @@ export default function QuizResultsPage() {
         >
           <Link
             href="/"
-            className="flex items-center justify-center gap-2 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+            className="flex items-center justify-center gap-2 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
             <Home className="w-5 h-5" />
             Home
@@ -114,9 +114,9 @@ export default function QuizResultsPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="mt-6 p-4 bg-blue-50 rounded-xl"
+          className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl"
         >
-          <p className="text-sm text-gray-700 text-center">
+          <p className="text-sm text-gray-700 dark:text-gray-300 text-center">
             Your progress has been updated! Keep practicing to reach mastery level.
           </p>
         </motion.div>
