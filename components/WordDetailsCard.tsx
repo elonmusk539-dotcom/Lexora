@@ -149,9 +149,8 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className="fixed left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[45] p-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           >
-            {/* Top right buttons */}
-            <div className="absolute top-4 right-4 flex items-center gap-2">
-              <ShareWordCard word={word} examples={detailedExamples} />
+            {/* Top left - Flag icon */}
+            <div className="absolute top-4 left-4">
               <button
                 onClick={() => setShowReportModal(true)}
                 className="p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
@@ -159,6 +158,11 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
               >
                 <Flag className="w-5 h-5" />
               </button>
+            </div>
+
+            {/* Top right - Share icon */}
+            <div className="absolute top-4 right-4">
+              <ShareWordCard word={word} examples={detailedExamples} />
             </div>
 
             {/* Image - Square container */}
@@ -178,20 +182,20 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                 <h2 className="text-4xl font-bold text-gray-900 dark:text-white">{word.kanji || word.word}</h2>
                 <button
                   onClick={playPronunciation}
-                  className="p-2 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 transition-colors"
+                  className="p-2 rounded-full hover:bg-blue-50 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 transition-colors"
                   aria-label="Play pronunciation"
                 >
                   <Volume2 className="w-6 h-6" />
                 </button>
               </div>
               {(word.furigana || word.romaji || word.reading) && (
-                <p className="text-xl text-gray-600 dark:text-gray-400 mb-2">
+                <p className="text-xl text-gray-900 dark:text-white mb-2">
                   {word.furigana}
                   {word.furigana && (word.romaji || word.reading) && ' '}
                   {(word.romaji || word.reading) && `(${word.romaji || word.reading})`}
                 </p>
               )}
-              <p className="text-lg text-gray-700 dark:text-gray-300 font-medium">{word.meaning}</p>
+              <p className="text-lg text-gray-900 dark:text-white font-medium">{word.meaning}</p>
             </div>
 
             {/* Examples */}
@@ -217,15 +221,15 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                         )}
                         {/* Furigana */}
                         {example.furigana && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400">{example.furigana}</p>
+                          <p className="text-sm text-gray-900 dark:text-white">{example.furigana}</p>
                         )}
                         {/* Romaji */}
                         {example.romaji && (
-                          <p className="text-sm text-gray-500 dark:text-gray-500 italic">{example.romaji}</p>
+                          <p className="text-sm text-gray-900 dark:text-white italic">{example.romaji}</p>
                         )}
                         {/* Translation */}
                         {example.translation && (
-                          <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{example.translation}</p>
+                          <p className="text-sm text-gray-900 dark:text-white font-medium">{example.translation}</p>
                         )}
                       </div>
                     </motion.div>
@@ -270,10 +274,10 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: 20 }}
                   transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                  className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl z-[55] p-6"
+                  className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[55] p-6"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Report an Issue</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Report an Issue</h3>
                   
                   {reportSuccess ? (
                     <motion.div
@@ -281,13 +285,13 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                       animate={{ opacity: 1, y: 0 }}
                       className="text-center py-4"
                     >
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      <p className="text-lg text-gray-900 font-medium mb-2">Thank you!</p>
-                      <p className="text-gray-600 mb-4">Your report has been submitted successfully.</p>
+                      <p className="text-lg text-gray-900 dark:text-white font-medium mb-2">Thank you!</p>
+                      <p className="text-gray-600 dark:text-gray-400 mb-4">Your report has been submitted successfully.</p>
                       <button
                         onClick={() => {
                           setShowReportModal(false);
@@ -303,14 +307,14 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                   ) : (
                     <form onSubmit={handleReportSubmit} className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Issue Type
                         </label>
                         <select
                           value={reportIssueType}
                           onChange={(e) => setReportIssueType(e.target.value)}
                           required
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700"
                         >
                           <option value="">Select an issue...</option>
                           <option value="incorrect_meaning">Incorrect Meaning</option>
@@ -322,7 +326,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Description
                         </label>
                         <textarea
@@ -331,7 +335,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                           required
                           rows={4}
                           placeholder="Please describe the issue..."
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 resize-none"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-700 resize-none"
                         />
                       </div>
 
@@ -339,7 +343,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                         <button
                           type="button"
                           onClick={() => setShowReportModal(false)}
-                          className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                          className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                         >
                           Cancel
                         </button>

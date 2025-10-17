@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Share2, X, Download, Link as LinkIcon } from 'lucide-react';
+import { Share2, X, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
 interface VocabularyWord {
@@ -38,8 +38,17 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      // Also prevent scrolling on the parent elements
+      const wordDetailsCard = document.querySelector('[class*="max-h-\\[85vh\\]"]');
+      if (wordDetailsCard) {
+        (wordDetailsCard as HTMLElement).style.overflow = 'hidden';
+      }
     } else {
       document.body.style.overflow = 'unset';
+      const wordDetailsCard = document.querySelector('[class*="max-h-\\[85vh\\]"]');
+      if (wordDetailsCard) {
+        (wordDetailsCard as HTMLElement).style.overflow = 'auto';
+      }
     }
     return () => {
       document.body.style.overflow = 'unset';
@@ -79,6 +88,29 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
     const url = `${window.location.origin}/?word=${encodeURIComponent(word.kanji || word.word)}`;
     navigator.clipboard.writeText(url);
     alert('Link copied to clipboard!');
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/lists`; // You can customize this URL
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${word.kanji || word.word} - Lexora`,
+          text: `Learn "${word.kanji || word.word}" (${word.meaning}) on Lexora!`,
+          url: url
+        });
+      } catch (error) {
+        // User cancelled or share failed
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Error sharing:', error);
+          copyLink(); // Fallback to copy
+        }
+      }
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      copyLink();
+    }
   };
 
   const firstExample = examples?.[0];
@@ -122,12 +154,12 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
 
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Share Word</h3>
 
-              {/* Scrollable container for preview */}
-              <div className="mb-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 250px)' }}>
+              {/* Preview card - no scroll */}
+              <div className="mb-6">
                 <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-xl">
                   <div
                     ref={cardRef}
-                    className="rounded-2xl p-8 flex flex-col justify-between mx-auto"
+                    className="rounded-2xl p-6 flex flex-col justify-between mx-auto"
                     style={{ 
                       width: '360px', 
                       height: '640px',
@@ -135,53 +167,53 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
                     }}
                   >
                     {/* Top Section - Word Info */}
-                    <div className="flex-1 flex flex-col justify-center items-center text-center">
+                    <div className="flex-1 flex flex-col justify-center items-center text-center space-y-3">
                       {word.image_url && (
-                        <div className="mb-6 rounded-2xl overflow-hidden shadow-2xl">
+                        <div className="mb-2 rounded-2xl overflow-hidden shadow-2xl">
                           <img
                             src={word.image_url}
                             alt={word.kanji || word.word}
-                            className="w-48 h-48 object-cover"
+                            className="w-40 h-40 object-cover"
                             crossOrigin="anonymous"
                           />
                         </div>
                       )}
                       
-                      <div className="text-7xl font-bold text-white mb-4">{word.kanji || word.word}</div>
+                      <div className="text-5xl font-bold text-white">{word.kanji || word.word}</div>
                       
                       {word.furigana && (
-                        <div className="text-2xl text-white mb-2" style={{ opacity: 0.9 }}>{word.furigana}</div>
+                        <div className="text-xl text-white" style={{ opacity: 0.9 }}>{word.furigana}</div>
                       )}
                       
                       {word.romaji && (
-                        <div className="text-xl text-white mb-6" style={{ opacity: 0.8 }}>{word.romaji}</div>
+                        <div className="text-lg text-white" style={{ opacity: 0.8 }}>{word.romaji}</div>
                       )}
                       
-                      <div className="text-3xl font-semibold text-white mb-8">
+                      <div className="text-2xl font-semibold text-white">
                         {word.meaning}
                       </div>
 
                       {/* Example */}
                       {firstExample && (
-                        <div className="rounded-xl p-4 max-w-xs" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)' }}>
-                          <div className="text-white text-lg mb-1">{firstExample.kanji}</div>
+                        <div className="rounded-xl p-3 max-w-xs mt-2" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)' }}>
+                          <div className="text-white text-base mb-1">{firstExample.kanji}</div>
                           {firstExample.furigana && (
-                            <div className="text-white text-sm mb-1" style={{ opacity: 0.8 }}>{firstExample.furigana}</div>
+                            <div className="text-white text-xs mb-1" style={{ opacity: 0.8 }}>{firstExample.furigana}</div>
                           )}
                           {firstExample.romaji && (
-                            <div className="text-white text-xs mb-2" style={{ opacity: 0.7 }}>{firstExample.romaji}</div>
+                            <div className="text-white text-xs mb-1" style={{ opacity: 0.7 }}>{firstExample.romaji}</div>
                           )}
                           {firstExample.translation && (
-                            <div className="text-white text-base" style={{ opacity: 0.9 }}>{firstExample.translation}</div>
+                            <div className="text-white text-sm" style={{ opacity: 0.9 }}>{firstExample.translation}</div>
                           )}
                         </div>
                       )}
                     </div>
 
                     {/* Bottom Section - Branding */}
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-white mb-2">Lexora</div>
-                      <div className="text-white text-sm" style={{ opacity: 0.8 }}>Learn Japanese Vocabulary</div>
+                    <div className="text-center pt-4">
+                      <div className="text-2xl font-bold text-white mb-1">Lexora</div>
+                      <div className="text-white text-xs" style={{ opacity: 0.8 }}>Learn Japanese Vocabulary</div>
                     </div>
                   </div>
                 </div>
@@ -203,11 +235,11 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={copyLink}
+                  onClick={handleShare}
                   className="w-full py-3 px-4 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
                 >
-                  <LinkIcon className="w-5 h-5" />
-                  Copy Link
+                  <Share2 className="w-5 h-5" />
+                  Share
                 </motion.button>
               </div>
             </motion.div>

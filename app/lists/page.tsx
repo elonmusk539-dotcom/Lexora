@@ -114,19 +114,19 @@ export default function ListsPage() {
               >
                 <Link
                   href={`/lists/${list.id}`}
-                  className="block p-6 bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all"
+                  className="block p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg transition-all"
                 >
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                     {list.name}
                   </h3>
                   {list.description && (
-                    <p className="text-gray-600 mb-4">{list.description}</p>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">{list.description}</p>
                   )}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
                       {list.word_count} word{list.word_count !== 1 ? 's' : ''}
                     </span>
-                    <span className="text-sm font-medium text-blue-600">
+                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                       View →
                     </span>
                   </div>

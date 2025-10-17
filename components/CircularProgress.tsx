@@ -29,7 +29,7 @@ export function CircularProgress({
         style={{ width: size, height: size }}
       >
         <div className="text-center">
-          <div className="text-xs font-semibold text-green-600">Mastered</div>
+          <div className="text-xs font-semibold text-green-600 dark:text-green-400">Mastered</div>
         </div>
       </motion.div>
     );
@@ -43,6 +43,7 @@ export function CircularProgress({
           cx={size / 2}
           cy={size / 2}
           r={radius}
+          className="dark:stroke-gray-700"
           stroke="#e5e7eb"
           strokeWidth={strokeWidth}
           fill="none"
@@ -52,6 +53,7 @@ export function CircularProgress({
           cx={size / 2}
           cy={size / 2}
           r={radius}
+          className="dark:stroke-blue-400"
           stroke="#3b82f6"
           strokeWidth={strokeWidth}
           fill="none"
@@ -66,7 +68,7 @@ export function CircularProgress({
       </svg>
       {/* Percentage text */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xs font-semibold text-gray-700">
+        <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
           {Math.round(progress)}%
         </span>
       </div>

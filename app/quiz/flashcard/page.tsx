@@ -30,6 +30,7 @@ export default function FlashcardQuizPage() {
   const [userId, setUserId] = useState<string>('');
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [selectedWord, setSelectedWord] = useState<Word | null>(null);
+  const [isAnswering, setIsAnswering] = useState(false);
 
   useEffect(() => {
     checkUserAndFetchWords();
@@ -120,6 +121,9 @@ export default function FlashcardQuizPage() {
   };
 
   const handleAnswer = async (correct: boolean) => {
+    if (isAnswering) return; // Prevent double-clicking
+    setIsAnswering(true);
+
     const currentWord = words[currentIndex];
 
     setScore((prev) => ({
@@ -136,7 +140,8 @@ export default function FlashcardQuizPage() {
         setCurrentIndex((prev) => prev + 1);
         setIsFlipped(false);
         setShowAnswer(false);
-      }, 500);
+        setIsAnswering(false);
+      }, 300);
     } else {
       finishQuiz();
     }

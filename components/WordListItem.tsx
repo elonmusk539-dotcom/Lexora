@@ -39,20 +39,20 @@ export function WordListItem({
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{word.kanji || word.word}</h3>
           <button
             onClick={playPronunciation}
-            className="p-1.5 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 transition-colors"
+            className="p-1.5 rounded-full hover:bg-blue-50 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 transition-colors"
             aria-label="Play pronunciation"
           >
             <Volume2 className="w-4 h-4" />
           </button>
         </div>
         {(word.furigana || word.romaji || word.reading) && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+          <p className="text-sm text-gray-900 dark:text-white mb-1">
             {word.furigana}
             {word.furigana && (word.romaji || word.reading) && ' '}
             {(word.romaji || word.reading) && `(${word.romaji || word.reading})`}
           </p>
         )}
-        <p className="text-gray-700 dark:text-gray-300">{word.meaning}</p>
+        <p className="text-gray-900 dark:text-white">{word.meaning}</p>
       </div>
 
       {/* Progress indicator */}
