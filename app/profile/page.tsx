@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
-import { User, Mail, Image as ImageIcon, Save, LogOut, Upload } from 'lucide-react';
+import { User, Mail, Image as ImageIcon, Save, LogOut, Upload, Trophy, Flame, BookPlus, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 import imageCompression from 'browser-image-compression';
 
@@ -20,9 +20,16 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [stats, setStats] = useState({
+    wordsMastered: 0,
+    longestStreak: 0,
+    userAddedWords: 0,
+    wordsStartedLearning: 0,
+  });
 
   useEffect(() => {
     checkUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function checkUser() {
@@ -51,10 +58,53 @@ export default function ProfilePage() {
         setUsername(profile.username || '');
         setAvatarUrl(profile.avatar_url || '');
       }
+
+      // Load statistics
+      await loadStatistics(user.id);
     } catch (error) {
       console.error('Error:', error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadStatistics(userId: string) {
+    try {
+      // Words mastered (is_mastered = true)
+      const { count: masteredCount } = await supabase
+        .from('user_progress')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('is_mastered', true);
+
+      // Longest streak (from user_profiles table)
+      const { data: profileData } = await supabase
+        .from('user_profiles')
+        .select('longest_streak')
+        .eq('user_id', userId)
+        .single();
+
+      // User added words (custom words)
+      const { count: customWordsCount } = await supabase
+        .from('user_custom_words')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+      // Words started learning (any progress exists, excluding mastered)
+      const { count: startedLearningCount } = await supabase
+        .from('user_progress')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('is_mastered', false);
+
+      setStats({
+        wordsMastered: masteredCount || 0,
+        longestStreak: profileData?.longest_streak || 0,
+        userAddedWords: customWordsCount || 0,
+        wordsStartedLearning: startedLearningCount || 0,
+      });
+    } catch (error) {
+      console.error('Error loading statistics:', error);
     }
   }
 
@@ -217,32 +267,32 @@ export default function ProfilePage() {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="max-w-2xl mx-auto"
         >
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
             {/* Page Title */}
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">My Profile</h2>
-              <p className="text-gray-600 dark:text-gray-400">Manage your account settings</p>
+            <div className="text-center mb-6 sm:mb-8">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">My Profile</h2>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Manage your account settings</p>
             </div>
 
             {/* Avatar Preview */}
-            <div className="flex justify-center mb-8">
+            <div className="flex justify-center mb-6 sm:mb-8">
               <div className="relative">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
                     alt="Profile avatar"
-                    className="w-32 h-32 rounded-full object-cover border-4 border-purple-200"
+                    className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-4 border-purple-200"
                   />
                 ) : (
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center border-4 border-purple-200">
-                    <User className="w-16 h-16 text-white" />
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center border-4 border-purple-200">
+                    <User className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 text-white" />
                   </div>
                 )}
                 {/* Upload button overlay */}
@@ -250,12 +300,12 @@ export default function ProfilePage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="absolute bottom-0 right-0 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                  className="absolute bottom-0 right-0 p-1.5 sm:p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                 >
                   {uploading ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
-                    <Upload className="w-5 h-5" />
+                    <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
                   )}
                 </button>
                 <input
@@ -362,6 +412,64 @@ export default function ProfilePage() {
               </div>
             </form>
           </div>
+
+          {/* Statistics Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="mt-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
+          >
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+              Learning Statistics
+            </h3>
+
+            <div className="grid grid-cols-2 gap-6">
+              {/* Words Mastered */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-green-500 dark:bg-green-600 rounded-lg">
+                    <Trophy className="w-6 h-6 text-white" />
+                  </div>
+                  <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Words Mastered</h4>
+                </div>
+                <p className="text-3xl font-bold text-green-700 dark:text-green-400">{stats.wordsMastered}</p>
+              </div>
+
+              {/* Longest Streak */}
+              <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl p-6 border border-orange-200 dark:border-orange-800">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-orange-500 dark:bg-orange-600 rounded-lg">
+                    <Flame className="w-6 h-6 text-white" />
+                  </div>
+                  <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Longest Streak</h4>
+                </div>
+                <p className="text-3xl font-bold text-orange-700 dark:text-orange-400">{stats.longestStreak}</p>
+              </div>
+
+              {/* User Added Words */}
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-800">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-purple-500 dark:bg-purple-600 rounded-lg">
+                    <BookPlus className="w-6 h-6 text-white" />
+                  </div>
+                  <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Custom Words</h4>
+                </div>
+                <p className="text-3xl font-bold text-purple-700 dark:text-purple-400">{stats.userAddedWords}</p>
+              </div>
+
+              {/* Words Started Learning */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-blue-500 dark:bg-blue-600 rounded-lg">
+                    <GraduationCap className="w-6 h-6 text-white" />
+                  </div>
+                  <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Words Learning</h4>
+                </div>
+                <p className="text-3xl font-bold text-blue-700 dark:text-blue-400">{stats.wordsStartedLearning}</p>
+              </div>
+            </div>
+          </motion.div>
         </motion.div>
       </div>
     </div>

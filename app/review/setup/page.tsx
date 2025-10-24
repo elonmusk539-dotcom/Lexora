@@ -1,13 +1,12 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, List } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '@/components/Header';
+import { supabase } from '@/lib/supabase/client';
+import { Brain, Clock, List, Info } from 'lucide-react';
 
-type QuizType = 'mcq' | 'flashcard';
 type QuizDuration = 5 | 10 | 15 | 20 | 'custom';
 
 interface VocabularyList {
@@ -17,100 +16,109 @@ interface VocabularyList {
   isCustom?: boolean;
 }
 
+// Due words preview interface - to be used when implementing preview feature
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface DueWord {
+  id: string;
+  word: string;
+  kanji?: string;
+  meaning: string;
+  list_name: string;
+  next_review_date: string | null;
+}
+
 interface UserSettings {
-  quiz?: {
-    lastQuizType?: QuizType;
+  review?: {
     lastDuration?: QuizDuration;
     customDuration?: number;
     lastSelectedLists?: string[];
   };
 }
 
-export default function QuizPage() {
-  const [quizType, setQuizType] = useState<QuizType>('mcq');
+export default function SmartQuizSetupPage() {
+  const router = useRouter();
   const [duration, setDuration] = useState<QuizDuration>(10);
   const [customDuration, setCustomDuration] = useState<number>(10);
   const [lists, setLists] = useState<VocabularyList[]>([]);
   const [selectedLists, setSelectedLists] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showListModal, setShowListModal] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
-  const router = useRouter();
+  // Due words preview state - to be implemented in future
+  // const [dueWords, setDueWords] = useState<Record<string, DueWord[]>>({});
+  // const [showDueWords, setShowDueWords] = useState(false);
+  // const [loadingDueWords, setLoadingDueWords] = useState(false);
 
   useEffect(() => {
-    checkUser();
+    checkUserAndLoadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      router.push('/login');
-      return;
-    }
-    setUserId(session.user.id);
-    
-    // Load saved preferences
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('settings')
-      .eq('user_id', session.user.id)
-      .single();
+  const checkUserAndLoadData = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        router.push('/login');
+        return;
+      }
 
-    let savedListIds: string[] = [];
-    if (profile && profile.settings) {
-      const settings = profile.settings as UserSettings;
-      if (settings.quiz) {
-        if (settings.quiz.lastQuizType) setQuizType(settings.quiz.lastQuizType);
-        if (settings.quiz.lastDuration) setDuration(settings.quiz.lastDuration);
-        if (settings.quiz.customDuration) setCustomDuration(settings.quiz.customDuration);
-        if (settings.quiz.lastSelectedLists && settings.quiz.lastSelectedLists.length > 0) {
-          savedListIds = settings.quiz.lastSelectedLists;
-          setSelectedLists(savedListIds);
+      const uid = session.user.id;
+      setUserId(uid);
+
+      // Load vocabulary lists
+      await loadLists(uid);
+
+      // Load saved preferences
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('settings')
+        .eq('user_id', uid)
+        .single();
+
+      const settings = profile?.settings as UserSettings;
+      if (settings?.review) {
+        if (settings.review.lastDuration) setDuration(settings.review.lastDuration);
+        if (settings.review.customDuration) setCustomDuration(settings.review.customDuration);
+        if (settings.review.lastSelectedLists) {
+          setSelectedLists(settings.review.lastSelectedLists);
         }
       }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
     }
-
-    // Fetch lists after loading preferences
-    await fetchLists(savedListIds);
   };
 
-  const fetchLists = async (savedListIds: string[] = []) => {
+  const loadLists = async (uid: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Fetch default vocabulary lists
-      const { data: defaultLists, error: defaultError } = await supabase
+      // Load default lists
+      const { data: defaultLists } = await supabase
         .from('vocabulary_lists')
         .select('id, name, description')
-        .order('created_at', { ascending: true });
+        .order('name');
 
-      if (defaultError) throw defaultError;
-
-      // Fetch user's custom lists
+      // Load custom lists
       const { data: customLists } = await supabase
         .from('user_custom_lists')
         .select('id, name, description')
-        .eq('user_id', user.id)
+        .eq('user_id', uid)
         .order('created_at', { ascending: false });
 
-      // Combine both lists
       const allLists = [
         ...(defaultLists || []),
-        ...(customLists || []).map(list => ({ ...list, isCustom: true }))
+        ...(customLists || []).map(list => ({ ...list, isCustom: true })),
       ];
 
       setLists(allLists);
-      
-      // Only select all lists if there are no saved preferences
-      if (savedListIds.length === 0) {
-        setSelectedLists(allLists.map((list: VocabularyList) => list.id));
+
+      // Auto-select all lists if none selected
+      if (selectedLists.length === 0) {
+        setSelectedLists(allLists.map(l => l.id));
       }
     } catch (error) {
-      console.error('Error fetching lists:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error loading lists:', error);
     }
   };
 
@@ -126,11 +134,11 @@ export default function QuizPage() {
     if (selectedLists.length === lists.length) {
       setSelectedLists([]);
     } else {
-      setSelectedLists(lists.map(list => list.id));
+      setSelectedLists(lists.map(l => l.id));
     }
   };
 
-  const startQuiz = async () => {
+  const startReview = async () => {
     if (selectedLists.length === 0) {
       alert('Please select at least one list');
       return;
@@ -147,8 +155,7 @@ export default function QuizPage() {
       const currentSettings = profile?.settings || {};
       const updatedSettings = {
         ...currentSettings,
-        quiz: {
-          lastQuizType: quizType,
+        review: {
           lastDuration: duration,
           customDuration: customDuration,
           lastSelectedLists: selectedLists,
@@ -169,69 +176,52 @@ export default function QuizPage() {
 
     const listIds = selectedLists.join(',');
     const actualDuration = duration === 'custom' ? customDuration : duration;
-    router.push(`/quiz/${quizType}?duration=${actualDuration}&lists=${listIds}`);
+    router.push(`/review?duration=${actualDuration}&lists=${listIds}`);
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 dark:border-purple-400"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <Header />
+      
+      <div className="max-w-3xl mx-auto px-4 py-12">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full mb-4">
+              <Brain className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Start a Smart Quiz
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Configure your spaced repetition review session
+            </p>
+          </div>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
-        >
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Start a Normal Quiz</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-8">
-            Choose your quiz type, select lists, and set duration
-          </p>
-
-          {/* Quiz Type Selection */}
-          <div className="mb-8">
-            <label className="block text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Quiz Type
-            </label>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setQuizType('mcq')}
-                className={`p-6 rounded-xl border-2 transition-all ${
-                  quizType === 'mcq'
-                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                }`}
-              >
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  Multiple Choice
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Choose the correct meaning from 4 options
+          {/* SRS Info Banner */}
+          <div className="mb-8 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm text-purple-900 dark:text-purple-100">
+                  <strong>Smart Quiz uses spaced repetition</strong> to optimize your learning. 
+                  Words due for review will be shown first, followed by new words from your selected lists.{' '}
+                  <button 
+                    onClick={() => router.push('/faq')}
+                    className="underline hover:text-purple-700 dark:hover:text-purple-300"
+                  >
+                    Learn more in our FAQ
+                  </button>
                 </p>
-              </button>
-
-              <button
-                onClick={() => setQuizType('flashcard')}
-                className={`p-6 rounded-xl border-2 transition-all ${
-                  quizType === 'flashcard'
-                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                }`}
-              >
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  Flashcards
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Review words and rate your knowledge
-                </p>
-              </button>
+              </div>
             </div>
           </div>
 
@@ -243,7 +233,7 @@ export default function QuizPage() {
             <button
               type="button"
               onClick={() => setShowListModal(true)}
-              className="w-full p-6 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500 transition-all text-left"
+              className="w-full p-6 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-500 transition-all text-left"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -270,7 +260,7 @@ export default function QuizPage() {
           <div className="mb-8">
             <label className="block text-lg font-semibold text-gray-900 dark:text-white mb-4">
               <Clock className="inline w-5 h-5 mr-2" />
-              Quiz Duration (words)
+              Review Duration (words)
             </label>
             <div className="grid grid-cols-5 gap-3">
               {([5, 10, 15, 20] as const).map((d) => (
@@ -279,7 +269,7 @@ export default function QuizPage() {
                   onClick={() => setDuration(d)}
                   className={`py-3 rounded-lg font-semibold transition-all ${
                     duration === d
-                      ? 'bg-blue-600 text-white shadow-md'
+                      ? 'bg-purple-600 text-white shadow-md'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
@@ -290,7 +280,7 @@ export default function QuizPage() {
                 onClick={() => setDuration('custom')}
                 className={`py-3 rounded-lg font-semibold transition-all ${
                   duration === 'custom'
-                    ? 'bg-blue-600 text-white shadow-md'
+                    ? 'bg-purple-600 text-white shadow-md'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
@@ -305,7 +295,7 @@ export default function QuizPage() {
                   max="100"
                   value={customDuration}
                   onChange={(e) => setCustomDuration(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="Enter number of words (1-100)"
                 />
               </div>
@@ -313,16 +303,15 @@ export default function QuizPage() {
           </div>
 
           {/* Start Button */}
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={startQuiz}
-            className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 transition-colors shadow-lg"
+          <button
+            onClick={startReview}
+            disabled={selectedLists.length === 0}
+            className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
           >
-            Start Quiz
-          </motion.button>
-        </motion.div>
-      </main>
+            Start Smart Quiz
+          </button>
+        </div>
+      </div>
 
       {/* List Selection Modal */}
       <AnimatePresence>
@@ -350,7 +339,7 @@ export default function QuizPage() {
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Select Lists</h3>
                   <button
                     onClick={toggleSelectAll}
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                    className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
                   >
                     {selectedLists.length === lists.length ? 'Deselect All' : 'Select All'}
                   </button>
@@ -367,7 +356,7 @@ export default function QuizPage() {
                           type="checkbox"
                           checked={selectedLists.includes(list.id)}
                           onChange={() => toggleList(list.id)}
-                          className="w-5 h-5 text-blue-600 rounded focus:ring-0 focus:ring-offset-0"
+                          className="w-5 h-5 text-purple-600 rounded focus:ring-0 focus:ring-offset-0"
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
@@ -387,13 +376,13 @@ export default function QuizPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <p className="text-sm text-gray-600">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     {selectedLists.length} of {lists.length} lists selected
                   </p>
                   <button
                     onClick={() => setShowListModal(false)}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
                   >
                     Done
                   </button>

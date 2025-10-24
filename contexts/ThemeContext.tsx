@@ -16,31 +16,21 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('light');
   const [userId, setUserId] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
 
+  // Initialize theme on mount
   useEffect(() => {
-    setMounted(true);
-    // Load theme from user settings
-    loadTheme();
+    initializeTheme();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    // Apply theme to document - only on client side
-    if (!mounted) return;
-    
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme, mounted]);
-
-  const loadTheme = async () => {
+  const initializeTheme = async () => {
     try {
+      // Get user first
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
+
+        // If user is logged in, prioritize database theme
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('settings')
@@ -48,15 +38,48 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           .single();
 
         if (profile?.settings?.theme) {
-          setThemeState(profile.settings.theme);
+          const dbTheme = profile.settings.theme as Theme;
+          applyTheme(dbTheme);
+          return;
         }
       }
+
+      // Fallback to localStorage
+      const savedTheme = localStorage.getItem('theme') as Theme | null;
+      
+      if (savedTheme) {
+        applyTheme(savedTheme);
+      } else {
+        // Check system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(prefersDark ? 'dark' : 'light');
+      }
     } catch (error) {
-      console.error('Error loading theme:', error);
+      console.error('Error initializing theme:', error);
+      // Fallback to localStorage on error
+      const savedTheme = localStorage.getItem('theme') as Theme | null;
+      if (savedTheme) {
+        applyTheme(savedTheme);
+      }
     }
   };
 
-  const saveTheme = async (newTheme: Theme) => {
+  const applyTheme = (newTheme: Theme) => {
+    console.log('Applying theme:', newTheme);
+    setThemeState(newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      console.log('Added dark class to html');
+    } else {
+      document.documentElement.classList.remove('dark');
+      console.log('Removed dark class from html');
+    }
+    console.log('Current html classes:', document.documentElement.className);
+  };
+
+  const saveThemeToDatabase = async (newTheme: Theme) => {
     if (!userId) return;
 
     try {
@@ -75,7 +98,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase
         .from('user_profiles')
         .update({
-          settings: updatedSettings as any,
+          settings: updatedSettings as Record<string, unknown>,
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', userId);
@@ -89,18 +112,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-    // Apply immediately
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    saveTheme(newTheme);
+    applyTheme(newTheme);
+    saveThemeToDatabase(newTheme);
   };
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
+    console.log('Toggle theme from', theme, 'to', newTheme);
     setTheme(newTheme);
   };
 

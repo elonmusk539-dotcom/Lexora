@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, Edit2, X, BookOpen, Search } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { WordListItem } from '@/components/WordListItem';
+import { AddCustomWord } from '@/components/AddCustomWord';
 
 interface CustomList {
   id: string;
@@ -29,6 +30,7 @@ interface Word {
 }
 
 export default function MyListsPage() {
+  const router = useRouter();
   const [lists, setLists] = useState<CustomList[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -40,6 +42,10 @@ export default function MyListsPage() {
   const [listWords, setListWords] = useState<Word[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Word[]>([]);
+  const [showAddCustomWord, setShowAddCustomWord] = useState(false);
+  const [allAvailableWords, setAllAvailableWords] = useState<Word[]>([]);
+  const [filterByList, setFilterByList] = useState<string>('all');
+  const [allLists, setAllLists] = useState<{id: string, name: string, isCustom?: boolean}[]>([]);
 
   useEffect(() => {
     fetchLists();
@@ -63,15 +69,23 @@ export default function MyListsPage() {
 
       if (error) throw error;
 
-      // Get word count for each list
+      // Get word count for each list (both regular and custom words)
       const listsWithCounts = await Promise.all(
         (lists || []).map(async (list) => {
-          const { count } = await supabase
+          const { count: regularCount } = await supabase
             .from('user_custom_list_words')
             .select('*', { count: 'exact', head: true })
             .eq('list_id', list.id);
 
-          return { ...list, word_count: count || 0 };
+          const { count: customCount } = await supabase
+            .from('user_custom_list_custom_words')
+            .select('*', { count: 'exact', head: true })
+            .eq('list_id', list.id);
+
+          return { 
+            ...list, 
+            word_count: (regularCount || 0) + (customCount || 0)
+          };
         })
       );
 
@@ -104,9 +118,9 @@ export default function MyListsPage() {
       setNewListDescription('');
       setShowCreateModal(false);
       fetchLists();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating list:', error);
-      if (error.code === '23505') {
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
         alert('You already have a list with this name!');
       }
     }
@@ -155,9 +169,52 @@ export default function MyListsPage() {
   const viewListWords = async (list: CustomList) => {
     setSelectedList(list);
     setShowWordsModal(true);
+    setSearchQuery('');
+    setFilterByList('all');
 
+    // Fetch all available lists for filtering
+    await fetchAllListsForFilter();
+    
+    // Fetch words currently in this list
+    await fetchCurrentListWords(list);
+    
+    // Fetch all available words to add
+    await fetchAllAvailableWords(list.id);
+  };
+
+  const fetchAllListsForFilter = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch default vocabulary lists
+      const { data: defaultLists } = await supabase
+        .from('vocabulary_lists')
+        .select('id, name')
+        .order('name', { ascending: true });
+
+      // Fetch user's custom lists
+      const { data: customLists } = await supabase
+        .from('user_custom_lists')
+        .select('id, name')
+        .eq('user_id', user.id)
+        .order('name', { ascending: true });
+
+      const combinedLists = [
+        ...(defaultLists || []),
+        ...(customLists || []).map(list => ({ ...list, isCustom: true }))
+      ];
+
+      setAllLists(combinedLists);
+    } catch (error) {
+      console.error('Error fetching lists for filter:', error);
+    }
+  };
+
+  const fetchCurrentListWords = async (list: CustomList) => {
+    try {
+      // Fetch regular vocabulary words
+      const { data: regularWordsData, error: regularError } = await supabase
         .from('user_custom_list_words')
         .select(`
           word_id,
@@ -165,31 +222,126 @@ export default function MyListsPage() {
         `)
         .eq('list_id', list.id);
 
-      if (error) throw error;
+      if (regularError) throw regularError;
 
-      const words = data?.map((item: any) => item.vocabulary_words) || [];
-      setListWords(words);
+      // Fetch custom words
+      const { data: customWordsData, error: customError } = await supabase
+        .from('user_custom_list_custom_words')
+        .select(`
+          custom_word_id,
+          user_custom_words (*)
+        `)
+        .eq('list_id', list.id);
+
+      if (customError) throw customError;
+
+      // Combine both types of words
+      interface RegularWordItem {
+        word_id: string;
+        vocabulary_words: Word;
+      }
+      
+      const regularWords = regularWordsData?.map((item: RegularWordItem) => ({
+        ...item.vocabulary_words,
+        word_type: 'regular'
+      })) || [];
+      
+      interface CustomWordItem {
+        custom_word_id: string;
+        user_custom_words: {
+          id: string;
+          kanji: string;
+          furigana: string | null;
+          romaji: string | null;
+          meaning: string;
+          pronunciation_url: string;
+          image_url: string;
+          examples: Array<{ kanji: string; furigana: string; romaji: string; translation: string }> | null;
+          [key: string]: unknown;
+        };
+      }
+      
+      const customWords = customWordsData?.map((item: CustomWordItem) => {
+        const word = item.user_custom_words;
+        return {
+          ...word,
+          word: word.kanji,
+          reading: word.romaji,
+          word_type: 'custom',
+          examples: word.examples ? 
+            word.examples.map((ex) => 
+              `${ex.kanji}|${ex.furigana}|${ex.romaji}|${ex.translation}`
+            ) : []
+        };
+      }) || [];
+
+      setListWords([...regularWords, ...customWords]);
     } catch (error) {
       console.error('Error fetching list words:', error);
     }
   };
 
-  const searchWords = async (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
+  const fetchAllAvailableWords = async (currentListId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch ALL vocabulary words
+      const { data: allVocabWords } = await supabase
         .from('vocabulary_words')
         .select('*')
-        .or(`word.ilike.%${query}%,meaning.ilike.%${query}%,kanji.ilike.%${query}%`)
-        .limit(20);
+        .order('kanji', { ascending: true });
 
-      if (error) throw error;
+      // Get words already in current list
+      const { data: existingWords } = await supabase
+        .from('user_custom_list_words')
+        .select('word_id')
+        .eq('list_id', currentListId);
+      
+      const existingWordIds = existingWords?.map(w => w.word_id) || [];
 
-      setSearchResults(data || []);
+      // Filter out words already in the list
+      const availableWords = (allVocabWords || []).filter(
+        word => !existingWordIds.includes(word.id)
+      );
+
+      setAllAvailableWords(availableWords);
+      setSearchResults(availableWords);
+    } catch (error) {
+      console.error('Error fetching all words:', error);
+    }
+  };
+
+  const searchWords = async (query: string) => {
+    if (!selectedList) return;
+
+    try {
+      let filteredWords = [...allAvailableWords];
+
+      // Apply list filter
+      if (filterByList !== 'all') {
+        const { data: wordsInList } = await supabase
+          .from('vocabulary_words')
+          .select('id')
+          .eq('list_id', filterByList);
+        
+        const wordIdsInList = wordsInList?.map(w => w.id) || [];
+        filteredWords = filteredWords.filter(word => wordIdsInList.includes(word.id));
+      }
+
+      // Apply search query
+      if (query.trim()) {
+        const searchLower = query.toLowerCase();
+        filteredWords = filteredWords.filter(word =>
+          word.kanji?.toLowerCase().includes(searchLower) ||
+          word.word?.toLowerCase().includes(searchLower) ||
+          word.furigana?.toLowerCase().includes(searchLower) ||
+          word.romaji?.toLowerCase().includes(searchLower) ||
+          word.meaning?.toLowerCase().includes(searchLower)
+        );
+      }
+
+      setSearchResults(filteredWords);
     } catch (error) {
       console.error('Error searching words:', error);
     }
@@ -225,15 +377,26 @@ export default function MyListsPage() {
     if (!selectedList) return;
 
     try {
-      const { error } = await supabase
+      // Try to remove from regular words first
+      const { error: regularError } = await supabase
         .from('user_custom_list_words')
         .delete()
         .eq('list_id', selectedList.id)
         .eq('word_id', wordId);
 
-      if (error) throw error;
+      // If not found in regular words, try custom words
+      if (regularError) {
+        const { error: customError } = await supabase
+          .from('user_custom_list_custom_words')
+          .delete()
+          .eq('list_id', selectedList.id)
+          .eq('custom_word_id', wordId);
+
+        if (customError) throw customError;
+      }
 
       viewListWords(selectedList);
+      fetchLists(); // Update word count
     } catch (error) {
       console.error('Error removing word from list:', error);
     }
@@ -280,7 +443,8 @@ export default function MyListsPage() {
               <motion.div
                 key={list.id}
                 whileHover={{ scale: 1.02 }}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700"
+                onClick={() => router.push(`/my-lists/${list.id}`)}
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-blue-500 transition-all"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
@@ -291,7 +455,8 @@ export default function MyListsPage() {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setEditingList(list);
                         setNewListName(list.name);
                         setNewListDescription(list.description || '');
@@ -301,7 +466,10 @@ export default function MyListsPage() {
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => deleteList(list.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteList(list.id);
+                      }}
                       className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -313,12 +481,9 @@ export default function MyListsPage() {
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     {list.word_count} {list.word_count === 1 ? 'word' : 'words'}
                   </span>
-                  <button
-                    onClick={() => viewListWords(list)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                  >
-                    View Words
-                  </button>
+                  <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                    Click to view →
+                  </span>
                 </div>
               </motion.div>
             ))}
@@ -447,6 +612,39 @@ export default function MyListsPage() {
 
                 {/* Add Word Search */}
                 <div className="mb-6">
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={() => setShowAddCustomWord(true)}
+                      className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:shadow-lg transition-shadow flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Create Custom Word
+                    </button>
+                  </div>
+
+                  {/* Filter by List */}
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Filter by List
+                    </label>
+                    <select
+                      value={filterByList}
+                      onChange={(e) => {
+                        setFilterByList(e.target.value);
+                        searchWords(searchQuery);
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="all">All Lists</option>
+                      {allLists.map(list => (
+                        <option key={list.id} value={list.id}>
+                          {list.name} {list.isCustom ? '(Custom)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  {/* Search Input */}
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
@@ -456,7 +654,7 @@ export default function MyListsPage() {
                         setSearchQuery(e.target.value);
                         searchWords(e.target.value);
                       }}
-                      placeholder="Search words to add..."
+                      placeholder="Search by kanji, furigana, romaji, or meaning..."
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
@@ -506,6 +704,19 @@ export default function MyListsPage() {
             </>
           )}
         </AnimatePresence>
+
+        {/* Add Custom Word Modal */}
+        {selectedList && (
+          <AddCustomWord
+            isOpen={showAddCustomWord}
+            onClose={() => setShowAddCustomWord(false)}
+            listId={selectedList.id}
+            onWordAdded={() => {
+              viewListWords(selectedList);
+              fetchLists();
+            }}
+          />
+        )}
       </div>
     </div>
   );

@@ -24,11 +24,12 @@ export interface Word {
   romaji?: string | null;
   // Legacy fields (for backwards compatibility)
   word: string;
-  reading?: string;
+  reading?: string | null;
   meaning: string;
   image_url: string;
   pronunciation_url: string;
   examples: string[];
+  word_type?: 'regular' | 'custom'; // Add word_type field
 }
 
 interface WordDetailsCardProps {
@@ -147,7 +148,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[45] p-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            className="fixed left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-6 scrollbar-hide"
           >
             {/* Top left - Flag icon */}
             <div className="absolute top-4 left-4">
@@ -160,10 +161,12 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
               </button>
             </div>
 
-            {/* Top right - Share icon */}
-            <div className="absolute top-4 right-4">
-              <ShareWordCard word={word} examples={detailedExamples} />
-            </div>
+            {/* Top right - Share icon (only for non-custom words) */}
+            {word.word_type !== 'custom' && (
+              <div className="absolute top-4 right-4">
+                <ShareWordCard word={word} examples={detailedExamples} />
+              </div>
+            )}
 
             {/* Image - Square container */}
             <div className="relative w-full aspect-square max-w-md mx-auto rounded-xl overflow-hidden mb-6 bg-gray-100 dark:bg-gray-700">
@@ -195,7 +198,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                   {(word.romaji || word.reading) && `(${word.romaji || word.reading})`}
                 </p>
               )}
-              <p className="text-lg text-gray-900 dark:text-white font-medium">{word.meaning}</p>
+              <p className="text-lg text-blue-600 dark:text-blue-400 font-medium">{word.meaning}</p>
             </div>
 
             {/* Examples */}
@@ -229,7 +232,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                         )}
                         {/* Translation */}
                         {example.translation && (
-                          <p className="text-sm text-gray-900 dark:text-white font-medium">{example.translation}</p>
+                          <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{example.translation}</p>
                         )}
                       </div>
                     </motion.div>
@@ -237,17 +240,28 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                 </div>
               ) : word.examples && word.examples.length > 0 ? (
                 <div className="space-y-3">
-                  {word.examples.map((example, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
-                    >
-                      <p className="text-gray-800 dark:text-gray-200">{example}</p>
-                    </motion.div>
-                  ))}
+                  {word.examples.map((example, index) => {
+                    // Parse pipe-separated format: kanji|furigana|romaji|translation
+                    const parts = typeof example === 'string' ? example.split('|') : [];
+                    const [kanji, furigana, romaji, translation] = parts;
+                    
+                    return (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
+                      >
+                        <div className="space-y-1">
+                          {kanji && <p className="text-gray-900 dark:text-white font-medium text-base">{kanji}</p>}
+                          {furigana && <p className="text-sm text-gray-900 dark:text-white">{furigana}</p>}
+                          {romaji && <p className="text-sm text-gray-900 dark:text-white italic">{romaji}</p>}
+                          {translation && <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{translation}</p>}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-gray-500 dark:text-gray-400 text-center py-4">No examples available</p>
@@ -265,7 +279,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={() => setShowReportModal(false)}
-                  className="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm"
+                  className="fixed inset-0 bg-black/60 z-[65] backdrop-blur-sm"
                 />
 
                 {/* Report Modal Card */}
@@ -274,7 +288,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: 20 }}
                   transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                  className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[55] p-6"
+                  className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[70] p-6"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Report an Issue</h3>

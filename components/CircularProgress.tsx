@@ -29,7 +29,7 @@ export function CircularProgress({
         style={{ width: size, height: size }}
       >
         <div className="text-center">
-          <div className="text-xs font-semibold text-green-600 dark:text-green-400">Mastered</div>
+          <div className="text-xs font-semibold text-yellow-600 dark:text-yellow-500">Mastered</div>
         </div>
       </motion.div>
     );

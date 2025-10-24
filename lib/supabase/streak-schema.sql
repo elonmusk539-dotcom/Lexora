@@ -37,9 +37,12 @@ CREATE POLICY "Users can view their own activity"
   TO authenticated
   USING (auth.uid() = user_id);
 
+-- Drop and recreate function with new return type
+DROP FUNCTION IF EXISTS update_user_streak(UUID);
+
 -- Function to update streak
 CREATE OR REPLACE FUNCTION update_user_streak(p_user_id UUID)
-RETURNS void AS $$
+RETURNS INTEGER AS $$
 DECLARE
   v_last_activity DATE;
   v_current_streak INTEGER;
@@ -47,24 +50,24 @@ DECLARE
   v_today DATE := CURRENT_DATE;
 BEGIN
   -- Get current streak data
-  SELECT last_activity_date, current_streak, longest_streak
+  SELECT last_activity_date, COALESCE(current_streak, 0), COALESCE(longest_streak, 0)
   INTO v_last_activity, v_current_streak, v_longest_streak
   FROM user_profiles
   WHERE user_id = p_user_id;
 
-  -- If no activity recorded yet
-  IF v_last_activity IS NULL THEN
+  -- If no activity recorded yet or streak is 0, set to 1
+  IF v_last_activity IS NULL OR v_current_streak = 0 THEN
     UPDATE user_profiles
     SET current_streak = 1,
-        longest_streak = 1,
+        longest_streak = GREATEST(COALESCE(longest_streak, 0), 1),
         last_activity_date = v_today
     WHERE user_id = p_user_id;
-    RETURN;
+    RETURN 1;
   END IF;
 
-  -- If last activity was today, do nothing
+  -- If last activity was today, return current streak (no change)
   IF v_last_activity = v_today THEN
-    RETURN;
+    RETURN v_current_streak;
   END IF;
 
   -- If last activity was yesterday, increment streak
@@ -77,10 +80,10 @@ BEGIN
         longest_streak = v_longest_streak,
         last_activity_date = v_today
     WHERE user_id = p_user_id;
-    RETURN;
+    RETURN v_current_streak;
   END IF;
 
-  -- If more than 1 day gap, reset streak
+  -- If more than 1 day gap, reset streak to 1
   IF v_last_activity < v_today - INTERVAL '1 day' THEN
     UPDATE user_profiles
     SET current_streak = 1,
@@ -88,7 +91,10 @@ BEGIN
         streak_freeze_used = FALSE,
         streak_freeze_date = NULL
     WHERE user_id = p_user_id;
-    RETURN;
+    RETURN 1;
   END IF;
+  
+  -- Fallback: return current streak
+  RETURN v_current_streak;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

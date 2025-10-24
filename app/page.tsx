@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Filter } from 'lucide-react';
+import { Filter, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -23,6 +23,8 @@ export default function Home() {
   const [filter, setFilter] = useState<FilterType>('all');
   const [selectedWord, setSelectedWord] = useState<Word | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showCustomWords, setShowCustomWords] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -40,33 +42,73 @@ export default function Home() {
 
   const fetchWordsAndProgress = async () => {
     try {
-      const { data: wordsData, error: wordsError } = await supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // Fetch regular vocabulary words
+      const { data: regularWords, error: wordsError } = await supabase
         .from('vocabulary_words')
         .select('*')
         .order('created_at', { ascending: true });
 
       if (wordsError) throw wordsError;
-      setWords(wordsData || []);
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: progressData, error: progressError } = await supabase
-          .from('user_progress')
-          .select('*')
-          .eq('user_id', session.user.id);
+      // Fetch user's custom words
+      const { data: customWords, error: customError } = await supabase
+        .from('user_custom_words')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: true});
 
-        if (progressError) throw progressError;
+      if (customError) throw customError;
 
-        const progressMap: Record<string, UserProgress> = {};
-        (progressData || []).forEach((p: { word_id: string; correct_streak: number; is_mastered: boolean }) => {
-          progressMap[p.word_id] = {
-            word_id: p.word_id,
-            correct_streak: p.correct_streak,
-            is_mastered: p.is_mastered,
-          };
-        });
-        setProgress(progressMap);
+      // Combine both types of words
+      interface CustomWord {
+        id: string;
+        kanji: string;
+        furigana: string | null;
+        romaji: string | null;
+        meaning: string;
+        pronunciation_url: string;
+        image_url: string;
+        examples: Array<{ kanji: string; furigana: string; romaji: string; translation: string }> | null;
+        [key: string]: unknown;
       }
+      
+      const allWords = [
+        ...(regularWords || []),
+        ...(customWords || []).map((w: CustomWord) => ({
+          ...w,
+          word: w.kanji, // Map kanji to word for consistency
+          reading: w.romaji,
+          word_type: 'custom',
+          // Convert JSONB examples to string array format for WordDetailsCard
+          examples: w.examples ? 
+            w.examples.map((ex) => 
+              `${ex.kanji}|${ex.furigana}|${ex.romaji}|${ex.translation}`
+            ) : []
+        } as Word))
+      ];
+
+      setWords(allWords);
+
+      // Fetch user progress
+      const { data: progressData, error: progressError } = await supabase
+        .from('user_progress')
+        .select('*')
+        .eq('user_id', session.user.id);
+
+      if (progressError) throw progressError;
+
+      const progressMap: Record<string, UserProgress> = {};
+      (progressData || []).forEach((p: { word_id: string; correct_streak: number; is_mastered: boolean }) => {
+        progressMap[p.word_id] = {
+          word_id: p.word_id,
+          correct_streak: p.correct_streak,
+          is_mastered: p.is_mastered,
+        };
+      });
+      setProgress(progressMap);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -88,17 +130,44 @@ export default function Home() {
   const filteredWords = words.filter((word) => {
     const wordProgress = progress[word.id];
     
+    // Apply status filter
+    let matchesFilter = false;
     switch (filter) {
       case 'started':
-        return wordProgress && wordProgress.correct_streak > 0 && !wordProgress.is_mastered;
+        matchesFilter = wordProgress && wordProgress.correct_streak > 0 && !wordProgress.is_mastered;
+        break;
       case 'not-started':
-        return !wordProgress || wordProgress.correct_streak === 0;
+        matchesFilter = !wordProgress || wordProgress.correct_streak === 0;
+        break;
       case 'mastered':
-        return wordProgress && wordProgress.is_mastered;
+        matchesFilter = wordProgress && wordProgress.is_mastered;
+        break;
       case 'all':
       default:
-        return true;
+        matchesFilter = true;
     }
+    
+    if (!matchesFilter) return false;
+    
+    // Apply custom words filter
+    if (!showCustomWords && 'word_type' in word && word.word_type === 'custom') {
+      return false;
+    }
+    
+    // Apply search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = 
+        (word.kanji?.toLowerCase().includes(query)) ||
+        (word.word?.toLowerCase().includes(query)) ||
+        (word.furigana?.toLowerCase().includes(query)) ||
+        (word.romaji?.toLowerCase().includes(query)) ||
+        (word.meaning?.toLowerCase().includes(query));
+      
+      return matchesSearch;
+    }
+    
+    return true;
   });
 
   if (loading) {
@@ -113,36 +182,68 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex items-center gap-4 flex-wrap"
+          className="mb-6 sm:mb-8 space-y-4"
         >
-          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-            <Filter className="w-5 h-5" />
-            <span className="font-medium">Filter:</span>
+          {/* Filter Buttons */}
+          <div className="flex items-start sm:items-center gap-2 sm:gap-4 flex-col sm:flex-row">
+            <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+              <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-sm sm:text-base font-medium">Filter:</span>
+            </div>
+            <div className="flex gap-2 flex-wrap w-full sm:w-auto">
+              {(['all', 'started', 'not-started', 'mastered'] as FilterType[]).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all ${
+                    filter === f
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                  }`}
+                >
+                  {f === 'all' && 'All'}
+                  {f === 'started' && 'In Progress'}
+                  {f === 'not-started' && 'Not Started'}
+                  {f === 'mastered' && 'Mastered'}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            {(['all', 'started', 'not-started', 'mastered'] as FilterType[]).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  filter === f
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
-                }`}
-              >
-                {f === 'all' && 'All Words'}
-                {f === 'started' && 'In Progress'}
-                {f === 'not-started' && 'Not Started'}
-                {f === 'mastered' && 'Mastered'}
-              </button>
-            ))}
-          </div>
-          <div className="ml-auto text-sm text-gray-600 dark:text-gray-400">
-            {filteredWords.length} word{filteredWords.length !== 1 ? 's' : ''}
+          
+          {/* Custom Words Toggle and Search */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
+            {/* Custom Words Toggle */}
+            <label className="flex items-center gap-2 cursor-pointer px-3 sm:px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full sm:w-auto">
+              <input
+                type="checkbox"
+                checked={showCustomWords}
+                onChange={(e) => setShowCustomWords(e.target.checked)}
+                className="w-4 h-4 text-purple-600 rounded focus:ring-0 focus:ring-offset-0"
+              />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Show Custom Words
+              </span>
+            </label>
+            
+            {/* Search input */}
+            <div className="relative sm:ml-auto w-full sm:w-auto">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search words..."
+                className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-full sm:min-w-[200px]"
+              />
+            </div>
+            
+            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
+              {filteredWords.length} word{filteredWords.length !== 1 ? 's' : ''}
+            </div>
           </div>
         </motion.div>
 

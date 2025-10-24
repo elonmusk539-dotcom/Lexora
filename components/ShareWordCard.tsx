@@ -85,19 +85,22 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
   };
 
   const copyLink = () => {
-    const url = `${window.location.origin}/?word=${encodeURIComponent(word.kanji || word.word)}`;
+    const url = `${window.location.origin}/word/${word.id}`;
     navigator.clipboard.writeText(url);
     alert('Link copied to clipboard!');
   };
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/lists`; // You can customize this URL
+    const url = `${window.location.origin}/word/${word.id}`;
+    const wordDisplay = word.kanji || word.word;
+    const readingDisplay = word.romaji || word.reading || '';
+    const shareText = `Check out this word: ${wordDisplay} (${readingDisplay}) - ${word.meaning || word.translation || 'Learn more on Lexora!'}`;
     
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${word.kanji || word.word} - Lexora`,
-          text: `Learn "${word.kanji || word.word}" (${word.meaning}) on Lexora!`,
+          title: `${wordDisplay} - Lexora`,
+          text: shareText,
           url: url
         });
       } catch (error) {

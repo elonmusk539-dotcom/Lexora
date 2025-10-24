@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, PlayCircle, User, Settings, ChevronLeft, ChevronRight, List } from 'lucide-react';
+import { Home, BookOpen, PlayCircle, User, Settings, Menu, X, List, Brain, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabase/client';
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -12,6 +13,8 @@ interface SidebarProps {
 
 export function Sidebar({ children }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [dueCount, setDueCount] = useState(0);
   const pathname = usePathname();
 
   // Load collapsed state from localStorage
@@ -20,7 +23,36 @@ export function Sidebar({ children }: SidebarProps) {
     if (savedState) {
       setCollapsed(savedState === 'true');
     }
+    
+    // Load due words count
+    loadDueCount();
+    
+    // Refresh count every 5 minutes
+    const interval = setInterval(loadDueCount, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  const loadDueCount = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: count } = await supabase.rpc('get_due_words_count', {
+        p_user_id: user.id,
+      });
+
+      if (count !== null) {
+        setDueCount(count);
+      }
+    } catch (error) {
+      console.error('Error loading due count:', error);
+    }
+  };
 
   // Save collapsed state to localStorage
   const toggleCollapsed = () => {
@@ -33,7 +65,9 @@ export function Sidebar({ children }: SidebarProps) {
     { href: '/', label: 'Home', icon: Home },
     { href: '/lists', label: 'Lists', icon: BookOpen },
     { href: '/my-lists', label: 'My Lists', icon: List },
-    { href: '/quiz', label: 'Quiz', icon: PlayCircle },
+    { href: '/review/setup', label: 'Smart Quiz', icon: Brain, badge: dueCount > 0 ? dueCount : undefined },
+    { href: '/quiz', label: 'Normal Quiz', icon: PlayCircle },
+    { href: '/faq', label: 'FAQ', icon: HelpCircle },
     { href: '/profile', label: 'Profile', icon: User },
     { href: '/settings', label: 'Settings', icon: Settings },
   ];
@@ -52,11 +86,36 @@ export function Sidebar({ children }: SidebarProps) {
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setMobileOpen(!mobileOpen)}
+        className="md:hidden fixed top-4 left-4 z-[60] p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+        aria-label="Toggle menu"
+      >
+        {mobileOpen ? (
+          <X className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+        ) : (
+          <Menu className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+        )}
+      </button>
+
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden fixed inset-0 bg-black/50 z-40"
+        />
+      )}
+
       {/* Sidebar */}
       <motion.aside
         initial={false}
-        animate={{ width: collapsed ? '80px' : '240px' }}
-        className="fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-40 flex flex-col"
+        animate={{ 
+          width: typeof window !== 'undefined' && window.innerWidth < 768 ? '240px' : (collapsed ? '80px' : '240px'),
+        }}
+        className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-50 transition-transform duration-300 ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
       >
         {/* Logo & Toggle */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
@@ -73,9 +132,9 @@ export function Sidebar({ children }: SidebarProps) {
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? (
-              <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <Menu className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             ) : (
-              <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             )}
           </button>
         </div>
@@ -90,8 +149,8 @@ export function Sidebar({ children }: SidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center justify-center gap-3 px-3 py-3 rounded-lg transition-colors ${
-                  collapsed ? 'aspect-square' : ''
+                className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors relative ${
+                  collapsed ? 'justify-center aspect-square' : 'justify-start'
                 } ${
                   active
                     ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
@@ -101,6 +160,15 @@ export function Sidebar({ children }: SidebarProps) {
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
                 {!collapsed && <span className="font-medium">{item.label}</span>}
+                {item.badge && item.badge > 0 && (
+                  <span className={`ml-auto px-2 py-0.5 text-xs font-bold rounded-full ${
+                    active 
+                      ? 'bg-white text-purple-600' 
+                      : 'bg-red-500 text-white'
+                  }`}>
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -109,26 +177,10 @@ export function Sidebar({ children }: SidebarProps) {
 
       {/* Main Content */}
       <div
-        className="flex-1 transition-all duration-300"
-        style={{ marginLeft: collapsed ? '80px' : '240px' }}
+        className="flex-1 transition-all duration-300 ml-0 md:ml-20 lg:ml-60"
       >
         {children}
       </div>
-
-      {/* Mobile Overlay */}
-      <style jsx global>{`
-        @media (max-width: 768px) {
-          aside {
-            transform: translateX(-100%);
-          }
-          aside.mobile-open {
-            transform: translateX(0);
-          }
-          .flex-1 {
-            margin-left: 0 !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

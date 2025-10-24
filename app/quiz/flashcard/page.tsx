@@ -61,18 +61,18 @@ export default function FlashcardQuizPage() {
 
   const fetchWords = async () => {
     try {
-      let allWords: any[] = [];
+      let allWords: Word[] = [];
 
       if (listIdsParam) {
         const listIds = listIdsParam.split(',');
         
-        // Fetch from default lists
+        // Fetch from default vocabulary lists
         const { data: defaultWords } = await supabase
           .from('vocabulary_words')
           .select('*')
           .in('list_id', listIds);
 
-        // Fetch from custom lists
+        // Fetch regular words from custom lists
         const { data: customListWords } = await supabase
           .from('user_custom_list_words')
           .select(`
@@ -81,11 +81,56 @@ export default function FlashcardQuizPage() {
           `)
           .in('list_id', listIds);
 
-        // Combine words
+        // Fetch user-created custom words from custom lists
+        const { data: userCustomWords } = await supabase
+          .from('user_custom_list_custom_words')
+          .select(`
+            custom_word_id,
+            user_custom_words (*)
+          `)
+          .in('list_id', listIds);
+
+        // Process user custom words to match vocabulary_words structure
+        interface CustomWordItem {
+          custom_word_id: string;
+          user_custom_words: {
+            id: string;
+            kanji: string;
+            furigana: string | null;
+            romaji: string | null;
+            meaning: string;
+            pronunciation_url: string;
+            image_url: string;
+            examples: Array<{ kanji: string; furigana: string; romaji: string; translation: string }> | null;
+            [key: string]: unknown;
+          };
+        }
+        
+        const processedCustomWords = (userCustomWords || []).map((item: CustomWordItem) => {
+          const word = item.user_custom_words;
+          return {
+            ...word,
+            word: word.kanji,
+            reading: word.romaji,
+            // Convert JSONB examples to string array format
+            examples: word.examples ? 
+              word.examples.map((ex) => 
+                `${ex.kanji}|${ex.furigana}|${ex.romaji}|${ex.translation}`
+              ) : []
+          } as Word;
+        });
+
+        interface ListWordItem {
+          word_id: string;
+          vocabulary_words: Word;
+        }
+
+        // Combine all words
         allWords = [
           ...(defaultWords || []),
-          ...(customListWords || []).map((item: any) => item.vocabulary_words)
-        ].filter(word => word != null);
+          ...(customListWords || []).map((item: ListWordItem) => item.vocabulary_words),
+          ...processedCustomWords
+        ].filter((word): word is Word => word != null);
       } else {
         // Fetch all words if no lists specified
         const { data } = await supabase
@@ -100,7 +145,28 @@ export default function FlashcardQuizPage() {
         return;
       }
 
-      const shuffled = [...allWords].sort(() => Math.random() - 0.5);
+      // Exclude mastered words
+      const { data: { user } } = await supabase.auth.getUser();
+      let availableWords = allWords;
+      
+      if (user) {
+        const { data: masteredProgress } = await supabase
+          .from('user_progress')
+          .select('word_id')
+          .eq('user_id', user.id)
+          .eq('is_mastered', true);
+
+        const masteredWordIds = new Set(masteredProgress?.map(p => p.word_id) || []);
+        availableWords = allWords.filter(w => !masteredWordIds.has(w.id));
+      }
+
+      if (availableWords.length === 0) {
+        alert('All words are mastered! No words available for quiz.');
+        router.push('/');
+        return;
+      }
+
+      const shuffled = [...availableWords].sort(() => Math.random() - 0.5);
       const selectedWords = shuffled.slice(0, Math.min(duration, shuffled.length));
 
       setWords(selectedWords as Word[]);
@@ -126,10 +192,12 @@ export default function FlashcardQuizPage() {
 
     const currentWord = words[currentIndex];
 
-    setScore((prev) => ({
-      correct: prev.correct + (correct ? 1 : 0),
-      incorrect: prev.incorrect + (correct ? 0 : 1),
-    }));
+    // Update score
+    const newScore = {
+      correct: score.correct + (correct ? 1 : 0),
+      incorrect: score.incorrect + (correct ? 0 : 1),
+    };
+    setScore(newScore);
 
     // Update progress immediately
     await updateWordProgress(currentWord.id, correct);
@@ -141,19 +209,27 @@ export default function FlashcardQuizPage() {
         setIsFlipped(false);
         setShowAnswer(false);
         setIsAnswering(false);
-      }, 300);
+      }, 100);
     } else {
-      finishQuiz();
+      // Pass the updated score to finishQuiz
+      finishQuiz(newScore);
     }
   };
 
-  const finishQuiz = async () => {
+  const finishQuiz = async (finalScore = score) => {
     // Update streak
+    let updatedStreak = 0;
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Update user streak
-        await supabase.rpc('update_user_streak', { p_user_id: user.id });
+        // Update user streak and get the new streak value
+        const { data: streakValue, error: streakError } = await supabase.rpc('update_user_streak', { p_user_id: user.id });
+        
+        if (streakError) {
+          console.error('Error updating streak:', streakError);
+        } else {
+          updatedStreak = streakValue || 0;
+        }
         
         // Log quiz activity
         const today = new Date().toISOString().split('T')[0];
@@ -163,50 +239,41 @@ export default function FlashcardQuizPage() {
           activity_type: 'quiz_completed',
           details: { 
             quiz_type: 'flashcard',
-            score: score.correct,
+            score: finalScore.correct,
             total: words.length
-          }
-        } as any);
+          } as Record<string, unknown>
+        });
       }
     } catch (error) {
-      console.error('Error updating streak:', error);
+      console.error('Error in finishQuiz:', error);
     }
 
-    router.push(`/quiz/results?correct=${score.correct}&total=${words.length}`);
+    // Store quiz session data in localStorage for results page
+    const quizSession = {
+      words: words.map(w => ({
+        id: w.id,
+        word: w.kanji || w.word,
+        meaning: w.meaning,
+      })),
+      timestamp: Date.now(),
+    };
+    localStorage.setItem('lastQuizSession', JSON.stringify(quizSession));
+
+    router.push(`/quiz/results?correct=${finalScore.correct}&total=${words.length}&streak=${updatedStreak}`);
   };
 
   const updateWordProgress = async (wordId: string, correct: boolean) => {
     try {
-      const { data: existing } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('word_id', wordId)
-        .maybeSingle();
-
-      if (existing) {
-        const newStreak = Math.max(0, existing.correct_streak + (correct ? 1 : -1));
-        const isMastered = newStreak >= 7;
-
-        await supabase
-          .from('user_progress')
-          .update({
-            correct_streak: newStreak,
-            is_mastered: isMastered,
-            last_reviewed: new Date().toISOString(),
-          })
-          .eq('id', existing.id);
-      } else {
-        await supabase
-          .from('user_progress')
-          .insert({
-            user_id: userId,
-            word_id: wordId,
-            correct_streak: correct ? 1 : 0,
-            is_mastered: false,
-            last_reviewed: new Date().toISOString(),
-          });
-      }
+      // Use unified SRS system for progress tracking
+      // Map correct/incorrect to quality ratings
+      // Correct: quality=3 (Good), Incorrect: quality=0 (Again)
+      const quality = correct ? 3 : 0;
+      
+      await supabase.rpc('update_srs_progress', {
+        p_user_id: userId,
+        p_word_id: wordId,
+        p_quality: quality,
+      });
     } catch (error) {
       console.error('Error updating progress:', error);
     }
@@ -240,7 +307,10 @@ export default function FlashcardQuizPage() {
         <div className="mb-8">
           <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
             <span>Card {currentIndex + 1} of {words.length}</span>
-            <span>{score.correct} correct, {score.incorrect} incorrect</span>
+            <div className="flex gap-4">
+              <span className="text-green-600 dark:text-green-400">{score.correct} correct</span>
+              <span className="text-red-600 dark:text-red-400">{score.incorrect} incorrect</span>
+            </div>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <motion.div
@@ -320,12 +390,12 @@ export default function FlashcardQuizPage() {
                     Show Details
                   </button>
 
-                  <div className="flex flex-col items-center gap-6">
+                  <div className="flex flex-col items-center gap-4">
                     {/* Main Reading - Kanji */}
                     <div className="flex items-center gap-3">
-                      <h3 className="text-6xl font-bold text-gray-900 dark:text-white">
+                      <h2 className="text-6xl font-bold text-gray-900 dark:text-white">
                         {currentWord.kanji || currentWord.word}
-                      </h3>
+                      </h2>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -338,17 +408,18 @@ export default function FlashcardQuizPage() {
                       </button>
                     </div>
                     
-                    {/* Furigana and Romaji together */}
-                    {(currentWord.furigana || currentWord.romaji || currentWord.reading) && (
-                      <p className="text-3xl text-gray-600 dark:text-gray-400">
-                        {currentWord.furigana}
-                        {currentWord.furigana && (currentWord.romaji || currentWord.reading) && ' '}
-                        {(currentWord.romaji || currentWord.reading) && `(${currentWord.romaji || currentWord.reading})`}
-                      </p>
+                    {/* Furigana - same size as front */}
+                    {currentWord.furigana && (
+                      <p className="text-2xl text-gray-600 dark:text-gray-400">{currentWord.furigana}</p>
                     )}
                     
-                    {/* Meaning */}
-                    <p className="text-3xl text-blue-600 dark:text-blue-400 font-semibold text-center px-8">
+                    {/* Romaji - same size as front */}
+                    {(currentWord.romaji || currentWord.reading) && (
+                      <p className="text-xl text-gray-500 dark:text-gray-500">{currentWord.romaji || currentWord.reading}</p>
+                    )}
+                    
+                    {/* Meaning - slightly smaller than main reading */}
+                    <p className="text-4xl text-gray-900 dark:text-white font-bold text-center px-8 mt-2">
                       {currentWord.meaning}
                     </p>
                   </div>

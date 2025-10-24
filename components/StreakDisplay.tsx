@@ -47,6 +47,7 @@ export function StreakDisplay({ compact = false }: StreakDisplayProps) {
 
   useEffect(() => {
     loadStreak();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkMissedDays = (data: StreakData) => {
@@ -79,7 +80,7 @@ export function StreakDisplay({ compact = false }: StreakDisplayProps) {
           streak_freeze_used: true,
           streak_freeze_date: today,
           last_activity_date: today,
-        } as any)
+        })
         .eq('user_id', user.id);
 
       setShowMissedModal(false);
@@ -103,7 +104,7 @@ export function StreakDisplay({ compact = false }: StreakDisplayProps) {
           last_activity_date: today,
           streak_freeze_used: false,
           streak_freeze_date: null,
-        } as any)
+        })
         .eq('user_id', user.id);
 
       setShowMissedModal(false);

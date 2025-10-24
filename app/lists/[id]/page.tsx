@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Filter, ArrowLeft } from 'lucide-react';
+import { Filter, ArrowLeft, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter, useParams } from 'next/navigation';
@@ -33,6 +33,7 @@ export default function ListDetailPage() {
   const [filter, setFilter] = useState<FilterType>('all');
   const [selectedWord, setSelectedWord] = useState<Word | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -111,17 +112,39 @@ export default function ListDetailPage() {
   const filteredWords = words.filter((word) => {
     const wordProgress = progress[word.id];
     
+    // Apply filter
+    let matchesFilter = false;
     switch (filter) {
       case 'started':
-        return wordProgress && wordProgress.correct_streak > 0 && !wordProgress.is_mastered;
+        matchesFilter = wordProgress && wordProgress.correct_streak > 0 && !wordProgress.is_mastered;
+        break;
       case 'not-started':
-        return !wordProgress || wordProgress.correct_streak === 0;
+        matchesFilter = !wordProgress || wordProgress.correct_streak === 0;
+        break;
       case 'mastered':
-        return wordProgress && wordProgress.is_mastered;
+        matchesFilter = wordProgress && wordProgress.is_mastered;
+        break;
       case 'all':
       default:
-        return true;
+        matchesFilter = true;
     }
+    
+    if (!matchesFilter) return false;
+    
+    // Apply search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = 
+        (word.kanji?.toLowerCase().includes(query)) ||
+        (word.word?.toLowerCase().includes(query)) ||
+        (word.furigana?.toLowerCase().includes(query)) ||
+        (word.romaji?.toLowerCase().includes(query)) ||
+        (word.meaning?.toLowerCase().includes(query));
+      
+      return matchesSearch;
+    }
+    
+    return true;
   });
 
   if (loading) {
@@ -197,7 +220,20 @@ export default function ListDetailPage() {
               </button>
             ))}
           </div>
-          <div className="ml-auto text-sm text-gray-600 dark:text-gray-400">
+          
+          {/* Search input */}
+          <div className="relative ml-auto">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search words..."
+              className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm min-w-[200px]"
+            />
+          </div>
+          
+          <div className="text-sm text-gray-600 dark:text-gray-400">
             {filteredWords.length} word{filteredWords.length !== 1 ? 's' : ''}
           </div>
         </motion.div>

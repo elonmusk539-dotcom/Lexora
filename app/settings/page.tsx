@@ -19,10 +19,24 @@ interface UserSettings {
     showFurigana: boolean;
     showRomaji: boolean;
   };
+  smartQuiz: {
+    showFuriganaOnFront: boolean;
+    showRomajiOnFront: boolean;
+    showImageOnFront: boolean;
+    showImageOnBack: boolean;
+    showExamples: boolean;
+    numberOfExamples: number;
+  };
   quiz: {
     lastQuizType?: 'mcq' | 'flashcard';
-    lastDuration?: number;
+    lastDuration?: number | 'custom';
     lastSelectedLists?: string[];
+    customDuration?: number;
+  };
+  review: {
+    lastDuration?: number | 'custom';
+    lastSelectedLists?: string[];
+    customDuration?: number;
   };
 }
 
@@ -35,10 +49,24 @@ const DEFAULT_SETTINGS: UserSettings = {
     showFurigana: false,
     showRomaji: false,
   },
+  smartQuiz: {
+    showFuriganaOnFront: false,
+    showRomajiOnFront: false,
+    showImageOnFront: true,
+    showImageOnBack: true,
+    showExamples: true,
+    numberOfExamples: 3,
+  },
   quiz: {
     lastQuizType: 'mcq',
     lastDuration: 10,
     lastSelectedLists: [],
+    customDuration: 10,
+  },
+  review: {
+    lastDuration: 10,
+    lastSelectedLists: [],
+    customDuration: 10,
   },
 };
 
@@ -84,7 +112,16 @@ export default function SettingsPage() {
         .single();
 
       if (profile && profile.settings) {
-        setSettings({ ...DEFAULT_SETTINGS, ...profile.settings });
+        // Deep merge settings to ensure all properties have default values
+        const mergedSettings = {
+          ...DEFAULT_SETTINGS,
+          flashcard: { ...DEFAULT_SETTINGS.flashcard, ...profile.settings.flashcard },
+          mcq: { ...DEFAULT_SETTINGS.mcq, ...profile.settings.mcq },
+          smartQuiz: { ...DEFAULT_SETTINGS.smartQuiz, ...profile.settings.smartQuiz },
+          quiz: { ...DEFAULT_SETTINGS.quiz, ...profile.settings.quiz },
+          review: { ...DEFAULT_SETTINGS.review, ...profile.settings.review },
+        };
+        setSettings(mergedSettings);
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -282,7 +319,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="text-gray-600 dark:text-gray-400">Loading...</div>
+        <div className="text-gray-900 dark:text-gray-300">Loading...</div>
       </div>
     );
   }
@@ -292,33 +329,22 @@ export default function SettingsPage() {
       <Header />
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="max-w-2xl mx-auto"
         >
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
             {/* Page Title */}
-            <div className="mb-8">
-              <div className="flex items-center gap-3 mb-2">
-                <SettingsIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h2>
+            <div className="mb-6 sm:mb-8">
+              <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                <SettingsIcon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-blue-600 dark:text-blue-400" />
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Settings</h2>
               </div>
-              <p className="text-gray-600 dark:text-gray-400">Customize your learning experience</p>
+              <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300">Customize your learning experience</p>
             </div>
-
-            {/* Success Message */}
-            {success && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-600 dark:text-green-400 text-sm"
-              >
-                {success}
-              </motion.div>
-            )}
 
             {/* Error Message */}
             {error && (
@@ -332,37 +358,37 @@ export default function SettingsPage() {
             )}
 
             {/* Settings Form */}
-            <form onSubmit={handleSave} className="space-y-8">
+            <form onSubmit={handleSave} className="space-y-6 sm:space-y-8">
               {/* Appearance Settings Section */}
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
                   Appearance
                 </h3>
                 
-                <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  <div className="flex items-center justify-between">
+                <div className="p-3 sm:p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
                     <div className="flex-1">
-                      <label className="block font-medium text-gray-900 dark:text-white">
+                      <label className="block font-medium text-gray-900 dark:text-white text-sm sm:text-base">
                         Dark Mode
                       </label>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      <p className="text-xs sm:text-sm text-gray-900 dark:text-gray-200 mt-1">
                         Switch between light and dark theme
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={toggleTheme}
-                      className="relative inline-flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                      className="relative inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                     >
                       {theme === 'dark' ? (
                         <>
-                          <Moon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                          <span className="font-medium text-gray-900 dark:text-white">Dark</span>
+                          <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
+                          <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">Dark</span>
                         </>
                       ) : (
                         <>
-                          <Sun className="w-5 h-5 text-yellow-600" />
-                          <span className="font-medium text-gray-900">Light</span>
+                          <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" />
+                          <span className="text-sm sm:text-base font-medium text-gray-900">Light</span>
                         </>
                       )}
                     </button>
@@ -378,62 +404,62 @@ export default function SettingsPage() {
                 
                 <div className="space-y-4">
                   {/* Show Furigana on Front */}
-                  <div className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <label
+                    htmlFor="showFuriganaOnFront"
+                    className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  >
                     <input
                       type="checkbox"
                       id="showFuriganaOnFront"
                       checked={settings.flashcard.showFuriganaOnFront}
                       onChange={(e) => updateFlashcardSetting('showFuriganaOnFront', e.target.checked)}
-                      className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-0 focus:ring-offset-0"
                     />
                     <div className="flex-1">
-                      <label
-                        htmlFor="showFuriganaOnFront"
-                        className="block font-medium text-gray-900 dark:text-white cursor-pointer"
-                      >
+                      <span className="block font-medium text-gray-900 dark:text-white">
                         Show Furigana on Flashcard Front
-                      </label>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      </span>
+                      <p className="text-sm text-gray-900 dark:text-gray-200 mt-1">
                         Display hiragana reading (furigana) above kanji on the front of flashcards
                       </p>
                       <div className="mt-2 text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Example: </span>
-                        <ruby className="text-lg">
+                        <span className="text-gray-700 dark:text-gray-300">Example: </span>
+                        <ruby className="text-lg text-gray-700">
                           食べる
-                          <rt className="text-xs">{settings.flashcard.showFuriganaOnFront ? 'たべる' : ''}</rt>
+                          <rt className="text-xs text-gray-700">{settings.flashcard.showFuriganaOnFront ? 'たべる' : ''}</rt>
                         </ruby>
                       </div>
                     </div>
-                  </div>
+                  </label>
 
                   {/* Show Romaji on Front */}
-                  <div className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <label
+                    htmlFor="showRomajiOnFront"
+                    className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  >
                     <input
                       type="checkbox"
                       id="showRomajiOnFront"
                       checked={settings.flashcard.showRomajiOnFront}
                       onChange={(e) => updateFlashcardSetting('showRomajiOnFront', e.target.checked)}
-                      className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-0 focus:ring-offset-0"
                     />
                     <div className="flex-1">
-                      <label
-                        htmlFor="showRomajiOnFront"
-                        className="block font-medium text-gray-900 dark:text-white cursor-pointer"
-                      >
+                      <span className="block font-medium text-gray-900 dark:text-white">
                         Show Romaji on Flashcard Front
-                      </label>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      </span>
+                      <p className="text-sm text-gray-900 dark:text-gray-200 mt-1">
                         Display romanized reading (romaji) on the front of flashcards
                       </p>
                       <div className="mt-2 text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Example: </span>
-                        <span className="text-lg">食べる</span>
+                        <span className="text-gray-700 dark:text-gray-300">Example: </span>
+                        <span className="text-lg text-gray-700">食べる</span>
                         {settings.flashcard.showRomajiOnFront && (
-                          <span className="ml-2 text-gray-600 dark:text-gray-400">(taberu)</span>
+                          <span className="ml-2 text-gray-700 dark:text-gray-300">(taberu)</span>
                         )}
                       </div>
                     </div>
-                  </div>
+                  </label>
 
                   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mt-4">
                     <p className="text-sm text-blue-800 dark:text-blue-400">
@@ -451,62 +477,220 @@ export default function SettingsPage() {
                 
                 <div className="space-y-4">
                   {/* Show Furigana in MCQ */}
-                  <div className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <label
+                    htmlFor="mcqShowFurigana"
+                    className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  >
                     <input
                       type="checkbox"
                       id="mcqShowFurigana"
                       checked={settings.mcq.showFurigana}
                       onChange={(e) => updateMcqSetting('showFurigana', e.target.checked)}
-                      className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-0 focus:ring-offset-0"
                     />
                     <div className="flex-1">
-                      <label
-                        htmlFor="mcqShowFurigana"
-                        className="block font-medium text-gray-900 dark:text-white cursor-pointer"
-                      >
+                      <span className="block font-medium text-gray-900 dark:text-white">
                         Show Furigana in Questions
-                      </label>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      </span>
+                      <p className="text-sm text-gray-900 dark:text-gray-200 mt-1">
                         Display hiragana reading (furigana) above kanji in MCQ questions
                       </p>
                       <div className="mt-2 text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Example: </span>
-                        <ruby className="text-lg">
+                        <span className="text-gray-700 dark:text-gray-300">Example: </span>
+                        <ruby className="text-lg text-gray-700">
                           食べる
-                          <rt className="text-xs">{settings.mcq.showFurigana ? 'たべる' : ''}</rt>
+                          <rt className="text-xs text-gray-700">{settings.mcq.showFurigana ? 'たべる' : ''}</rt>
                         </ruby>
                       </div>
                     </div>
-                  </div>
+                  </label>
 
                   {/* Show Romaji in MCQ */}
-                  <div className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <label
+                    htmlFor="mcqShowRomaji"
+                    className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  >
                     <input
                       type="checkbox"
                       id="mcqShowRomaji"
                       checked={settings.mcq.showRomaji}
                       onChange={(e) => updateMcqSetting('showRomaji', e.target.checked)}
-                      className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-0 focus:ring-offset-0"
                     />
                     <div className="flex-1">
-                      <label
-                        htmlFor="mcqShowRomaji"
-                        className="block font-medium text-gray-900 dark:text-white cursor-pointer"
-                      >
+                      <span className="block font-medium text-gray-900 dark:text-white">
                         Show Romaji in Questions
-                      </label>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      </span>
+                      <p className="text-sm text-gray-900 dark:text-gray-200 mt-1">
                         Display romanized reading (romaji) in MCQ questions
                       </p>
                       <div className="mt-2 text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Example: </span>
-                        <span className="text-lg">食べる</span>
+                        <span className="text-gray-700 dark:text-gray-300">Example: </span>
+                        <span className="text-lg text-gray-700">食べる</span>
                         {settings.mcq.showRomaji && (
-                          <span className="ml-2 text-gray-600 dark:text-gray-400">(taberu)</span>
+                          <span className="ml-2 text-gray-700 dark:text-gray-300">(taberu)</span>
                         )}
                       </div>
                     </div>
-                  </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Smart Quiz Settings Section */}
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+                  Smart Quiz Settings
+                </h3>
+                
+                <div className="space-y-4">
+                  {/* Show Furigana on Front */}
+                  <label
+                    htmlFor="smartQuizShowFuriganaOnFront"
+                    className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      id="smartQuizShowFuriganaOnFront"
+                      checked={settings.smartQuiz.showFuriganaOnFront}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        smartQuiz: { ...prev.smartQuiz, showFuriganaOnFront: e.target.checked }
+                      }))}
+                      className="mt-1 w-5 h-5 text-purple-600 rounded focus:ring-0 focus:ring-offset-0"
+                    />
+                    <div className="flex-1">
+                      <span className="block font-medium text-gray-900 dark:text-white">
+                        Show Furigana on Front
+                      </span>
+                      <p className="text-sm text-gray-900 dark:text-gray-200 mt-1">
+                        Display furigana before revealing the answer
+                      </p>
+                    </div>
+                  </label>
+
+                  {/* Show Romaji on Front */}
+                  <label
+                    htmlFor="smartQuizShowRomajiOnFront"
+                    className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      id="smartQuizShowRomajiOnFront"
+                      checked={settings.smartQuiz.showRomajiOnFront}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        smartQuiz: { ...prev.smartQuiz, showRomajiOnFront: e.target.checked }
+                      }))}
+                      className="mt-1 w-5 h-5 text-purple-600 rounded focus:ring-0 focus:ring-offset-0"
+                    />
+                    <div className="flex-1">
+                      <span className="block font-medium text-gray-900 dark:text-white">
+                        Show Romaji on Front
+                      </span>
+                      <p className="text-sm text-gray-900 dark:text-gray-200 mt-1">
+                        Display romaji before revealing the answer
+                      </p>
+                    </div>
+                  </label>
+
+                  {/* Show Image on Front */}
+                  <label
+                    htmlFor="smartQuizShowImageOnFront"
+                    className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      id="smartQuizShowImageOnFront"
+                      checked={settings.smartQuiz.showImageOnFront}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        smartQuiz: { ...prev.smartQuiz, showImageOnFront: e.target.checked }
+                      }))}
+                      className="mt-1 w-5 h-5 text-purple-600 rounded focus:ring-0 focus:ring-offset-0"
+                    />
+                    <div className="flex-1">
+                      <span className="block font-medium text-gray-900 dark:text-white">
+                        Show Image on Front
+                      </span>
+                      <p className="text-sm text-gray-900 dark:text-gray-200 mt-1">
+                        Display the word image on the front of the card (before showing answer)
+                      </p>
+                    </div>
+                  </label>
+
+                  {/* Show Image on Back */}
+                  <label
+                    htmlFor="smartQuizShowImageOnBack"
+                    className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      id="smartQuizShowImageOnBack"
+                      checked={settings.smartQuiz.showImageOnBack}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        smartQuiz: { ...prev.smartQuiz, showImageOnBack: e.target.checked }
+                      }))}
+                      className="mt-1 w-5 h-5 text-purple-600 rounded focus:ring-0 focus:ring-offset-0"
+                    />
+                    <div className="flex-1">
+                      <span className="block font-medium text-gray-900 dark:text-white">
+                        Show Image on Back
+                      </span>
+                      <p className="text-sm text-gray-900 dark:text-gray-200 mt-1">
+                        Display the word image on the back of the card (after showing answer)
+                      </p>
+                    </div>
+                  </label>
+
+                  {/* Show Examples */}
+                  <label
+                    htmlFor="smartQuizShowExamples"
+                    className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      id="smartQuizShowExamples"
+                      checked={settings.smartQuiz.showExamples}
+                      onChange={(e) => setSettings(prev => ({
+                        ...prev,
+                        smartQuiz: { ...prev.smartQuiz, showExamples: e.target.checked }
+                      }))}
+                      className="mt-1 w-5 h-5 text-purple-600 rounded focus:ring-0 focus:ring-offset-0"
+                    />
+                    <div className="flex-1">
+                      <span className="block font-medium text-gray-900 dark:text-white">
+                        Show Example Sentences
+                      </span>
+                      <p className="text-sm text-gray-900 dark:text-gray-200 mt-1">
+                        Display example sentences after revealing the answer
+                      </p>
+                    </div>
+                  </label>
+
+                  {/* Number of Examples */}
+                  {settings.smartQuiz.showExamples && (
+                    <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                      <label htmlFor="numberOfExamples" className="block font-medium text-gray-900 dark:text-white mb-2">
+                        Number of Examples to Show
+                      </label>
+                      <select
+                        id="numberOfExamples"
+                        value={settings.smartQuiz.numberOfExamples}
+                        onChange={(e) => setSettings(prev => ({
+                          ...prev,
+                          smartQuiz: { ...prev.smartQuiz, numberOfExamples: parseInt(e.target.value) }
+                        }))}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      >
+                        <option value={1}>1 example</option>
+                        <option value={2}>2 examples</option>
+                        <option value={3}>3 examples</option>
+                        <option value={4}>4 examples</option>
+                        <option value={5}>5 examples</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -516,7 +700,7 @@ export default function SettingsPage() {
                 <h3 className="text-xl font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                   Other Settings
                 </h3>
-                <p className="text-gray-500 text-sm">More settings coming soon...</p>
+                <p className="text-gray-700 dark:text-gray-300 text-sm">More settings coming soon...</p>
               </div>
               */}
 
@@ -532,6 +716,17 @@ export default function SettingsPage() {
                   <Save className="w-5 h-5" />
                   {saving ? 'Saving...' : 'Save Settings'}
                 </motion.button>
+
+                {/* Success Message */}
+                {success && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-600 dark:text-green-400 text-sm text-center"
+                  >
+                    {success}
+                  </motion.div>
+                )}
               </div>
             </form>
 
@@ -542,7 +737,7 @@ export default function SettingsPage() {
                   <MessageSquare className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Send Feedback</h3>
                 </div>
-                <p className="text-gray-600 dark:text-gray-400">Help us improve Lexora by sharing your thoughts</p>
+                <p className="text-gray-700 dark:text-gray-300">Help us improve Lexora by sharing your thoughts</p>
               </div>
 
               {/* Feedback Success Message */}
@@ -606,7 +801,7 @@ export default function SettingsPage() {
                   <label className="block font-medium text-gray-900 dark:text-white mb-2">
                     Screenshots (Optional)
                   </label>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  <p className="text-sm text-gray-900 dark:text-gray-200 mb-2">
                     Upload up to 3 screenshots (max 2MB each)
                   </p>
                   
@@ -634,8 +829,8 @@ export default function SettingsPage() {
 
                   {feedbackScreenshots.length < 3 && (
                     <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 dark:hover:border-purple-400 transition-colors">
-                      <Upload className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                      <Upload className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                      <span className="text-sm text-gray-900 dark:text-gray-200">
                         {feedbackScreenshots.length === 0 ? 'Upload Screenshots' : `Add More (${3 - feedbackScreenshots.length} remaining)`}
                       </span>
                       <input
