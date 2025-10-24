@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
@@ -19,7 +19,7 @@ interface WordProgress {
   ease_factor: number;
 }
 
-export default function ReviewCompletePage() {
+function ReviewComplete() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [stats, setStats] = useState({ again: 0, hard: 0, good: 0, easy: 0 });
@@ -345,5 +345,17 @@ export default function ReviewCompletePage() {
         onClose={() => setShowMilestonePopup(false)}
       />
     </div>
+  );
+}
+
+export default function ReviewCompletePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    }>
+      <ReviewComplete />
+    </Suspense>
   );
 }

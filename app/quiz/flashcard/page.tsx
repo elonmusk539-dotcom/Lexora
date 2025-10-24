@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Volume2, RotateCw, Check, X } from 'lucide-react';
@@ -15,7 +15,7 @@ interface UserSettings {
   };
 }
 
-export default function FlashcardQuizPage() {
+function FlashcardQuiz() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const duration = parseInt(searchParams.get('duration') || '10');
@@ -478,5 +478,17 @@ export default function FlashcardQuizPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function FlashcardQuizPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    }>
+      <FlashcardQuiz />
+    </Suspense>
   );
 }

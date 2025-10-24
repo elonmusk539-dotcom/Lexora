@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Trophy, Home, RotateCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { StreakPopup } from '@/components/StreakPopup';
 import { MilestonePopup } from '@/components/MilestonePopup';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { WordListItem } from '@/components/WordListItem';
 import { WordDetailsCard, type Word } from '@/components/WordDetailsCard';
@@ -18,7 +18,7 @@ interface WordProgress {
   ease_factor: number;
 }
 
-export default function QuizResultsPage() {
+function QuizResults() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const correct = parseInt(searchParams.get('correct') || '0');
@@ -370,5 +370,17 @@ export default function QuizResultsPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function QuizResultsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    }>
+      <QuizResults />
+    </Suspense>
   );
 }

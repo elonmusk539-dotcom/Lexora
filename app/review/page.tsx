@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
@@ -32,7 +32,7 @@ interface ReviewSession {
   };
 }
 
-export default function SRSReviewPage() {
+function SRSReview() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [session, setSession] = useState<ReviewSession>({
@@ -525,5 +525,17 @@ export default function SRSReviewPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function SRSReviewPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    }>
+      <SRSReview />
+    </Suspense>
   );
 }
