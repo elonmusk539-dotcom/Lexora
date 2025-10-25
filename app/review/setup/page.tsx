@@ -226,23 +226,23 @@ export default function SmartQuizSetupPage() {
           </div>
 
           {/* List Selection */}
-          <div className="mb-8">
-            <label className="block text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="mb-6 sm:mb-8">
+            <label className="block text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
               Select Lists
             </label>
             <button
               type="button"
               onClick={() => setShowListModal(true)}
-              className="w-full p-6 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-500 transition-all text-left"
+              className="w-full p-4 sm:p-6 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-500 transition-all text-left"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white mb-1">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white mb-1">
                     {selectedLists.length === 0
                       ? 'No lists selected'
                       : `${selectedLists.length} list${selectedLists.length === 1 ? '' : 's'} selected`}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
                     {selectedLists.length === 0
                       ? 'Click to select lists'
                       : lists
@@ -251,23 +251,23 @@ export default function SmartQuizSetupPage() {
                           .join(', ')}
                   </p>
                 </div>
-                <List className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+                <List className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 dark:text-gray-500 flex-shrink-0" />
               </div>
             </button>
           </div>
 
           {/* Duration Selection */}
           <div className="mb-8">
-            <label className="block text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              <Clock className="inline w-5 h-5 mr-2" />
+            <label className="block text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
+              <Clock className="inline w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Review Duration (words)
             </label>
-            <div className="grid grid-cols-5 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3">
               {([5, 10, 15, 20] as const).map((d) => (
                 <button
                   key={d}
                   onClick={() => setDuration(d)}
-                  className={`py-3 rounded-lg font-semibold transition-all ${
+                  className={`py-2 sm:py-3 rounded-lg text-sm sm:text-base font-semibold transition-all ${
                     duration === d
                       ? 'bg-purple-600 text-white shadow-md'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -278,7 +278,7 @@ export default function SmartQuizSetupPage() {
               ))}
               <button
                 onClick={() => setDuration('custom')}
-                className={`py-3 rounded-lg font-semibold transition-all ${
+                className={`py-2 sm:py-3 rounded-lg text-sm sm:text-base font-semibold transition-all col-span-3 sm:col-span-1 ${
                   duration === 'custom'
                     ? 'bg-purple-600 text-white shadow-md'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -306,7 +306,7 @@ export default function SmartQuizSetupPage() {
           <button
             onClick={startReview}
             disabled={selectedLists.length === 0}
-            className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
+            className="w-full py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-base sm:text-lg hover:from-purple-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
           >
             Start Smart Quiz
           </button>
@@ -332,43 +332,43 @@ export default function SmartQuizSetupPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[80vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 p-6"
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl max-h-[80vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 p-4 sm:p-6"
             >
               <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Select Lists</h3>
+                <div className="flex items-center justify-between mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-gray-200 dark:border-gray-700">
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Select Lists</h3>
                   <button
                     onClick={toggleSelectAll}
-                    className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
+                    className="text-xs sm:text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
                   >
                     {selectedLists.length === lists.length ? 'Deselect All' : 'Select All'}
                   </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto mb-4">
+                <div className="flex-1 overflow-y-auto mb-3 sm:mb-4">
                   <div className="space-y-2">
                     {lists.map((list) => (
                       <label
                         key={list.id}
-                        className="flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer rounded-lg border border-gray-200 dark:border-gray-700"
+                        className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer rounded-lg border border-gray-200 dark:border-gray-700"
                       >
                         <input
                           type="checkbox"
                           checked={selectedLists.includes(list.id)}
                           onChange={() => toggleList(list.id)}
-                          className="w-5 h-5 text-purple-600 rounded focus:ring-0 focus:ring-offset-0"
+                          className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 rounded focus:ring-0 focus:ring-offset-0 flex-shrink-0"
                         />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <div className="font-medium text-gray-900 dark:text-white">{list.name}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <div className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{list.name}</div>
                             {list.isCustom && (
-                              <span className="px-2 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full">
+                              <span className="px-1.5 sm:px-2 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full">
                                 Custom
                               </span>
                             )}
                           </div>
                           {list.description && (
-                            <div className="text-sm text-gray-500 dark:text-gray-400">{list.description}</div>
+                            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">{list.description}</div>
                           )}
                         </div>
                       </label>
@@ -376,13 +376,13 @@ export default function SmartQuizSetupPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {selectedLists.length} of {lists.length} lists selected
+                <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                    {selectedLists.length} of {lists.length} selected
                   </p>
                   <button
                     onClick={() => setShowListModal(false)}
-                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                    className="px-4 sm:px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm sm:text-base font-medium"
                   >
                     Done
                   </button>

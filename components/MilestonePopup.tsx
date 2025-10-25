@@ -70,15 +70,15 @@ export function MilestonePopup({ isOpen, type, milestone, onClose }: MilestonePo
               }
             }}
             exit={{ opacity: 0, scale: 0.5, rotate: 10 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg z-[101]"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-lg z-[101]"
           >
-            <div className={`bg-gradient-to-br ${config.color} rounded-3xl shadow-2xl p-12 relative overflow-hidden`}>
+            <div className={`bg-gradient-to-br ${config.color} rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 relative overflow-hidden`}>
               {/* Close button */}
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors z-10"
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 sm:p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors z-10"
               >
-                <X className="w-6 h-6 text-white" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </button>
 
               {/* Animated background elements */}
@@ -103,7 +103,7 @@ export function MilestonePopup({ isOpen, type, milestone, onClose }: MilestonePo
                       repeat: Infinity,
                       repeatDelay: 2,
                     }}
-                    className="absolute w-4 h-4"
+                    className="absolute w-3 h-3 sm:w-4 sm:h-4"
                   >
                     <Sparkles className="w-full h-full text-white/30" />
                   </motion.div>
@@ -122,7 +122,7 @@ export function MilestonePopup({ isOpen, type, milestone, onClose }: MilestonePo
                     stiffness: 100,
                     delay: 0.2,
                   }}
-                  className="text-8xl mb-6"
+                  className="text-5xl sm:text-6xl md:text-8xl mb-4 sm:mb-6"
                 >
                   {config.icon}
                 </motion.div>
@@ -132,7 +132,7 @@ export function MilestonePopup({ isOpen, type, milestone, onClose }: MilestonePo
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-4xl font-bold mb-4 drop-shadow-lg"
+                  className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 drop-shadow-lg"
                 >
                   {config.title}
                 </motion.h2>
@@ -142,7 +142,7 @@ export function MilestonePopup({ isOpen, type, milestone, onClose }: MilestonePo
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="text-xl mb-8 drop-shadow-md"
+                  className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 drop-shadow-md"
                 >
                   {config.message}
                 </motion.p>
@@ -152,9 +152,9 @@ export function MilestonePopup({ isOpen, type, milestone, onClose }: MilestonePo
                   initial={{ scale: 0 }}
                   animate={{ scale: [0, 1.2, 1] }}
                   transition={{ delay: 0.5, duration: 0.5 }}
-                  className="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-full backdrop-blur-sm"
+                  className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-full backdrop-blur-sm"
                 >
-                  <Trophy className="w-10 h-10 text-white" />
+                  <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                 </motion.div>
 
                 {/* Continue button */}
@@ -163,7 +163,7 @@ export function MilestonePopup({ isOpen, type, milestone, onClose }: MilestonePo
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
                   onClick={onClose}
-                  className="mt-8 px-8 py-3 bg-white/90 hover:bg-white text-gray-900 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
+                  className="mt-6 sm:mt-8 px-6 sm:px-8 py-2.5 sm:py-3 bg-white/90 hover:bg-white text-gray-900 rounded-full font-semibold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all"
                 >
                   Continue
                 </motion.button>

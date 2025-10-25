@@ -65,27 +65,15 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // Create response with redirect
-        const response = NextResponse.redirect(`${origin}/`);
+        // For mobile compatibility, redirect to a page that will handle session initialization
+        // Pass tokens as URL fragments (hash) which are not sent to server and stay client-side
+        const redirectUrl = new URL(`${origin}/auth/confirm`);
+        redirectUrl.hash = Buffer.from(JSON.stringify({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        })).toString('base64');
         
-        // Set session cookies
-        response.cookies.set('sb-access-token', data.session.access_token, {
-          path: '/',
-          maxAge: 60 * 60 * 24 * 7, // 7 days
-          sameSite: 'lax',
-          secure: process.env.NODE_ENV === 'production',
-          httpOnly: false,
-        });
-        
-        response.cookies.set('sb-refresh-token', data.session.refresh_token, {
-          path: '/',
-          maxAge: 60 * 60 * 24 * 7, // 7 days
-          sameSite: 'lax',
-          secure: process.env.NODE_ENV === 'production',
-          httpOnly: false,
-        });
-
-        return response;
+        return NextResponse.redirect(redirectUrl.toString());
       }
     } catch (error) {
       console.error('Auth callback exception:', error);
