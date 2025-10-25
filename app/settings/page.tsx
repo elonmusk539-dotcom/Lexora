@@ -424,9 +424,9 @@ export default function SettingsPage() {
                       </p>
                       <div className="mt-2 text-sm">
                         <span className="text-gray-700 dark:text-gray-300">Example: </span>
-                        <ruby className="text-lg text-gray-700">
+                        <ruby className="text-lg text-gray-700 dark:text-gray-300">
                           食べる
-                          <rt className="text-xs text-gray-700">{settings.flashcard.showFuriganaOnFront ? 'たべる' : ''}</rt>
+                          <rt className="text-xs text-gray-700 dark:text-gray-300">{settings.flashcard.showFuriganaOnFront ? 'たべる' : ''}</rt>
                         </ruby>
                       </div>
                     </div>
@@ -453,7 +453,7 @@ export default function SettingsPage() {
                       </p>
                       <div className="mt-2 text-sm">
                         <span className="text-gray-700 dark:text-gray-300">Example: </span>
-                        <span className="text-lg text-gray-700">食べる</span>
+                        <span className="text-lg text-gray-700 dark:text-gray-300">食べる</span>
                         {settings.flashcard.showRomajiOnFront && (
                           <span className="ml-2 text-gray-700 dark:text-gray-300">(taberu)</span>
                         )}
@@ -497,9 +497,9 @@ export default function SettingsPage() {
                       </p>
                       <div className="mt-2 text-sm">
                         <span className="text-gray-700 dark:text-gray-300">Example: </span>
-                        <ruby className="text-lg text-gray-700">
+                        <ruby className="text-lg text-gray-700 dark:text-gray-300">
                           食べる
-                          <rt className="text-xs text-gray-700">{settings.mcq.showFurigana ? 'たべる' : ''}</rt>
+                          <rt className="text-xs text-gray-700 dark:text-gray-300">{settings.mcq.showFurigana ? 'たべる' : ''}</rt>
                         </ruby>
                       </div>
                     </div>
@@ -526,7 +526,7 @@ export default function SettingsPage() {
                       </p>
                       <div className="mt-2 text-sm">
                         <span className="text-gray-700 dark:text-gray-300">Example: </span>
-                        <span className="text-lg text-gray-700">食べる</span>
+                        <span className="text-lg text-gray-700 dark:text-gray-300">食べる</span>
                         {settings.mcq.showRomaji && (
                           <span className="ml-2 text-gray-700 dark:text-gray-300">(taberu)</span>
                         )}
@@ -772,12 +772,12 @@ export default function SettingsPage() {
                     id="feedback-category"
                     value={feedbackCategory}
                     onChange={(e) => setFeedbackCategory(e.target.value as 'bug' | 'feature_request' | 'improvement' | 'other')}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:text-white"
+                    className="w-full px-4 py-2 border border-gray-400 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 text-gray-900 dark:text-gray-300"
                   >
-                    <option value="bug">🐛 Bug Report</option>
-                    <option value="feature_request">✨ Feature Request</option>
-                    <option value="improvement">💡 Improvement Suggestion</option>
-                    <option value="other">💬 Other</option>
+                    <option className="text-gray-700 dark:text-gray-300" value="bug">🐛 Bug Report</option>
+                    <option className="text-gray-700 dark:text-gray-300" value="feature_request">✨ Feature Request</option>
+                    <option className="text-gray-700 dark:text-gray-300" value="improvement">💡 Improvement Suggestion</option>
+                    <option className="text-gray-700 dark:text-gray-300" value="other">💬 Other</option>
                   </select>
                 </div>
 
@@ -792,7 +792,7 @@ export default function SettingsPage() {
                     onChange={(e) => setFeedbackMessage(e.target.value)}
                     rows={5}
                     placeholder="Tell us what's on your mind..."
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 resize-none dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 resize-none dark:bg-gray-800 text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500"
                   />
                 </div>
 
