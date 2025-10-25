@@ -190,28 +190,28 @@ export default function SmartQuizSetupPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <Header />
-      
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
+
+      <div className="max-w-3xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8">
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full mb-4">
-              <Brain className="w-8 h-8 text-white" />
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full mb-3 sm:mb-4">
+              <Brain className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Start a Smart Quiz
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Setup Smart Quiz (SRS)
             </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              Configure your spaced repetition review session
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+              Configure your personalized review session
             </p>
           </div>
 
-          {/* SRS Info Banner */}
-          <div className="mb-8 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-            <div className="flex items-start gap-3">
+          {/* Info Box */}
+          <div className="mb-6 sm:mb-8 p-3 sm:p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+            <div className="flex items-start gap-2 sm:gap-3">
               <Info className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-sm text-purple-900 dark:text-purple-100">
+                <p className="text-xs sm:text-sm text-purple-900 dark:text-purple-100">
                   <strong>Smart Quiz uses spaced repetition</strong> to optimize your learning. 
                   Words due for review will be shown first, followed by new words from your selected lists.{' '}
                   <button 

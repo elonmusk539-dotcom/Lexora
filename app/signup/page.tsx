@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function SignupPage() {
@@ -13,7 +12,6 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const router = useRouter();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,15 +41,16 @@ export default function SignupPage() {
       if (error) throw error;
 
       if (data.session) {
-        router.push('/');
-        router.refresh();
+        // Wait a bit for session to be stored in localStorage on mobile
+        await new Promise(resolve => setTimeout(resolve, 100));
+        // Use window.location instead of router for more reliable redirect on mobile
+        window.location.href = '/';
       } else {
         setSuccess(true);
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred during signup';
       setError(errorMessage);
-    } finally {
       setLoading(false);
     }
   };

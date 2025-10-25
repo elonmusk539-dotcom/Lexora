@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Edit2, X, BookOpen, Search } from 'lucide-react';
+import { Plus, Trash2, Edit2, X, BookOpen, Search, Crown } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { WordListItem } from '@/components/WordListItem';
 import { AddCustomWord } from '@/components/AddCustomWord';
+import { useSubscription } from '@/lib/subscription/useSubscription';
+import { canCreateCustomList, getRemainingSlots } from '@/lib/subscription/config';
+import Link from 'next/link';
 
 interface CustomList {
   id: string;
@@ -31,6 +34,7 @@ interface Word {
 
 export default function MyListsPage() {
   const router = useRouter();
+  const { subscription, isPro, loading: subLoading } = useSubscription();
   const [lists, setLists] = useState<CustomList[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -99,6 +103,13 @@ export default function MyListsPage() {
 
   const createList = async () => {
     if (!newListName.trim()) return;
+
+    // Check if user can create more lists
+    if (!canCreateCustomList(subscription.tier, lists.length)) {
+      alert(`Free users can only create 2 custom lists. Upgrade to Pro for unlimited custom lists!`);
+      setShowCreateModal(false);
+      return;
+    }
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -405,20 +416,45 @@ export default function MyListsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">My Word Lists</h1>
-            <p className="text-gray-600 dark:text-gray-400">Create and manage your custom vocabulary collections</p>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">My Word Lists</h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              {isPro 
+                ? 'Create and manage unlimited custom vocabulary collections'
+                : `${lists.length}/2 custom lists used. Upgrade to Pro for unlimited!`
+              }
+            </p>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowCreateModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow flex items-center gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            Create New List
-          </motion.button>
+          <div className="flex gap-3">
+            {!isPro && (
+              <Link
+                href="/premium"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all"
+              >
+                <Crown className="w-4 h-4" />
+                <span className="text-sm font-semibold">Upgrade</span>
+              </Link>
+            )}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                if (!canCreateCustomList(subscription.tier, lists.length)) {
+                  if (confirm('You have reached the limit of 2 custom lists on the free plan. Upgrade to Pro for unlimited custom lists?')) {
+                    router.push('/premium');
+                  }
+                  return;
+                }
+                setShowCreateModal(true);
+              }}
+              disabled={!canCreateCustomList(subscription.tier, lists.length) && !isPro}
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Plus className="w-5 h-5" />
+              Create New List
+            </motion.button>
+          </div>
         </div>
 
         {loading ? (

@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function LoginPage() {
@@ -11,7 +10,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,13 +25,14 @@ export default function LoginPage() {
       if (error) throw error;
 
       if (data.session) {
-        router.push('/');
-        router.refresh();
+        // Wait a bit for session to be stored in localStorage on mobile
+        await new Promise(resolve => setTimeout(resolve, 100));
+        // Use window.location instead of router for more reliable redirect on mobile
+        window.location.href = '/';
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred during login';
       setError(errorMessage);
-    } finally {
       setLoading(false);
     }
   };

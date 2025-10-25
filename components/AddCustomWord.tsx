@@ -1,9 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Trash2, Image as ImageIcon, Mic } from 'lucide-react';
+import { X, Plus, Trash2, Image as ImageIcon, Mic, Crown } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
+import { useSubscription } from '@/lib/subscription/useSubscription';
+import { canAddCustomWord } from '@/lib/subscription/config';
+import Link from 'next/link';
 
 interface Example {
   kanji: string;
@@ -20,6 +23,8 @@ interface AddCustomWordProps {
 }
 
 export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCustomWordProps) {
+  const { subscription, isPro } = useSubscription();
+  const [totalCustomWords, setTotalCustomWords] = useState(0);
   const [kanji, setKanji] = useState('');
   const [furigana, setFurigana] = useState('');
   const [romaji, setRomaji] = useState('');
@@ -39,6 +44,25 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
   const CLOUDINARY_UPLOAD_PRESET = 'Lexora user word image upload preset';
   const MAX_FILE_SIZE = 1024 * 1024; // 1MB
   const MAX_AUDIO_SIZE = 1024 * 1024; // 1MB for audio
+
+  // Fetch total custom words count
+  useEffect(() => {
+    const fetchCustomWordsCount = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { count } = await supabase
+        .from('user_custom_words')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      setTotalCustomWords(count || 0);
+    };
+
+    if (isOpen) {
+      fetchCustomWordsCount();
+    }
+  }, [isOpen]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -196,6 +220,13 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
       return;
     }
 
+    // Check subscription limit
+    if (!canAddCustomWord(subscription.tier, totalCustomWords)) {
+      setError('Free users can only add 10 custom words. Upgrade to Pro for unlimited!');
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+
     setLoading(true);
     setError('');
     setUploadProgress(0);
@@ -300,16 +331,28 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
             className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl max-h-[90vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[70] overflow-hidden"
           >
             {/* Header */}
-            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Add Custom Word
-              </h3>
-              <button
-                onClick={onClose}
-                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              </button>
+            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    Add Custom Word
+                  </h3>
+                  {!isPro && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      {totalCustomWords}/10 custom words used. 
+                      <Link href="/premium" className="text-purple-600 dark:text-purple-400 hover:underline ml-1">
+                        Upgrade to Pro
+                      </Link> for unlimited!
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={onClose}
+                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </button>
+              </div>
             </div>
 
             {/* Content */}
