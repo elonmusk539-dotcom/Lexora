@@ -46,10 +46,10 @@ Value: Your service role key from Supabase
 Environment: All
 ```
 
-### 5. **Stripe Variables** (if using premium features)
-- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
-- `STRIPE_SECRET_KEY`
-- `STRIPE_WEBHOOK_SECRET`
+### 5. **PayPal Variables** (if using premium features)
+- `NEXT_PUBLIC_PAYPAL_CLIENT_ID`
+- `NEXT_PUBLIC_PAYPAL_PLAN_ID_MONTHLY`
+- `NEXT_PUBLIC_PAYPAL_PLAN_ID_YEARLY`
 - `NEXT_PUBLIC_APP_URL` (same as NEXT_PUBLIC_SITE_URL)
 
 ---

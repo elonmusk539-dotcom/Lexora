@@ -1,49 +1,102 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { useSubscription } from '@/lib/subscription/useSubscription';
 import { motion } from 'framer-motion';
 import { Check, Crown, Zap, Infinity, List, FileText, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
+import Script from 'next/script';
+
+// Declare PayPal types
+declare global {
+  interface Window {
+    paypal?: {
+      Buttons: (config: {
+        style: {
+          shape: string;
+          color: string;
+          layout: string;
+          label: string;
+        };
+        createSubscription: (data: unknown, actions: {
+          subscription: {
+            create: (params: { plan_id: string }) => Promise<string>;
+          };
+        }) => Promise<string>;
+        onApprove: (data: { subscriptionID: string }, actions: unknown) => void;
+      }) => {
+        render: (selector: string) => void;
+      };
+    };
+  }
+}
 
 export default function PremiumPage() {
   const { subscription, isPro, loading: subLoading } = useSubscription();
-  const [loading, setLoading] = useState(false);
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
+  const [paypalLoaded, setPaypalLoaded] = useState(false);
 
-  const handleSubscribe = async (priceId: string) => {
-    try {
-      setLoading(true);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        window.location.href = '/login';
-        return;
-      }
+  // PayPal Plan IDs
+  const PAYPAL_PLAN_ID_MONTHLY = 'P-46L67236992761240ND6OTJI';
+  const PAYPAL_PLAN_ID_YEARLY = 'P-5WV83425FL4882210ND6PAQY';
 
-      // Call API to create Stripe checkout session
-      const response = await fetch('/api/stripe/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          priceId,
-          userId: session.user.id,
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (data.url) {
-        // Redirect to Stripe Checkout
-        window.location.href = data.url;
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error);
-      alert('Failed to start checkout. Please try again.');
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (paypalLoaded && !isPro && window.paypal) {
+      renderPayPalButton();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paypalLoaded, billingInterval, isPro]);
+
+  const renderPayPalButton = () => {
+    if (!window.paypal) return;
+
+    const planId = billingInterval === 'month' ? PAYPAL_PLAN_ID_MONTHLY : PAYPAL_PLAN_ID_YEARLY;
+    const containerId = `paypal-button-container-${billingInterval}`;
+    
+    // Clear existing button
+    const container = document.getElementById(containerId);
+    if (container) {
+      container.innerHTML = '';
+    }
+
+    window.paypal.Buttons({
+      style: {
+        shape: 'pill',
+        color: 'blue',
+        layout: 'vertical',
+        label: 'subscribe'
+      },
+      createSubscription: function(data, actions) {
+        return actions.subscription.create({
+          plan_id: planId
+        });
+      },
+      onApprove: async function(data) {
+        try {
+          // Get current user
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) return;
+
+          // Call API to save subscription
+          await fetch('/api/paypal/subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              subscriptionId: data.subscriptionID,
+              userId: session.user.id,
+              planId: planId,
+            }),
+          });
+
+          // Redirect to success page
+          window.location.href = `/premium/success?subscription_id=${data.subscriptionID}`;
+        } catch (error) {
+          console.error('Error processing subscription:', error);
+          alert('Subscription created but there was an error. Please contact support.');
+        }
+      }
+    }).render(`#${containerId}`);
   };
 
   const monthlyPrice = '$2.99';
@@ -63,10 +116,18 @@ export default function PremiumPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      <Header />
+    <>
+      {/* PayPal SDK Script */}
+      <Script
+        src="https://www.paypal.com/sdk/js?client-id=Afo4JDNyPVqFHlF4ra_SJdDCXAfM4pBmx1VW19eLcWd73vNZSUTjSdp1Lo7ILyHLmyFReEBitVFwf7Ut&vault=true&intent=subscription"
+        onLoad={() => setPaypalLoaded(true)}
+        strategy="lazyOnload"
+      />
+      
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+        <Header />
 
-      <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12 md:mb-16">
           <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mb-4 sm:mb-6">
@@ -226,28 +287,23 @@ export default function PremiumPage() {
               </li>
             </ul>
 
-            <button
-              onClick={() => handleSubscribe(billingInterval === 'month' 
-                ? process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY! 
-                : process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY!
-              )}
-              disabled={loading || isPro}
-              className="w-full py-3 bg-white text-purple-600 rounded-xl font-bold text-base sm:text-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Processing...
-                </>
-              ) : isPro ? (
-                'Current Plan'
-              ) : (
-                <>
-                  <Crown className="w-5 h-5" />
-                  Upgrade to Pro
-                </>
-              )}
-            </button>
+            {isPro ? (
+              <button
+                disabled
+                className="w-full py-3 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-xl font-bold text-base sm:text-lg cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                Current Plan
+              </button>
+            ) : (
+              <div className="w-full">
+                <div id={`paypal-button-container-${billingInterval}`} className="w-full" />
+                {!paypalLoaded && (
+                  <div className="flex items-center justify-center py-3">
+                    <Loader2 className="w-5 h-5 animate-spin text-white" />
+                  </div>
+                )}
+              </div>
+            )}
           </motion.div>
         </div>
 
@@ -272,7 +328,7 @@ export default function PremiumPage() {
                 What payment methods do you accept?
               </summary>
               <p className="mt-3 text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                We accept all major credit cards through Stripe, including Visa, Mastercard, American Express, and more.
+                We accept PayPal for subscriptions. You can pay with your PayPal balance, credit cards, or debit cards through PayPal&apos;s secure checkout.
               </p>
             </details>
 
@@ -286,7 +342,8 @@ export default function PremiumPage() {
             </details>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

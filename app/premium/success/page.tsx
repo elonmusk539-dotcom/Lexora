@@ -1,20 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-export default function SuccessPage() {
+function SuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const sessionId = searchParams.get('session_id');
+    const subscriptionId = searchParams.get('subscription_id');
     
-    if (!sessionId) {
+    if (!subscriptionId) {
       router.push('/premium');
       return;
     }
@@ -98,5 +98,21 @@ export default function SuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+        <Header />
+        <div className="flex flex-col items-center justify-center h-screen">
+          <Loader2 className="w-12 h-12 animate-spin text-purple-600 mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        </div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }
