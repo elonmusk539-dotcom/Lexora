@@ -6,7 +6,7 @@
 -- =====================================================
 
 -- Drop existing table if you need to recreate (BE CAREFUL - THIS DELETES DATA!)
--- DROP TABLE IF EXISTS subscriptions CASCADE;
+DROP TABLE IF EXISTS subscriptions CASCADE;
 
 -- Create subscriptions table
 CREATE TABLE IF NOT EXISTS subscriptions (
