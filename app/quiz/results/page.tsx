@@ -226,7 +226,7 @@ function QuizResults() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.5 }}
-          className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6 sm:p-8 mb-6 sm:mb-8"
+          className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8"
         >
           <div className="text-center">
             <div className="text-5xl sm:text-6xl md:text-7xl font-bold text-blue-600 dark:text-blue-400 mb-2">

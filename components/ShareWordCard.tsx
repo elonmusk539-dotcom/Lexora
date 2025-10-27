@@ -143,92 +143,93 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-3 sm:p-6 max-h-[80vh] sm:max-h-[90vh] overflow-y-auto"
             >
               <button
                 onClick={() => setIsOpen(false)}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors z-10"
+                className="absolute top-2 right-2 sm:top-4 sm:right-4 p-1.5 sm:p-2 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors z-10"
               >
-                <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" />
               </button>
 
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Share Word</h3>
+              <h3 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 pr-8">Share Word</h3>
 
-              {/* Preview card - no scroll */}
-              <div className="mb-6">
-                <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-xl">
+              {/* Preview card - scaled for mobile */}
+              <div className="mb-4 sm:mb-6">
+                <div className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 p-2 sm:p-4 rounded-xl">
                   <div
                     ref={cardRef}
-                    className="rounded-2xl p-6 flex flex-col justify-between mx-auto"
+                    className="rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col justify-between mx-auto"
                     style={{ 
-                      width: '360px', 
-                      height: '640px',
+                      width: '100%', 
+                      maxWidth: '320px',
+                      aspectRatio: '9/16',
                       background: 'linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #6366F1 100%)'
                     }}
                   >
                     {/* Top Section - Word Info */}
-                    <div className="flex-1 flex flex-col justify-center items-center text-center space-y-3">
+                    <div className="flex-1 flex flex-col justify-center items-center text-center space-y-2">
                       {word.image_url && (
-                        <div className="mb-2 rounded-2xl overflow-hidden shadow-2xl">
+                        <div className="mb-1 rounded-lg sm:rounded-xl overflow-hidden shadow-lg">
                           <img
                             src={word.image_url}
                             alt={word.kanji || word.word}
-                            className="w-40 h-40 object-cover"
+                            className="w-24 h-24 sm:w-32 sm:h-32 object-cover"
                             crossOrigin="anonymous"
                           />
                         </div>
                       )}
                       
-                      <div className="text-5xl font-bold text-white">{word.kanji || word.word}</div>
+                      <div className="text-3xl sm:text-4xl font-bold text-white">{word.kanji || word.word}</div>
                       
                       {word.furigana && (
-                        <div className="text-xl text-white" style={{ opacity: 0.9 }}>{word.furigana}</div>
+                        <div className="text-base sm:text-lg text-white" style={{ opacity: 0.9 }}>{word.furigana}</div>
                       )}
                       
                       {word.romaji && (
-                        <div className="text-lg text-white" style={{ opacity: 0.8 }}>{word.romaji}</div>
+                        <div className="text-sm sm:text-base text-white" style={{ opacity: 0.8 }}>{word.romaji}</div>
                       )}
                       
-                      <div className="text-2xl font-semibold text-white">
+                      <div className="text-lg sm:text-xl font-semibold text-white">
                         {word.meaning}
                       </div>
 
                       {/* Example */}
                       {firstExample && (
-                        <div className="rounded-xl p-3 max-w-xs mt-2" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)' }}>
-                          <div className="text-white text-base mb-1">{firstExample.kanji}</div>
+                        <div className="rounded-lg p-2 max-w-[90%] mt-1" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)' }}>
+                          <div className="text-white text-sm sm:text-base mb-0.5">{firstExample.kanji}</div>
                           {firstExample.furigana && (
-                            <div className="text-white text-xs mb-1" style={{ opacity: 0.8 }}>{firstExample.furigana}</div>
+                            <div className="text-white text-xs" style={{ opacity: 0.8 }}>{firstExample.furigana}</div>
                           )}
                           {firstExample.romaji && (
-                            <div className="text-white text-xs mb-1" style={{ opacity: 0.7 }}>{firstExample.romaji}</div>
+                            <div className="text-white text-xs" style={{ opacity: 0.7 }}>{firstExample.romaji}</div>
                           )}
                           {firstExample.translation && (
-                            <div className="text-white text-sm" style={{ opacity: 0.9 }}>{firstExample.translation}</div>
+                            <div className="text-white text-xs sm:text-sm" style={{ opacity: 0.9 }}>{firstExample.translation}</div>
                           )}
                         </div>
                       )}
                     </div>
 
                     {/* Bottom Section - Branding */}
-                    <div className="text-center pt-4">
-                      <div className="text-2xl font-bold text-white mb-1">Lexora</div>
-                      <div className="text-white text-xs" style={{ opacity: 0.8 }}>Learn Japanese Vocabulary</div>
+                    <div className="text-center pt-2 sm:pt-4">
+                      <div className="text-xl sm:text-2xl font-bold text-white mb-0.5">Lexora</div>
+                      <div className="text-white text-[10px] sm:text-xs" style={{ opacity: 0.8 }}>Learn Japanese Vocabulary</div>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={generateImage}
                   disabled={generating}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full py-2.5 sm:py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg sm:rounded-xl font-medium shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center gap-2 disabled:opacity-50 text-sm sm:text-base"
                 >
-                  <Download className="w-5 h-5" />
+                  <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                   {generating ? 'Generating...' : 'Download Card'}
                 </motion.button>
 
@@ -236,9 +237,9 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleShare}
-                  className="w-full py-3 px-4 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-2.5 sm:py-3 px-4 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg sm:rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
-                  <Share2 className="w-5 h-5" />
+                  <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
                   Share
                 </motion.button>
               </div>

@@ -356,7 +356,7 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
             </div>
 
             {/* Content */}
-            <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-5rem)]">
+            <form onSubmit={handleSubmit} className="p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-5rem)]">
               {error && (
                 <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
                   {error}
@@ -441,7 +441,7 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
                     </div>
                   </div>
                 ) : (
-                  <label className="block w-full p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer">
+                  <label className="block w-full p-4 sm:p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer">
                     <input
                       type="file"
                       accept="audio/*"

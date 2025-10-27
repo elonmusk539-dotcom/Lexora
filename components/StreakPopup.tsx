@@ -29,9 +29,9 @@ export function StreakPopup({ isOpen, streakCount, onClose }: StreakPopupProps) 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-md z-[101]"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-md z-[101] max-h-[80vh] sm:max-h-[90vh]"
           >
-            <div className="bg-gradient-to-br from-orange-50 via-red-50 to-yellow-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 rounded-2xl shadow-2xl p-6 sm:p-8 border-4 border-orange-400 dark:border-orange-600 relative overflow-hidden">
+            <div className="bg-gradient-to-br from-orange-50 via-red-50 to-yellow-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 border-4 border-orange-400 dark:border-orange-600 relative overflow-hidden">
               {/* Close button */}
               <button
                 onClick={onClose}

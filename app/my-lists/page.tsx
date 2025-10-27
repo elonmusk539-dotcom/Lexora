@@ -8,7 +8,8 @@ import { useRouter } from 'next/navigation';
 import { WordListItem } from '@/components/WordListItem';
 import { AddCustomWord } from '@/components/AddCustomWord';
 import { useSubscription } from '@/lib/subscription/useSubscription';
-import { canCreateCustomList, getRemainingSlots } from '@/lib/subscription/config';
+import { canCreateCustomList, getRemainingSlots, FREE_TIER_LISTS } from '@/lib/subscription/config';
+import { Header } from '@/components/Header';
 import Link from 'next/link';
 
 interface CustomList {
@@ -297,10 +298,15 @@ export default function MyListsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch ALL vocabulary words
+      // Fetch vocabulary words with their list information
       const { data: allVocabWords } = await supabase
         .from('vocabulary_words')
-        .select('*')
+        .select(`
+          *,
+          vocabulary_lists (
+            name
+          )
+        `)
         .order('kanji', { ascending: true });
 
       // Get words already in current list
@@ -312,9 +318,17 @@ export default function MyListsPage() {
       const existingWordIds = existingWords?.map(w => w.word_id) || [];
 
       // Filter out words already in the list
-      const availableWords = (allVocabWords || []).filter(
+      let availableWords = (allVocabWords || []).filter(
         word => !existingWordIds.includes(word.id)
       );
+
+      // Filter by subscription tier - free users only see words from free tier lists
+      if (!isPro) {
+        availableWords = availableWords.filter(word => {
+          const listName = (word as any).vocabulary_lists?.name;
+          return listName && FREE_TIER_LISTS.includes(listName);
+        });
+      }
 
       setAllAvailableWords(availableWords);
       setSearchResults(availableWords);
@@ -415,6 +429,7 @@ export default function MyListsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <Header />
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div>
@@ -427,15 +442,6 @@ export default function MyListsPage() {
             </p>
           </div>
           <div className="flex gap-3">
-            {!isPro && (
-              <Link
-                href="/premium"
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all"
-              >
-                <Crown className="w-4 h-4" />
-                <span className="text-sm font-semibold">Upgrade</span>
-              </Link>
-            )}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -480,7 +486,7 @@ export default function MyListsPage() {
                 key={list.id}
                 whileHover={{ scale: 1.02 }}
                 onClick={() => router.push(`/my-lists/${list.id}`)}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-blue-500 transition-all"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-blue-500 transition-all"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
@@ -546,9 +552,9 @@ export default function MyListsPage() {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-6"
+                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-4 sm:p-6"
               >
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                     {editingList ? 'Edit List' : 'Create New List'}
                   </h3>
@@ -628,9 +634,9 @@ export default function MyListsPage() {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl max-h-[90vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-6 overflow-y-auto"
+                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl max-h-[90vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-4 sm:p-6 overflow-y-auto"
               >
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedList.name}</h3>
                   <button
                     onClick={() => {

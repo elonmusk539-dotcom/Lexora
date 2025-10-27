@@ -92,20 +92,11 @@ export default function ListsPage() {
               <BookOpen className="w-8 h-8 text-blue-600 dark:text-blue-400" />
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Vocabulary Lists</h2>
             </div>
-            {!isPro && (
-              <Link
-                href="/premium"
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all"
-              >
-                <Crown className="w-4 h-4" />
-                <span className="text-sm font-semibold">Upgrade to Pro</span>
-              </Link>
-            )}
           </div>
           <p className="text-gray-600 dark:text-gray-400">
             {isPro 
               ? 'Browse and study all available word collections'
-              : `You have access to ${FREE_TIER_LISTS.length} free lists. Upgrade to unlock all lists!`
+              : `You have access to ${FREE_TIER_LISTS.length} free lists. Unlock all lists with Pro!`
             }
           </p>
         </motion.div>
@@ -133,7 +124,7 @@ export default function ListsPage() {
                   transition={{ delay: index * 0.1 }}
                 >
                   {isLocked ? (
-                    <div className="relative block p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 opacity-75">
+                    <div className="relative block p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 opacity-75">
                       <div className="absolute top-4 right-4">
                         <Lock className="w-5 h-5 text-gray-400" />
                       </div>
@@ -147,19 +138,16 @@ export default function ListsPage() {
                         <span className="text-sm text-gray-500 dark:text-gray-400">
                           {list.word_count} word{list.word_count !== 1 ? 's' : ''}
                         </span>
-                        <Link
-                          href="/premium"
-                          className="text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
-                        >
+                        <span className="text-sm font-medium text-purple-600 dark:text-purple-400 flex items-center gap-1">
                           <Crown className="w-4 h-4" />
-                          Upgrade to unlock
-                        </Link>
+                          Pro Only
+                        </span>
                       </div>
                     </div>
                   ) : (
                     <Link
                       href={`/lists/${list.id}`}
-                      className="block p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg transition-all"
+                      className="block p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg transition-all"
                     >
                       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                         {list.name}

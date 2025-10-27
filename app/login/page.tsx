@@ -65,9 +65,9 @@ export default function LoginPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
           {/* Logo and title */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6 sm:mb-8">
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Lexora</h1>
             <p className="text-gray-600 dark:text-gray-400">Welcome back! Please login to continue.</p>
           </div>

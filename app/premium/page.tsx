@@ -236,7 +236,7 @@ export default function PremiumPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl shadow-2xl p-6 sm:p-8 border-2 border-purple-400 relative overflow-hidden"
+            className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 border-2 border-purple-400 relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 bg-yellow-400 text-purple-900 px-4 py-1 text-xs sm:text-sm font-bold rounded-bl-lg">
               BEST VALUE

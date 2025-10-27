@@ -120,9 +120,9 @@ export function StreakDisplay({ compact = false }: StreakDisplayProps) {
 
   if (compact) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-        <Flame className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-        <span className="font-bold text-orange-600 dark:text-orange-400">{streakData.current_streak}</span>
+      <div className="flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 sm:py-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+        <Flame className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-orange-600 dark:text-orange-400" />
+        <span className="text-sm sm:text-base font-bold text-orange-600 dark:text-orange-400">{streakData.current_streak}</span>
       </div>
     );
   }
@@ -161,7 +161,7 @@ export function StreakDisplay({ compact = false }: StreakDisplayProps) {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-6"
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-4 sm:p-6"
             >
               <button
                 onClick={() => setShowMissedModal(false)}

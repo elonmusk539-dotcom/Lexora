@@ -148,32 +148,34 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-4 sm:p-6 scrollbar-hide mt-12 sm:mt-0"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl max-h-[80vh] sm:max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-4 sm:p-6 scrollbar-hide mb-8 sm:mb-0"
           >
-            {/* Close button - Mobile visible, top-right */}
-            <button
-              onClick={onClose}
-              className="absolute top-2 right-2 sm:top-3 sm:right-3 p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors z-10"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {/* Action buttons row - All in one line */}
+            <div className="flex gap-2 mb-4 pt-1 justify-between items-center">
+              <div className="flex gap-2">
+                {/* Flag button */}
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="p-2 rounded-full bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors"
+                  aria-label="Report an issue"
+                >
+                  <Flag className="w-5 h-5" />
+                </button>
 
-            {/* Action buttons row - Below close button */}
-            <div className="flex gap-2 mb-4 pt-1">
-              {/* Flag button */}
+                {/* Share button (only for non-custom words) */}
+                {word.word_type !== 'custom' && (
+                  <ShareWordCard word={word} examples={detailedExamples} />
+                )}
+              </div>
+
+              {/* Close button - aligned right */}
               <button
-                onClick={() => setShowReportModal(true)}
-                className="p-2 rounded-full bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors"
-                aria-label="Report an issue"
+                onClick={onClose}
+                className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors"
+                aria-label="Close"
               >
-                <Flag className="w-5 h-5" />
+                <X className="w-5 h-5" />
               </button>
-
-              {/* Share button (only for non-custom words) */}
-              {word.word_type !== 'custom' && (
-                <ShareWordCard word={word} examples={detailedExamples} />
-              )}
             </div>
 
             {/* Image - Square container */}

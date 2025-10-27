@@ -339,7 +339,7 @@ function FlashcardQuiz() {
             >
               {/* Front of card */}
               <div className="absolute inset-0 backface-hidden">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 h-full flex flex-col items-center justify-center">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 h-full flex flex-col items-center justify-center">
                   <div className="flex flex-col items-center gap-4">
                     {/* Main reading - always show kanji if available, fallback to word */}
                     <div className="flex items-center gap-3">
@@ -378,7 +378,7 @@ function FlashcardQuiz() {
 
               {/* Back of card - show reading, furigana, romaji, meaning, pronunciation */}
               <div className="absolute inset-0 backface-hidden rotate-y-180">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 h-full flex flex-col items-center justify-center relative">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 h-full flex flex-col items-center justify-center relative">
                   {/* Show Details Button */}
                   <button
                     onClick={(e) => {

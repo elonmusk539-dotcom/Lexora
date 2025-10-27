@@ -42,8 +42,8 @@ function SuccessContent() {
       <Header />
       
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 sm:p-12">
-          <div className="flex justify-center mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 lg:p-12">
+          <div className="flex justify-center mb-4 sm:mb-6">
             <div className="bg-green-100 dark:bg-green-900/30 rounded-full p-4">
               <CheckCircle className="w-16 h-16 text-green-600 dark:text-green-400" />
             </div>
@@ -53,11 +53,11 @@ function SuccessContent() {
             Welcome to Lexora Pro! 🎉
           </h1>
           
-          <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
+          <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 sm:mb-8">
             Your subscription has been activated successfully. You now have access to all premium features!
           </p>
           
-          <div className="space-y-4 text-left bg-gray-50 dark:bg-gray-900 rounded-lg p-6 mb-8">
+          <div className="space-y-4 text-left bg-gray-50 dark:bg-gray-900 rounded-lg p-4 sm:p-6 mb-6 sm:mb-8">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
               What&apos;s unlocked:
             </h3>

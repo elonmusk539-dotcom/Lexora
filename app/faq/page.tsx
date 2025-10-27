@@ -22,9 +22,9 @@ export default function FAQPage() {
           </p>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* What is Spaced Repetition */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
             <div className="flex items-start gap-4 mb-4">
               <div className="flex-shrink-0 w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
                 <Brain className="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -46,7 +46,7 @@ export default function FAQPage() {
           </div>
 
           {/* Normal Quiz vs Smart Quiz */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
             <div className="flex items-start gap-4 mb-4">
               <div className="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
                 <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -90,7 +90,7 @@ export default function FAQPage() {
           </div>
 
           {/* How does the rating system work */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
             <div className="flex items-start gap-4 mb-4">
               <div className="flex-shrink-0 w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
                 <Target className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -142,7 +142,7 @@ export default function FAQPage() {
           </div>
 
           {/* When is a word mastered */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
             <div className="flex items-start gap-4 mb-4">
               <div className="flex-shrink-0 w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
                 <Award className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
@@ -191,7 +191,7 @@ export default function FAQPage() {
           </div>
 
           {/* How are review dates calculated */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
             <div className="flex items-start gap-4 mb-4">
               <div className="flex-shrink-0 w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
@@ -238,7 +238,7 @@ export default function FAQPage() {
           </div>
 
           {/* Additional Tips */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl shadow-lg p-8">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               💡 Tips for Effective Learning
             </h2>

@@ -209,7 +209,7 @@ export default function QuizPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8"
         >
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Start a Normal Quiz</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
@@ -264,7 +264,7 @@ export default function QuizPage() {
             <button
               type="button"
               onClick={() => setShowListModal(true)}
-              className="w-full p-6 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500 transition-all text-left"
+              className="w-full p-4 sm:p-6 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500 transition-all text-left"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -322,11 +322,23 @@ export default function QuizPage() {
               <div className="mt-4">
                 <input
                   type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   min="1"
                   max="100"
                   value={customDuration}
-                  onChange={(e) => setCustomDuration(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '') {
+                      setCustomDuration(1);
+                    } else {
+                      const num = parseInt(val, 10);
+                      if (!isNaN(num)) {
+                        setCustomDuration(Math.max(1, Math.min(100, num)));
+                      }
+                    }
+                  }}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base sm:text-sm"
                   placeholder="Enter number of words (1-100)"
                 />
               </div>
@@ -364,7 +376,7 @@ export default function QuizPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[80vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 p-6"
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[80vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 p-4 sm:p-6"
             >
               <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">

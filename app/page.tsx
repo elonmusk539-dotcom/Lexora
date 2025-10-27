@@ -228,8 +228,8 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 sm:mb-8 space-y-4"
         >
-          {/* Filter Toggle Button */}
-          <div className="flex items-center justify-between">
+          {/* Top Row - Filter Toggle, Word Count, and Search */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -239,8 +239,21 @@ export default function Home() {
                 {showFilters ? 'Hide Filters' : 'Show Filters'}
               </span>
             </button>
+            
             <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               {filteredWords.length} word{filteredWords.length !== 1 ? 's' : ''}
+            </div>
+
+            {/* Search input - Always visible */}
+            <div className="relative flex-1 min-w-[200px] sm:min-w-[250px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search words..."
+                className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-full"
+              />
             </div>
           </div>
 
@@ -276,9 +289,8 @@ export default function Home() {
                   </div>
                 </div>
                 
-                {/* Custom Words Toggle and Search */}
+                {/* Custom Words Toggle */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
-                  {/* Custom Words Toggle */}
                   <label className="flex items-center gap-2 cursor-pointer px-3 sm:px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full sm:w-auto">
                     <input
                       type="checkbox"
@@ -290,18 +302,6 @@ export default function Home() {
                       Show Custom Words
                     </span>
                   </label>
-                  
-                  {/* Search input */}
-                  <div className="relative sm:ml-auto w-full sm:w-auto">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search words..."
-                      className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-full sm:min-w-[200px]"
-                    />
-                  </div>
                 </div>
               </motion.div>
             )}

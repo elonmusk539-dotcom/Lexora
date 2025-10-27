@@ -70,7 +70,7 @@ export function MilestonePopup({ isOpen, type, milestone, onClose }: MilestonePo
               }
             }}
             exit={{ opacity: 0, scale: 0.5, rotate: 10 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-lg z-[101]"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-lg z-[101] max-h-[80vh] sm:max-h-[90vh]"
           >
             <div className={`bg-gradient-to-br ${config.color} rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 relative overflow-hidden`}>
               {/* Close button */}

@@ -418,15 +418,15 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
+            className="mt-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8"
           >
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 text-center">
               Learning Statistics
             </h3>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
               {/* Words Mastered */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800">
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 sm:p-6 border border-green-200 dark:border-green-800">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 bg-green-500 dark:bg-green-600 rounded-lg">
                     <Trophy className="w-6 h-6 text-white" />
@@ -437,7 +437,7 @@ export default function ProfilePage() {
               </div>
 
               {/* Longest Streak */}
-              <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl p-6 border border-orange-200 dark:border-orange-800">
+              <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl p-4 sm:p-6 border border-orange-200 dark:border-orange-800">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 bg-orange-500 dark:bg-orange-600 rounded-lg">
                     <Flame className="w-6 h-6 text-white" />
@@ -448,7 +448,7 @@ export default function ProfilePage() {
               </div>
 
               {/* User Added Words */}
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-800">
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 sm:p-6 border border-purple-200 dark:border-purple-800">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 bg-purple-500 dark:bg-purple-600 rounded-lg">
                     <BookPlus className="w-6 h-6 text-white" />
@@ -459,7 +459,7 @@ export default function ProfilePage() {
               </div>
 
               {/* Words Started Learning */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 sm:p-6 border border-blue-200 dark:border-blue-800">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="p-2 bg-blue-500 dark:bg-blue-600 rounded-lg">
                     <GraduationCap className="w-6 h-6 text-white" />

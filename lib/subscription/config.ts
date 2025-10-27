@@ -31,7 +31,9 @@ export const FREE_TIER_LISTS = [
   'Family',
   'Numbers',
   'Body parts',
-  'Food & Drinks'
+  'Body Parts',
+  'Food & Drinks',
+  'Food & drinks'
 ];
 
 export type SubscriptionTier = 'free' | 'pro';

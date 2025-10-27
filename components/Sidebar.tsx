@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, PlayCircle, User, Settings, Menu, X, List, Brain, HelpCircle } from 'lucide-react';
+import { Home, BookOpen, PlayCircle, User, Settings, List, Brain, HelpCircle, Menu, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
+import { Header } from './Header';
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -16,6 +17,11 @@ export function Sidebar({ children }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dueCount, setDueCount] = useState(0);
   const pathname = usePathname();
+
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    setMobileOpen(!mobileOpen);
+  };
 
   // Load collapsed state from localStorage
   useEffect(() => {
@@ -86,24 +92,12 @@ export function Sidebar({ children }: SidebarProps) {
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setMobileOpen(!mobileOpen)}
-        className="md:hidden fixed top-4 left-4 z-[80] p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
-        aria-label="Toggle menu"
-      >
-        {mobileOpen ? (
-          <X className="w-6 h-6 text-gray-700 dark:text-gray-300" />
-        ) : (
-          <Menu className="w-6 h-6 text-gray-700 dark:text-gray-300" />
-        )}
-      </button>
-
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div
-          onClick={() => setMobileOpen(false)}
+          onClick={toggleMobileMenu}
           className="md:hidden fixed inset-0 bg-black/50 z-40"
+          style={{ touchAction: 'none' }}
         />
       )}
 
@@ -113,15 +107,15 @@ export function Sidebar({ children }: SidebarProps) {
         animate={{ 
           width: typeof window !== 'undefined' && window.innerWidth < 768 ? '240px' : (collapsed ? '80px' : '240px'),
         }}
-        className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-50 transition-transform duration-300 ${
+        className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-50 transition-transform duration-300 overflow-y-auto ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         {/* Upgrade Button & Toggle */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
           {!collapsed && (
             <Link href="/premium">
-              <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity">
+              <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity text-sm">
                 Upgrade
               </button>
             </Link>
@@ -179,6 +173,12 @@ export function Sidebar({ children }: SidebarProps) {
       <div
         className="flex-1 transition-all duration-300 ml-0 md:ml-20 lg:ml-60"
       >
+        {/* Don't show Header on login/signup/smart-quiz pages (smart quiz only on mobile) */}
+        {pathname !== '/login' && pathname !== '/signup' && (
+          <div className={pathname === '/review' ? 'hidden sm:block' : ''}>
+            <Header onMenuToggle={toggleMobileMenu} menuOpen={mobileOpen} />
+          </div>
+        )}
         {children}
       </div>
     </div>

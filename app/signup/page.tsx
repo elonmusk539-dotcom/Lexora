@@ -81,9 +81,9 @@ export default function SignupPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center"
+          className="w-full max-w-md bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 text-center"
         >
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
               className="w-8 h-8 text-green-600"
               fill="none"
@@ -124,9 +124,9 @@ export default function SignupPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
           {/* Logo and title */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6 sm:mb-8">
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Lexora</h1>
             <p className="text-gray-600 dark:text-gray-400">Create your account to get started</p>
           </div>

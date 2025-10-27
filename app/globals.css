@@ -104,3 +104,15 @@ body {
 .rotate-y-180 {
   transform: rotateY(180deg);
 }
+
+/* Prevent text and icon overflow on mobile */
+* {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Ensure containers don't overflow viewport */
+body, html {
+  overflow-x: hidden;
+  max-width: 100vw;
+}

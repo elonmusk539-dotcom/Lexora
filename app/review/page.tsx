@@ -380,14 +380,14 @@ function SRSReview() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 mb-6 relative"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 relative"
           >
-            {/* Show Details Button */}
+            {/* Show Details Button - moved to avoid overlap */}
             <button
               onClick={() => setSelectedWord(currentWord)}
-              className="absolute top-4 right-4 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors z-10"
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors z-10 shadow-md"
             >
-              Show Details
+              Details
             </button>
 
             {/* Word Image - Front */}
@@ -476,38 +476,38 @@ function SRSReview() {
                 </motion.div>
 
                 {/* Rating Buttons */}
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-4 gap-2 sm:gap-3">
                   <button
                     onClick={() => handleRating(0)}
                     disabled={submitting}
-                    className="py-3 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors"
+                    className="py-2.5 sm:py-3 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors text-sm sm:text-base"
                   >
                     Again
-                    <div className="text-xs opacity-75">1 day</div>
+                    <div className="text-[10px] sm:text-xs opacity-75">1 day</div>
                   </button>
                   <button
                     onClick={() => handleRating(1)}
                     disabled={submitting}
-                    className="py-3 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors"
+                    className="py-2.5 sm:py-3 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors text-sm sm:text-base"
                   >
                     Hard
-                    <div className="text-xs opacity-75">3 days</div>
+                    <div className="text-[10px] sm:text-xs opacity-75">3 days</div>
                   </button>
                   <button
                     onClick={() => handleRating(3)}
                     disabled={submitting}
-                    className="py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors"
+                    className="py-2.5 sm:py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors text-sm sm:text-base"
                   >
                     Good
-                    <div className="text-xs opacity-75">1 week</div>
+                    <div className="text-[10px] sm:text-xs opacity-75">1 week</div>
                   </button>
                   <button
                     onClick={() => handleRating(5)}
                     disabled={submitting}
-                    className="py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors"
+                    className="py-2.5 sm:py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors text-sm sm:text-base"
                   >
                     Easy
-                    <div className="text-xs opacity-75">2 weeks</div>
+                    <div className="text-[10px] sm:text-xs opacity-75">2 weeks</div>
                   </button>
                 </div>
               </>
