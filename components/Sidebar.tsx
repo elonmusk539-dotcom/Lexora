@@ -89,7 +89,7 @@ export function Sidebar({ children }: SidebarProps) {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="md:hidden fixed top-4 left-4 z-[60] p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+        className="md:hidden fixed top-4 left-4 z-[80] p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
         aria-label="Toggle menu"
       >
         {mobileOpen ? (
@@ -117,13 +117,13 @@ export function Sidebar({ children }: SidebarProps) {
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
-        {/* Logo & Toggle */}
+        {/* Upgrade Button & Toggle */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           {!collapsed && (
-            <Link href="/">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity">
-                Lexora
-              </h1>
+            <Link href="/premium">
+              <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity">
+                Upgrade
+              </button>
             </Link>
           )}
           <button

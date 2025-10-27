@@ -11,9 +11,14 @@ export default function AuthConfirmPage() {
   useEffect(() => {
     const confirmAuth = async () => {
       try {
+        console.log('[Auth Confirm] Starting auth confirmation...');
+        console.log('[Auth Confirm] Full URL:', window.location.href);
+        console.log('[Auth Confirm] Hash:', window.location.hash);
+
         // Get tokens from URL hash
         const hash = window.location.hash.substring(1);
         if (!hash) {
+          console.error('[Auth Confirm] No hash found in URL');
           setStatus('error');
           setErrorMessage('No authentication data found');
           setTimeout(() => {
@@ -22,13 +27,28 @@ export default function AuthConfirmPage() {
           return;
         }
 
-        // Decode tokens
-        const tokens = JSON.parse(Buffer.from(hash, 'base64').toString());
+        console.log('[Auth Confirm] Decoding hash...');
+        // Decode tokens using browser-native atob (not Node.js Buffer)
+        let tokens;
+        try {
+          const decodedString = atob(hash);
+          console.log('[Auth Confirm] Decoded string:', decodedString);
+          tokens = JSON.parse(decodedString);
+          console.log('[Auth Confirm] Parsed tokens:', { 
+            hasAccessToken: !!tokens.access_token,
+            hasRefreshToken: !!tokens.refresh_token 
+          });
+        } catch (decodeError) {
+          console.error('[Auth Confirm] Failed to decode/parse hash:', decodeError);
+          throw new Error('Invalid authentication data format');
+        }
         
         if (!tokens.access_token || !tokens.refresh_token) {
+          console.error('[Auth Confirm] Missing tokens in data');
           throw new Error('Invalid token data');
         }
 
+        console.log('[Auth Confirm] Setting session...');
         // Set the session using Supabase client
         const { error } = await supabase.auth.setSession({
           access_token: tokens.access_token,
@@ -36,19 +56,22 @@ export default function AuthConfirmPage() {
         });
 
         if (error) {
+          console.error('[Auth Confirm] Supabase setSession error:', error);
           throw error;
         }
 
+        console.log('[Auth Confirm] Session set successfully!');
         // Session set successfully
         setStatus('success');
         
         // Wait a bit longer on mobile to ensure localStorage is written
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
+        console.log('[Auth Confirm] Redirecting to home...');
         // Use window.location for reliable redirect on mobile
         window.location.href = '/';
       } catch (error) {
-        console.error('Auth confirmation error:', error);
+        console.error('[Auth Confirm] Auth confirmation error:', error);
         setStatus('error');
         setErrorMessage(error instanceof Error ? error.message : 'Authentication failed');
         

@@ -120,15 +120,13 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
 
   return (
     <>
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      <button
         onClick={() => setIsOpen(true)}
-        className="p-2 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 transition-colors"
+        className="p-2 rounded-full bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-colors"
         title="Share"
       >
         <Share2 className="w-5 h-5" />
-      </motion.button>
+      </button>
 
       <AnimatePresence>
         {isOpen && (
@@ -145,8 +143,7 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-6"
-              style={{ maxHeight: '90vh', overflow: 'hidden' }}
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
             >
               <button
                 onClick={() => setIsOpen(false)}

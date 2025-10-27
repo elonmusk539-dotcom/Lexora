@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { supabase } from '@/lib/supabase/client';
 import { Brain, Clock, List, Info } from 'lucide-react';
+import { FREE_TIER_LISTS, type SubscriptionTier } from '@/lib/subscription/config';
 
 type QuizDuration = 5 | 10 | 15 | 20 | 'custom';
 
@@ -44,6 +45,7 @@ export default function SmartQuizSetupPage() {
   const [showListModal, setShowListModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
+  const [userTier, setUserTier] = useState<SubscriptionTier>('free');
   // Due words preview state - to be implemented in future
   // const [dueWords, setDueWords] = useState<Record<string, DueWord[]>>({});
   // const [showDueWords, setShowDueWords] = useState(false);
@@ -93,11 +95,30 @@ export default function SmartQuizSetupPage() {
 
   const loadLists = async (uid: string) => {
     try {
+      // Fetch user's subscription status
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('status, current_period_end')
+        .eq('user_id', uid)
+        .single();
+
+      const isPro = subscription?.status === 'active' && 
+                    new Date(subscription.current_period_end) > new Date();
+      setUserTier(isPro ? 'pro' : 'free');
+
       // Load default lists
       const { data: defaultLists } = await supabase
         .from('vocabulary_lists')
         .select('id, name, description')
         .order('name');
+
+      // Filter lists based on subscription tier
+      let filteredDefaultLists = defaultLists || [];
+      if (!isPro) {
+        filteredDefaultLists = filteredDefaultLists.filter(
+          (list: VocabularyList) => FREE_TIER_LISTS.includes(list.name)
+        );
+      }
 
       // Load custom lists
       const { data: customLists } = await supabase
@@ -107,7 +128,7 @@ export default function SmartQuizSetupPage() {
         .order('created_at', { ascending: false });
 
       const allLists = [
-        ...(defaultLists || []),
+        ...filteredDefaultLists,
         ...(customLists || []).map(list => ({ ...list, isCustom: true })),
       ];
 

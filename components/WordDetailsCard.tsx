@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Flag, Volume2 } from 'lucide-react';
+import { Flag, Volume2, X } from 'lucide-react';
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
@@ -148,25 +148,33 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-4 sm:p-6 scrollbar-hide"
+            className="fixed left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-4 sm:p-6 scrollbar-hide mt-12 sm:mt-0"
           >
-            {/* Top left - Flag icon */}
-            <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+            {/* Close button - Mobile visible, top-right */}
+            <button
+              onClick={onClose}
+              className="absolute top-2 right-2 sm:top-3 sm:right-3 p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors z-10"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Action buttons row - Below close button */}
+            <div className="flex gap-2 mb-4 pt-1">
+              {/* Flag button */}
               <button
                 onClick={() => setShowReportModal(true)}
-                className="p-1.5 sm:p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
+                className="p-2 rounded-full bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors"
                 aria-label="Report an issue"
               >
-                <Flag className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Flag className="w-5 h-5" />
               </button>
-            </div>
 
-            {/* Top right - Share icon (only for non-custom words) */}
-            {word.word_type !== 'custom' && (
-              <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
+              {/* Share button (only for non-custom words) */}
+              {word.word_type !== 'custom' && (
                 <ShareWordCard word={word} examples={detailedExamples} />
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Image - Square container */}
             <div className="relative w-full aspect-square max-w-md mx-auto rounded-xl overflow-hidden mb-4 sm:mb-6 bg-gray-100 dark:bg-gray-700">

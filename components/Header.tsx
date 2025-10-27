@@ -46,10 +46,11 @@ export function Header() {
   }
 
   return (
-    <header className="bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-50">
+    <header className="bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-[70]">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <Link href="/">
+          {/* Add left padding on mobile to avoid overlap with sidebar menu button */}
+          <Link href="/" className="pl-12 md:pl-0">
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity">
               Lexora
             </h1>

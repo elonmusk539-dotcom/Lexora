@@ -217,7 +217,9 @@ export default function PremiumPage() {
               </li>
               <li className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                <span className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Basic quiz features</span>
+                <span className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                  <strong>All quiz features</strong> (Smart Quiz, Normal Quiz, MCQ, Flashcards)
+                </span>
               </li>
             </ul>
 
@@ -276,7 +278,7 @@ export default function PremiumPage() {
               <li className="flex items-start gap-3">
                 <Zap className="w-5 h-5 text-yellow-300 flex-shrink-0 mt-0.5" />
                 <span className="text-sm sm:text-base text-white">
-                  Advanced quiz features
+                  <strong>All quiz features</strong> (Smart Quiz, Normal Quiz, MCQ, Flashcards)
                 </span>
               </li>
               <li className="flex items-start gap-3">

@@ -9,13 +9,18 @@ export async function GET(request: NextRequest) {
   const error = requestUrl.searchParams.get('error');
   const errorDescription = requestUrl.searchParams.get('error_description');
 
+  console.log('[Auth Callback] Request URL:', requestUrl.toString());
+  console.log('[Auth Callback] Code present:', !!code);
+  console.log('[Auth Callback] Error:', error, errorDescription);
+
   // If there's an error from the OAuth provider
   if (error) {
-    console.error('OAuth error:', error, errorDescription);
+    console.error('[Auth Callback] OAuth error:', error, errorDescription);
     return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(errorDescription || error)}`);
   }
 
   if (code) {
+    console.log('[Auth Callback] Processing code...');
     // Create a Supabase client
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,14 +36,17 @@ export async function GET(request: NextRequest) {
     );
     
     try {
+      console.log('[Auth Callback] Exchanging code for session...');
       const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
       
       if (exchangeError) {
-        console.error('Token exchange error:', exchangeError);
+        console.error('[Auth Callback] Token exchange error:', exchangeError);
         return NextResponse.redirect(`${origin}/login?error=auth_exchange_failed`);
       }
 
       if (data?.session) {
+        console.log('[Auth Callback] Session obtained successfully');
+        console.log('[Auth Callback] User ID:', data.user?.id);
         // Check if user profile exists, create if not
         if (data.user) {
           const { error: profileError } = await supabase
@@ -65,22 +73,31 @@ export async function GET(request: NextRequest) {
           }
         }
 
+        console.log('[Auth Callback] Creating redirect with tokens...');
         // For mobile compatibility, redirect to a page that will handle session initialization
         // Pass tokens as URL fragments (hash) which are not sent to server and stay client-side
-        const redirectUrl = new URL(`${origin}/auth/confirm`);
-        redirectUrl.hash = Buffer.from(JSON.stringify({
+        const tokensData = JSON.stringify({
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token,
-        })).toString('base64');
+        });
         
+        // Use browser-compatible base64 encoding
+        const encodedTokens = Buffer.from(tokensData).toString('base64');
+        console.log('[Auth Callback] Encoded tokens length:', encodedTokens.length);
+        
+        const redirectUrl = new URL(`${origin}/auth/confirm`);
+        redirectUrl.hash = encodedTokens;
+        
+        console.log('[Auth Callback] Redirecting to:', redirectUrl.toString().substring(0, 100) + '...');
         return NextResponse.redirect(redirectUrl.toString());
       }
     } catch (error) {
-      console.error('Auth callback exception:', error);
+      console.error('[Auth Callback] Auth callback exception:', error);
       return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
     }
   }
 
   // No code present, redirect to login
+  console.log('[Auth Callback] No code present in request');
   return NextResponse.redirect(`${origin}/login?error=no_code`);
 }

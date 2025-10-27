@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { WordListItem } from '@/components/WordListItem';
 import { WordDetailsCard, type Word } from '@/components/WordDetailsCard';
 import { Header } from '@/components/Header';
+import { FREE_TIER_LISTS, type SubscriptionTier } from '@/lib/subscription/config';
 
 type FilterType = 'all' | 'started' | 'not-started' | 'mastered';
 
@@ -25,6 +26,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCustomWords, setShowCustomWords] = useState(true);
+  const [userTier, setUserTier] = useState<SubscriptionTier>('free');
+  const [showFilters, setShowFilters] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -45,10 +48,24 @@ export default function Home() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
+      // Fetch user's subscription status
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('status, current_period_end')
+        .eq('user_id', session.user.id)
+        .single();
+
+      const isPro = subscription?.status === 'active' && 
+                    new Date(subscription.current_period_end) > new Date();
+      setUserTier(isPro ? 'pro' : 'free');
+
       // Fetch regular vocabulary words
       const { data: regularWords, error: wordsError } = await supabase
         .from('vocabulary_words')
-        .select('*')
+        .select(`
+          *,
+          vocabulary_lists!inner(name)
+        `)
         .order('created_at', { ascending: true });
 
       if (wordsError) throw wordsError;
@@ -74,9 +91,24 @@ export default function Home() {
         examples: Array<{ kanji: string; furigana: string; romaji: string; translation: string }> | null;
         [key: string]: unknown;
       }
+
+      interface VocabularyWord {
+        id: string;
+        word: string;
+        reading: string | null;
+        meaning: string;
+        pronunciation_url: string;
+        image_url: string;
+        examples: string[];
+        vocabulary_lists: { name: string };
+        [key: string]: unknown;
+      }
       
       const allWords = [
-        ...(regularWords || []),
+        ...(regularWords || []).map((w: VocabularyWord) => ({
+          ...w,
+          list_name: w.vocabulary_lists.name,
+        } as Word & { list_name: string })),
         ...(customWords || []).map((w: CustomWord) => ({
           ...w,
           word: w.kanji, // Map kanji to word for consistency
@@ -129,6 +161,14 @@ export default function Home() {
 
   const filteredWords = words.filter((word) => {
     const wordProgress = progress[word.id];
+    
+    // Filter by subscription tier - free users only see words from free lists
+    if (userTier === 'free') {
+      const wordWithList = word as Word & { list_name?: string };
+      if (wordWithList.list_name && !FREE_TIER_LISTS.includes(wordWithList.list_name)) {
+        return false;
+      }
+    }
     
     // Apply status filter
     let matchesFilter = false;
@@ -188,63 +228,84 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 sm:mb-8 space-y-4"
         >
-          {/* Filter Buttons */}
-          <div className="flex items-start sm:items-center gap-2 sm:gap-4 flex-col sm:flex-row">
-            <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-              <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="text-sm sm:text-base font-medium">Filter:</span>
-            </div>
-            <div className="flex gap-2 flex-wrap w-full sm:w-auto">
-              {(['all', 'started', 'not-started', 'mastered'] as FilterType[]).map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all ${
-                    filter === f
-                      ? 'bg-blue-600 text-white shadow-md'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
-                  }`}
-                >
-                  {f === 'all' && 'All'}
-                  {f === 'started' && 'In Progress'}
-                  {f === 'not-started' && 'Not Started'}
-                  {f === 'mastered' && 'Mastered'}
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          {/* Custom Words Toggle and Search */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
-            {/* Custom Words Toggle */}
-            <label className="flex items-center gap-2 cursor-pointer px-3 sm:px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full sm:w-auto">
-              <input
-                type="checkbox"
-                checked={showCustomWords}
-                onChange={(e) => setShowCustomWords(e.target.checked)}
-                className="w-4 h-4 text-purple-600 rounded focus:ring-0 focus:ring-offset-0"
-              />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Show Custom Words
+          {/* Filter Toggle Button */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-gray-300" />
+              <span className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">
+                {showFilters ? 'Hide Filters' : 'Show Filters'}
               </span>
-            </label>
-            
-            {/* Search input */}
-            <div className="relative sm:ml-auto w-full sm:w-auto">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search words..."
-                className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-full sm:min-w-[200px]"
-              />
-            </div>
-            
-            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
+            </button>
+            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               {filteredWords.length} word{filteredWords.length !== 1 ? 's' : ''}
             </div>
           </div>
+
+          {/* Collapsible Filter Section */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-4 overflow-hidden"
+              >
+                {/* Filter Buttons */}
+                <div className="flex items-start sm:items-center gap-2 sm:gap-4 flex-col sm:flex-row">
+                  <div className="flex gap-2 flex-wrap w-full sm:w-auto">
+                    {(['all', 'started', 'not-started', 'mastered'] as FilterType[]).map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setFilter(f)}
+                        className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all ${
+                          filter === f
+                            ? 'bg-blue-600 text-white shadow-md'
+                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                        }`}
+                      >
+                        {f === 'all' && 'All'}
+                        {f === 'started' && 'In Progress'}
+                        {f === 'not-started' && 'Not Started'}
+                        {f === 'mastered' && 'Mastered'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Custom Words Toggle and Search */}
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
+                  {/* Custom Words Toggle */}
+                  <label className="flex items-center gap-2 cursor-pointer px-3 sm:px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full sm:w-auto">
+                    <input
+                      type="checkbox"
+                      checked={showCustomWords}
+                      onChange={(e) => setShowCustomWords(e.target.checked)}
+                      className="w-4 h-4 text-purple-600 rounded focus:ring-0 focus:ring-offset-0"
+                    />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Show Custom Words
+                    </span>
+                  </label>
+                  
+                  {/* Search input */}
+                  <div className="relative sm:ml-auto w-full sm:w-auto">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search words..."
+                      className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-full sm:min-w-[200px]"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {filteredWords.length === 0 ? (
