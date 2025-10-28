@@ -228,20 +228,22 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 sm:mb-8 space-y-4"
         >
-          {/* Top Row - Filter Toggle, Word Count, and Search */}
+          {/* Top Row - Filter Toggle and Search */}
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-gray-300" />
-              <span className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
-              </span>
-            </button>
-            
-            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              {filteredWords.length} word{filteredWords.length !== 1 ? 's' : ''}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-gray-300" />
+                <span className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">
+                  {showFilters ? 'Hide Filters' : 'Show Filters'}
+                </span>
+              </button>
+              
+              <div className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
+                {filteredWords.length} word{filteredWords.length !== 1 ? 's' : ''}
+              </div>
             </div>
 
             {/* Search input - Always visible */}

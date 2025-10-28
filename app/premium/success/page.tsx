@@ -28,7 +28,6 @@ function SuccessContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-        <Header />
         <div className="flex flex-col items-center justify-center h-screen">
           <Loader2 className="w-12 h-12 animate-spin text-purple-600 mb-4" />
           <p className="text-gray-600 dark:text-gray-400">Processing your subscription...</p>
@@ -105,7 +104,6 @@ export default function SuccessPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-        <Header />
         <div className="flex flex-col items-center justify-center h-screen">
           <Loader2 className="w-12 h-12 animate-spin text-purple-600 mb-4" />
           <p className="text-gray-600 dark:text-gray-400">Loading...</p>

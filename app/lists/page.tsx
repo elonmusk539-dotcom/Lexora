@@ -1,7 +1,7 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { BookOpen, Lock, Crown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { BookOpen, Lock, Crown, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -21,6 +21,7 @@ interface VocabularyList {
 export default function ListsPage() {
   const [lists, setLists] = useState<VocabularyList[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
   const { subscription, isPro, loading: subLoading } = useSubscription();
 
@@ -77,23 +78,56 @@ export default function ListsPage() {
     );
   }
 
+  const filteredLists = lists.filter((list) => {
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      return (
+        list.name.toLowerCase().includes(query) ||
+        list.description?.toLowerCase().includes(query)
+      );
+    }
+    return true;
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-6 sm:mb-8 space-y-4"
         >
-          <div className="flex items-center justify-between mb-2">
+          {/* Top Row - Title with count and Search */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3">
-              <BookOpen className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Vocabulary Lists</h2>
+              <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" />
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                  Vocabulary Lists
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  {filteredLists.length} list{filteredLists.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+
+            {/* Search input */}
+            <div className="relative flex-1 min-w-[200px] sm:min-w-[250px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search lists..."
+                className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-full"
+              />
             </div>
           </div>
-          <p className="text-gray-600 dark:text-gray-400">
+
+          {/* Info message */}
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             {isPro 
               ? 'Browse and study all available word collections'
               : `You have access to ${FREE_TIER_LISTS.length} free lists. Unlock all lists with Pro!`
@@ -101,19 +135,19 @@ export default function ListsPage() {
           </p>
         </motion.div>
 
-        {lists.length === 0 ? (
+        {filteredLists.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-16"
           >
             <p className="text-gray-600 text-lg">
-              No vocabulary lists available yet.
+              {searchQuery.trim() ? 'No lists match your search.' : 'No vocabulary lists available yet.'}
             </p>
           </motion.div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {lists.map((list, index) => {
+            {filteredLists.map((list, index) => {
               const isLocked = !canAccessList(subscription.tier, list.name);
               
               return (

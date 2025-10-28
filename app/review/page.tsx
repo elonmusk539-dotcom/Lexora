@@ -310,7 +310,6 @@ function SRSReview() {
   if (session.words.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <Header />
         <div className="max-w-2xl mx-auto px-4 py-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

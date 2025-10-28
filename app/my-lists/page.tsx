@@ -38,6 +38,7 @@ export default function MyListsPage() {
   const { subscription, isPro, loading: subLoading } = useSubscription();
   const [lists, setLists] = useState<CustomList[]>([]);
   const [loading, setLoading] = useState(true);
+  const [listSearchQuery, setListSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [newListDescription, setNewListDescription] = useState('');
@@ -427,21 +428,59 @@ export default function MyListsPage() {
     }
   };
 
+  const filteredLists = lists.filter((list) => {
+    if (listSearchQuery.trim()) {
+      const query = listSearchQuery.toLowerCase();
+      return (
+        list.name.toLowerCase().includes(query) ||
+        list.description?.toLowerCase().includes(query)
+      );
+    }
+    return true;
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <Header />
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">My Word Lists</h1>
-            <p className="text-gray-600 dark:text-gray-400">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 sm:mb-8 space-y-4"
+        >
+          {/* Top Row - Title with count and Search */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 dark:text-purple-400" />
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">My Word Lists</h1>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  {filteredLists.length} list{filteredLists.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+
+            {/* Search input */}
+            <div className="relative flex-1 min-w-[200px] sm:min-w-[250px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={listSearchQuery}
+                onChange={(e) => setListSearchQuery(e.target.value)}
+                placeholder="Search your lists..."
+                className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm w-full"
+              />
+            </div>
+          </div>
+
+          {/* Info and Create button row */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {isPro 
                 ? 'Create and manage unlimited custom vocabulary collections'
                 : `${lists.length}/2 custom lists used. Upgrade to Pro for unlimited!`
               }
             </p>
-          </div>
-          <div className="flex gap-3">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -455,33 +494,39 @@ export default function MyListsPage() {
                 setShowCreateModal(true);
               }}
               disabled={!canCreateCustomList(subscription.tier, lists.length) && !isPro}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base whitespace-nowrap"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
               Create New List
             </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
           </div>
-        ) : lists.length === 0 ? (
+        ) : filteredLists.length === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
             <BookOpen className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No custom lists yet</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">Create your first custom word list to get started!</p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow"
-            >
-              Create Your First List
-            </button>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              {listSearchQuery.trim() ? 'No lists match your search' : 'No custom lists yet'}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {listSearchQuery.trim() ? 'Try a different search term' : 'Create your first custom word list to get started!'}
+            </p>
+            {!listSearchQuery.trim() && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow"
+              >
+                Create Your First List
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {lists.map((list) => (
+            {filteredLists.map((list) => (
               <motion.div
                 key={list.id}
                 whileHover={{ scale: 1.02 }}
