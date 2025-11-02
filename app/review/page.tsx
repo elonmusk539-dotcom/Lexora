@@ -52,6 +52,7 @@ function SRSReview() {
     showExamples: true,
     numberOfExamples: 3,
   });
+  const [wordProgress, setWordProgress] = useState<Record<string, { interval: number; easeFactor: number; repetitions: number }>>({});
 
   useEffect(() => {
     checkUserAndLoadDueWords();
@@ -94,6 +95,48 @@ function SRSReview() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Calculate next review interval based on SM-2 algorithm
+  const calculateNextInterval = (quality: number, currentWordId: string): number => {
+    const progress = wordProgress[currentWordId] || { interval: 0, easeFactor: 2.5, repetitions: 0 };
+    
+    let newInterval = 1; // Default 1 day
+    let newEaseFactor = progress.easeFactor;
+    let newRepetitions = progress.repetitions;
+
+    if (quality >= 3) {
+      // Good or Easy
+      if (newRepetitions === 0) {
+        newInterval = 1;
+      } else if (newRepetitions === 1) {
+        newInterval = quality === 5 ? 4 : 3; // Easy: 4 days, Good: 3 days
+      } else {
+        newInterval = Math.round(progress.interval * progress.easeFactor);
+        if (quality === 5) newInterval = Math.round(newInterval * 1.3); // Easy gets longer
+      }
+      newRepetitions += 1;
+      newEaseFactor = Math.max(1.3, progress.easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
+    } else {
+      // Again or Hard
+      newRepetitions = 0;
+      newInterval = quality === 1 ? 1 : 1; // Hard: 1 day, Again: 1 day
+      newEaseFactor = Math.max(1.3, progress.easeFactor - 0.2);
+    }
+
+    return newInterval;
+  };
+
+  const formatInterval = (days: number): string => {
+    if (days < 1) return '<1d';
+    if (days === 1) return '1d';
+    if (days < 30) return `${days}d`;
+    if (days < 365) {
+      const months = Math.round(days / 30);
+      return `${months}mo`;
+    }
+    const years = Math.round(days / 365);
+    return `${years}y`;
   };
 
   const loadDueWords = async (userId: string, duration: number, selectedListIds: string[]) => {
@@ -186,9 +229,31 @@ function SRSReview() {
         return;
       }
 
+      // Debug: Check if examples are in the data
+      console.log('Smart Quiz - Sample word data:', allWords[0]);
+      console.log('Smart Quiz - Examples for first word:', allWords[0]?.examples);
+
       // Shuffle to make it less predictable
       const shuffled = allWords.sort(() => Math.random() - 0.5);
       setSession(prev => ({ ...prev, words: shuffled }));
+
+      // Fetch progress data for all words
+      const wordIds = shuffled.map(w => w.id);
+      const { data: progressData } = await supabase
+        .from('user_progress')
+        .select('word_id, interval, ease_factor, repetitions')
+        .eq('user_id', userId)
+        .in('word_id', wordIds);
+
+      const progressMap: Record<string, { interval: number; easeFactor: number; repetitions: number }> = {};
+      (progressData || []).forEach((p: { word_id: string; interval: number; ease_factor: number; repetitions: number }) => {
+        progressMap[p.word_id] = {
+          interval: p.interval || 0,
+          easeFactor: p.ease_factor || 2.5,
+          repetitions: p.repetitions || 0,
+        };
+      });
+      setWordProgress(progressMap);
     } catch (error) {
       console.error('Error loading due words:', error);
     }
@@ -342,8 +407,6 @@ function SRSReview() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <Header />
-      
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -386,7 +449,7 @@ function SRSReview() {
               onClick={() => setSelectedWord(currentWord)}
               className="absolute top-2 right-2 sm:top-4 sm:right-4 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors z-10 shadow-md"
             >
-              Details
+              Show Details
             </button>
 
             {/* Word Image - Front */}
@@ -442,7 +505,7 @@ function SRSReview() {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-6 text-center"
                 >
-                  {/* Word Image - Back */}
+                  {/* Word Image - Back (moved to top) */}
                   {settings.showImageOnBack && (
                     <div className="relative w-full aspect-square max-w-xs mx-auto rounded-xl overflow-hidden mb-6 bg-gray-100 dark:bg-gray-700">
                       <img
@@ -482,7 +545,7 @@ function SRSReview() {
                     className="py-2.5 sm:py-3 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors text-sm sm:text-base"
                   >
                     Again
-                    <div className="text-[10px] sm:text-xs opacity-75">1 day</div>
+                    <div className="text-[10px] sm:text-xs opacity-75">{formatInterval(calculateNextInterval(0, currentWord.id))}</div>
                   </button>
                   <button
                     onClick={() => handleRating(1)}
@@ -490,7 +553,7 @@ function SRSReview() {
                     className="py-2.5 sm:py-3 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors text-sm sm:text-base"
                   >
                     Hard
-                    <div className="text-[10px] sm:text-xs opacity-75">3 days</div>
+                    <div className="text-[10px] sm:text-xs opacity-75">{formatInterval(calculateNextInterval(1, currentWord.id))}</div>
                   </button>
                   <button
                     onClick={() => handleRating(3)}
@@ -498,7 +561,7 @@ function SRSReview() {
                     className="py-2.5 sm:py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors text-sm sm:text-base"
                   >
                     Good
-                    <div className="text-[10px] sm:text-xs opacity-75">1 week</div>
+                    <div className="text-[10px] sm:text-xs opacity-75">{formatInterval(calculateNextInterval(3, currentWord.id))}</div>
                   </button>
                   <button
                     onClick={() => handleRating(5)}
@@ -506,7 +569,7 @@ function SRSReview() {
                     className="py-2.5 sm:py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors text-sm sm:text-base"
                   >
                     Easy
-                    <div className="text-[10px] sm:text-xs opacity-75">2 weeks</div>
+                    <div className="text-[10px] sm:text-xs opacity-75">{formatInterval(calculateNextInterval(5, currentWord.id))}</div>
                   </button>
                 </div>
               </>

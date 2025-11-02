@@ -124,8 +124,6 @@ export default function PremiumPage() {
       />
       
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-        <Header />
-
         <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12 md:mb-16">

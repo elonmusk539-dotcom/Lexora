@@ -40,7 +40,7 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     try {
       // Determine the callback URL based on the environment
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
                       (typeof window !== 'undefined' ? window.location.origin : '');
       
       const { error } = await supabase.auth.signInWithOAuth({

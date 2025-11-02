@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, ArrowLeft, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
@@ -28,6 +28,7 @@ export default function ListDetailPage() {
   const params = useParams();
   const listId = params.id as string;
   const [list, setList] = useState<VocabularyList | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   const [words, setWords] = useState<Word[]>([]);
   const [progress, setProgress] = useState<Record<string, UserProgress>>({});
   const [filter, setFilter] = useState<FilterType>('all');
@@ -170,8 +171,6 @@ export default function ListDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <Header />
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back button and list title */}
         <motion.div
@@ -196,46 +195,71 @@ export default function ListDetailPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 flex items-center gap-4 flex-wrap"
+          className="mb-6 sm:mb-8 space-y-4"
         >
-          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-            <Filter className="w-5 h-5" />
-            <span className="font-medium">Filter:</span>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {(['all', 'started', 'not-started', 'mastered'] as FilterType[]).map((f) => (
+          {/* Top Row - Filter Toggle, Word Count, and Search */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
               <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  filter === f
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
-                }`}
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
-                {f === 'all' && 'All Words'}
-                {f === 'started' && 'In Progress'}
-                {f === 'not-started' && 'Not Started'}
-                {f === 'mastered' && 'Mastered'}
+                <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-gray-300" />
+                <span className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">
+                  {showFilters ? 'Hide Filters' : 'Show Filters'}
+                </span>
               </button>
-            ))}
+              
+              <div className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
+                {filteredWords.length} word{filteredWords.length !== 1 ? 's' : ''}
+              </div>
+            </div>
+
+            {/* Search input - Always visible */}
+            <div className="relative flex-1 min-w-[200px] sm:min-w-[250px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search words..."
+                className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-full"
+              />
+            </div>
           </div>
-          
-          {/* Search input */}
-          <div className="relative ml-auto">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search words..."
-              className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm min-w-[200px]"
-            />
-          </div>
-          
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            {filteredWords.length} word{filteredWords.length !== 1 ? 's' : ''}
-          </div>
+
+          {/* Collapsible Filter Section */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-4 overflow-hidden"
+              >
+                {/* Filter Buttons */}
+                <div className="flex gap-2 flex-wrap">
+                  {(['all', 'started', 'not-started', 'mastered'] as FilterType[]).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setFilter(f)}
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all ${
+                        filter === f
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                      }`}
+                    >
+                      {f === 'all' && 'All'}
+                      {f === 'started' && 'In Progress'}
+                      {f === 'not-started' && 'Not Started'}
+                      {f === 'mastered' && 'Mastered'}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {/* Words grid */}
