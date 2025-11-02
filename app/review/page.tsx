@@ -75,14 +75,16 @@ function SRSReview() {
         .single();
 
       if (profile?.settings?.smartQuiz) {
-        setSettings({
+        const smartQuizSettings = {
           showFuriganaOnFront: profile.settings.smartQuiz.showFuriganaOnFront ?? false,
           showRomajiOnFront: profile.settings.smartQuiz.showRomajiOnFront ?? false,
           showImageOnFront: profile.settings.smartQuiz.showImageOnFront ?? true,
           showImageOnBack: profile.settings.smartQuiz.showImageOnBack ?? true,
           showExamples: profile.settings.smartQuiz.showExamples ?? true,
           numberOfExamples: profile.settings.smartQuiz.numberOfExamples ?? 3,
-        });
+        };
+        console.log('Smart Quiz Settings Loaded:', smartQuizSettings);
+        setSettings(smartQuizSettings);
       }
 
       // Get query parameters
@@ -505,6 +507,15 @@ function SRSReview() {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-6 text-center"
                 >
+                  {/* Debug info */}
+                  {typeof window !== 'undefined' && console.log('Current word on back:', {
+                    word: currentWord.word,
+                    hasExamples: !!currentWord.examples,
+                    examplesCount: currentWord.examples?.length || 0,
+                    showExamples: settings.showExamples,
+                    examples: currentWord.examples
+                  })}
+                  
                   {/* Word Image - Back (moved to top) */}
                   {settings.showImageOnBack && (
                     <div className="relative w-full aspect-square max-w-xs mx-auto rounded-xl overflow-hidden mb-6 bg-gray-100 dark:bg-gray-700">
@@ -522,17 +533,23 @@ function SRSReview() {
                   </div>
                   
                   {/* Examples */}
-                  {settings.showExamples && currentWord.examples && currentWord.examples.length > 0 && (
-                    <div className="space-y-4">
+                  {settings.showExamples && currentWord.examples && currentWord.examples.length > 0 ? (
+                    <div className="space-y-4 mt-6">
+                      <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Examples:</div>
                       {currentWord.examples.slice(0, settings.numberOfExamples).map((example, index) => {
                         const parts = example.split('|');
                         return (
-                          <div key={index} className="text-sm">
+                          <div key={index} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-left">
                             <div className="font-medium text-gray-900 dark:text-gray-200 mb-1">{parts[0]}</div>
                             {parts[3] && <div className="text-sm text-blue-600 dark:text-blue-400">{parts[3]}</div>}
                           </div>
                         );
                       })}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-4">
+                      {!settings.showExamples && '(Examples hidden in settings)'}
+                      {settings.showExamples && (!currentWord.examples || currentWord.examples.length === 0) && '(No examples available for this word)'}
                     </div>
                   )}
                 </motion.div>

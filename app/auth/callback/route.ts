@@ -1,6 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -21,16 +22,25 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     console.log('[Auth Callback] Processing code...');
-    // Create a Supabase client with session persistence
-    const supabase = createClient(
+    
+    const cookieStore = await cookies();
+    
+    // Create a Supabase client with cookie support for proper session handling
+    const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-        }
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name: string, value: string, options: any) {
+            cookieStore.set({ name, value, ...options });
+          },
+          remove(name: string, options: any) {
+            cookieStore.set({ name, value: '', ...options });
+          },
+        },
       }
     );
     
@@ -73,7 +83,7 @@ export async function GET(request: NextRequest) {
         }
 
         console.log('[Auth Callback] Session established, redirecting to home...');
-        // Redirect directly to home - session is now stored in Supabase client
+        // Redirect directly to home - session is now stored in cookies
         return NextResponse.redirect(`${origin}/`);
       }
     } catch (error) {
