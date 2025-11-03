@@ -1,12 +1,11 @@
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from './database.types';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 // Determine the site URL based on environment
 const getURL = () => {
   let url =
     process.env.NEXT_PUBLIC_SITE_URL ?? // Set this in Vercel environment variables
     process.env.NEXT_PUBLIC_VERCEL_URL ?? // Automatically set by Vercel
-    'http://localhost:3000';
+    'https://lexora-nu.vercel.app/';
   
   // Make sure to include `https://` when not localhost
   url = url.includes('http') ? url : `https://${url}`;
@@ -15,7 +14,7 @@ const getURL = () => {
   return url;
 };
 
-export const supabase = createClient<Database>(
+export const supabase: SupabaseClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   {

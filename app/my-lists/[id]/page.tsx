@@ -8,7 +8,6 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { WordListItem } from '@/components/WordListItem';
 import { WordDetailsCard, type Word } from '@/components/WordDetailsCard';
-import { Header } from '@/components/Header';
 import { AddCustomWord } from '@/components/AddCustomWord';
 
 type FilterType = 'all' | 'started' | 'not-started' | 'mastered';
@@ -105,11 +104,12 @@ export default function CustomListDetailPage() {
         word_id: string;
         vocabulary_words: Word;
       }
-      
-      const regularWords = regularWordsData?.map((item: RegularWordItem) => ({
+
+      const regularWordItems = (regularWordsData ?? []) as unknown as RegularWordItem[];
+      const regularWords: Word[] = regularWordItems.map((item) => ({
         ...item.vocabulary_words,
-        word_type: 'regular'
-      })) || [];
+        word_type: 'regular' as const,
+      }));
       
       interface CustomWordItem {
         custom_word_id: string;
@@ -126,20 +126,21 @@ export default function CustomListDetailPage() {
         };
       }
       
-      const customWords = customWordsData?.map((item: CustomWordItem) => {
+      const customWordItems = (customWordsData ?? []) as unknown as CustomWordItem[];
+      const customWords: Word[] = customWordItems.map((item) => {
         const word = item.user_custom_words;
         return {
           ...word,
           word: word.kanji, // Map kanji to word field for compatibility
           reading: word.romaji,
-          word_type: 'custom',
+          word_type: 'custom' as const,
           // Custom words store examples as JSONB, convert to string array for compatibility
           examples: word.examples ? 
             word.examples.map((ex) => 
               `${ex.kanji}|${ex.furigana}|${ex.romaji}|${ex.translation}`
             ) : []
         };
-      }) || [];
+      });
 
       setWords([...regularWords, ...customWords]);
 

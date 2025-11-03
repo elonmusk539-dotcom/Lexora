@@ -3,8 +3,8 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
-import { Header } from '@/components/Header';
 import { Volume2, ArrowLeft, RotateCcw } from 'lucide-react';
 import { WordDetailsCard } from '@/components/WordDetailsCard';
 
@@ -102,31 +102,21 @@ function SRSReview() {
   // Calculate next review interval based on SM-2 algorithm
   const calculateNextInterval = (quality: number, currentWordId: string): number => {
     const progress = wordProgress[currentWordId] || { interval: 0, easeFactor: 2.5, repetitions: 0 };
-    
-    let newInterval = 1; // Default 1 day
-    let newEaseFactor = progress.easeFactor;
-    let newRepetitions = progress.repetitions;
 
     if (quality >= 3) {
-      // Good or Easy
-      if (newRepetitions === 0) {
-        newInterval = 1;
-      } else if (newRepetitions === 1) {
-        newInterval = quality === 5 ? 4 : 3; // Easy: 4 days, Good: 3 days
-      } else {
-        newInterval = Math.round(progress.interval * progress.easeFactor);
-        if (quality === 5) newInterval = Math.round(newInterval * 1.3); // Easy gets longer
+      if (progress.repetitions === 0) {
+        return 1;
       }
-      newRepetitions += 1;
-      newEaseFactor = Math.max(1.3, progress.easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
-    } else {
-      // Again or Hard
-      newRepetitions = 0;
-      newInterval = quality === 1 ? 1 : 1; // Hard: 1 day, Again: 1 day
-      newEaseFactor = Math.max(1.3, progress.easeFactor - 0.2);
+
+      if (progress.repetitions === 1) {
+        return quality === 5 ? 4 : 3;
+      }
+
+      const baseInterval = Math.max(1, Math.round(progress.interval * progress.easeFactor));
+      return quality === 5 ? Math.max(1, Math.round(baseInterval * 1.3)) : baseInterval;
     }
 
-    return newInterval;
+    return 1;
   };
 
   const formatInterval = (days: number): string => {
@@ -455,12 +445,15 @@ function SRSReview() {
             </button>
 
             {/* Word Image - Front */}
-            {!session.showAnswer && settings.showImageOnFront && (
+            {!session.showAnswer && settings.showImageOnFront && currentWord.image_url && (
               <div className="relative w-full aspect-square max-w-xs mx-auto rounded-xl overflow-hidden mb-6 bg-gray-100 dark:bg-gray-700">
-                <img
+                <Image
                   src={currentWord.image_url}
                   alt={currentWord.word}
-                  className="w-full h-full object-contain"
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, 300px"
+                  unoptimized
                 />
               </div>
             )}
@@ -507,22 +500,16 @@ function SRSReview() {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-6 text-center"
                 >
-                  {/* Debug info */}
-                  {typeof window !== 'undefined' && console.log('Current word on back:', {
-                    word: currentWord.word,
-                    hasExamples: !!currentWord.examples,
-                    examplesCount: currentWord.examples?.length || 0,
-                    showExamples: settings.showExamples,
-                    examples: currentWord.examples
-                  })}
-                  
                   {/* Word Image - Back (moved to top) */}
-                  {settings.showImageOnBack && (
+                  {settings.showImageOnBack && currentWord.image_url && (
                     <div className="relative w-full aspect-square max-w-xs mx-auto rounded-xl overflow-hidden mb-6 bg-gray-100 dark:bg-gray-700">
-                      <img
+                      <Image
                         src={currentWord.image_url}
                         alt={currentWord.word}
-                        className="w-full h-full object-contain"
+                        fill
+                        className="object-contain"
+                        sizes="(max-width: 768px) 100vw, 300px"
+                        unoptimized
                       />
                     </div>
                   )}

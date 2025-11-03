@@ -109,7 +109,8 @@ function MCQQuiz() {
           };
         }
         
-        const processedCustomWords = (userCustomWords || []).map((item: CustomWordItem) => {
+  const customWordItems = (userCustomWords ?? []) as unknown as CustomWordItem[];
+  const processedCustomWords = customWordItems.map((item) => {
           const word = item.user_custom_words;
           return {
             ...word,
@@ -129,9 +130,11 @@ function MCQQuiz() {
         }
 
         // Combine all words
+        const listWordItems = (customListWords ?? []) as unknown as ListWordItem[];
+
         allWords = [
-          ...(defaultWords || []),
-          ...(customListWords || []).map((item: ListWordItem) => item.vocabulary_words),
+          ...((defaultWords ?? []) as Word[]),
+          ...listWordItems.map((item) => item.vocabulary_words),
           ...processedCustomWords
         ].filter((word): word is Word => word != null);
       } else {

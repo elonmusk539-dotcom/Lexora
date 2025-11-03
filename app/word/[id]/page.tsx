@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { WordDetailsCard, type Word } from '@/components/WordDetailsCard';
-import { Header } from '@/components/Header';
 
 export default function WordSharePage() {
   const params = useParams();

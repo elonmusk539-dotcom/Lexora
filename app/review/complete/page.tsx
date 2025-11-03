@@ -3,7 +3,6 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Header } from '@/components/Header';
 import { Trophy, Home, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';

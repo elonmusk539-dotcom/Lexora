@@ -6,9 +6,53 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { Settings as SettingsIcon, Save, Moon, Sun, MessageSquare, Upload, X } from 'lucide-react';
-import { Header } from '@/components/Header';
 import { useTheme } from '@/contexts/ThemeContext';
 import imageCompression from 'browser-image-compression';
+import Image from 'next/image';
+
+interface ScreenshotPreviewProps {
+  file: File;
+  index: number;
+  onRemove: () => void;
+}
+
+function ScreenshotPreview({ file, index, onRemove }: ScreenshotPreviewProps) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [file]);
+
+  if (!previewUrl) {
+    return null;
+  }
+
+  return (
+    <div className="relative group">
+      <div className="relative w-full h-24 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+        <Image
+          src={previewUrl}
+          alt={`Screenshot ${index + 1}`}
+          fill
+          unoptimized
+          className="object-cover"
+          sizes="(max-width: 768px) 33vw, 200px"
+        />
+      </div>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
 
 interface UserSettings {
   flashcard: {
@@ -807,20 +851,12 @@ export default function SettingsPage() {
                   {feedbackScreenshots.length > 0 && (
                     <div className="grid grid-cols-3 gap-2 mb-3">
                       {feedbackScreenshots.map((file, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={URL.createObjectURL(file)}
-                            alt={`Screenshot ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeScreenshot(index)}
-                            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
+                        <ScreenshotPreview
+                          key={`${file.name}-${index}`}
+                          file={file}
+                          index={index}
+                          onRemove={() => removeScreenshot(index)}
+                        />
                       ))}
                     </div>
                   )}

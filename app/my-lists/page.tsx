@@ -2,15 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Edit2, X, BookOpen, Search, Crown } from 'lucide-react';
+import { Plus, Trash2, Edit2, X, BookOpen, Search } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { WordListItem } from '@/components/WordListItem';
 import { AddCustomWord } from '@/components/AddCustomWord';
 import { useSubscription } from '@/lib/subscription/useSubscription';
-import { canCreateCustomList, getRemainingSlots, FREE_TIER_LISTS } from '@/lib/subscription/config';
-import { Header } from '@/components/Header';
-import Link from 'next/link';
+import { canCreateCustomList, FREE_TIER_LISTS } from '@/lib/subscription/config';
 
 interface CustomList {
   id: string;
@@ -31,11 +29,12 @@ interface Word {
   image_url: string;
   pronunciation_url: string;
   examples: string[];
+  word_type?: 'custom' | 'regular';
 }
 
 export default function MyListsPage() {
   const router = useRouter();
-  const { subscription, isPro, loading: subLoading } = useSubscription();
+  const { subscription, isPro } = useSubscription();
   const [lists, setLists] = useState<CustomList[]>([]);
   const [loading, setLoading] = useState(true);
   const [listSearchQuery, setListSearchQuery] = useState('');
@@ -253,11 +252,12 @@ export default function MyListsPage() {
         word_id: string;
         vocabulary_words: Word;
       }
-      
-      const regularWords = regularWordsData?.map((item: RegularWordItem) => ({
+
+      const regularWordItems = (regularWordsData ?? []) as unknown as RegularWordItem[];
+      const regularWords: Word[] = regularWordItems.map((item) => ({
         ...item.vocabulary_words,
-        word_type: 'regular'
-      })) || [];
+        word_type: 'regular' as const,
+      }));
       
       interface CustomWordItem {
         custom_word_id: string;
@@ -274,19 +274,19 @@ export default function MyListsPage() {
         };
       }
       
-      const customWords = customWordsData?.map((item: CustomWordItem) => {
+      const customWordItems = (customWordsData ?? []) as unknown as CustomWordItem[];
+      const customWords: Word[] = customWordItems.map((item) => {
         const word = item.user_custom_words;
         return {
           ...word,
           word: word.kanji,
           reading: word.romaji,
-          word_type: 'custom',
-          examples: word.examples ? 
-            word.examples.map((ex) => 
-              `${ex.kanji}|${ex.furigana}|${ex.romaji}|${ex.translation}`
-            ) : []
+          word_type: 'custom' as const,
+          examples: word.examples
+            ? word.examples.map((ex) => `${ex.kanji}|${ex.furigana}|${ex.romaji}|${ex.translation}`)
+            : [],
         };
-      }) || [];
+      });
 
       setListWords([...regularWords, ...customWords]);
     } catch (error) {
@@ -310,6 +310,9 @@ export default function MyListsPage() {
         `)
         .order('kanji', { ascending: true });
 
+      type WordWithList = Word & { vocabulary_lists?: { name?: string | null } | null };
+      const vocabWords = (allVocabWords ?? []) as unknown as WordWithList[];
+
       // Get words already in current list
       const { data: existingWords } = await supabase
         .from('user_custom_list_words')
@@ -319,15 +322,15 @@ export default function MyListsPage() {
       const existingWordIds = existingWords?.map(w => w.word_id) || [];
 
       // Filter out words already in the list
-      let availableWords = (allVocabWords || []).filter(
+      let availableWords = vocabWords.filter(
         word => !existingWordIds.includes(word.id)
       );
 
       // Filter by subscription tier - free users only see words from free tier lists
       if (!isPro) {
         availableWords = availableWords.filter(word => {
-          const listName = (word as any).vocabulary_lists?.name;
-          return listName && FREE_TIER_LISTS.includes(listName);
+          const listName = word.vocabulary_lists?.name ?? undefined;
+          return listName !== undefined && FREE_TIER_LISTS.includes(listName);
         });
       }
 
@@ -775,7 +778,12 @@ export default function MyListsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {listWords.map((word) => (
                       <div key={word.id} className="relative">
-                        <WordListItem word={word} />
+                        <WordListItem
+                          word={word}
+                          progress={0}
+                          isMastered={false}
+                          onClick={() => undefined}
+                        />
                         <button
                           onClick={() => removeWordFromList(word.id)}
                           className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-lg"

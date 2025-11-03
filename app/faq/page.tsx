@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Header } from '@/components/Header';
 import { Brain, Target, Calendar, Zap, Award, HelpCircle } from 'lucide-react';
 
 export default function FAQPage() {

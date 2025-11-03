@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-@variant dark (.dark &);
-
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -9,6 +7,10 @@
   --card-border: #e5e7eb;
   --input-bg: #ffffff;
   --input-border: #d1d5db;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
 
 .dark {
@@ -18,13 +20,6 @@
   --card-border: #2a2a2a;
   --input-bg: #1a1a1a;
   --input-border: #2a2a2a;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {

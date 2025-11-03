@@ -1,12 +1,11 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { BookOpen, Lock, Crown, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Header } from '@/components/Header';
 import { useSubscription } from '@/lib/subscription/useSubscription';
 import { FREE_TIER_LISTS, canAccessList } from '@/lib/subscription/config';
 

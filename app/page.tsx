@@ -7,7 +7,6 @@ import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { WordListItem } from '@/components/WordListItem';
 import { WordDetailsCard, type Word } from '@/components/WordDetailsCard';
-import { Header } from '@/components/Header';
 import { FREE_TIER_LISTS, type SubscriptionTier } from '@/lib/subscription/config';
 
 type FilterType = 'all' | 'started' | 'not-started' | 'mastered';

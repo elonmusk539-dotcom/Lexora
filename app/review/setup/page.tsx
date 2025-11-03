@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Header } from '@/components/Header';
 import { supabase } from '@/lib/supabase/client';
 import { Brain, Clock, List, Info } from 'lucide-react';
-import { FREE_TIER_LISTS, type SubscriptionTier } from '@/lib/subscription/config';
+import { FREE_TIER_LISTS } from '@/lib/subscription/config';
 
 type QuizDuration = 5 | 10 | 15 | 20 | 'custom';
 
@@ -45,7 +44,6 @@ export default function SmartQuizSetupPage() {
   const [showListModal, setShowListModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>('');
-  const [userTier, setUserTier] = useState<SubscriptionTier>('free');
   // Due words preview state - to be implemented in future
   // const [dueWords, setDueWords] = useState<Record<string, DueWord[]>>({});
   // const [showDueWords, setShowDueWords] = useState(false);
@@ -102,9 +100,8 @@ export default function SmartQuizSetupPage() {
         .eq('user_id', uid)
         .single();
 
-      const isPro = subscription?.status === 'active' && 
-                    new Date(subscription.current_period_end) > new Date();
-      setUserTier(isPro ? 'pro' : 'free');
+  const isPro = subscription?.status === 'active' && 
+        new Date(subscription.current_period_end) > new Date();
 
       // Load default lists
       const { data: defaultLists } = await supabase

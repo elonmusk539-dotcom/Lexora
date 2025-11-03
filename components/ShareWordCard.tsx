@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, X, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
+import Image from 'next/image';
 
 interface VocabularyWord {
   id: string;
@@ -171,11 +172,14 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
                     <div className="flex-1 flex flex-col justify-center items-center text-center space-y-2">
                       {word.image_url && (
                         <div className="mb-1 rounded-lg sm:rounded-xl overflow-hidden shadow-lg">
-                          <img
+                          <Image
                             src={word.image_url}
                             alt={word.kanji || word.word}
+                            width={128}
+                            height={128}
                             className="w-24 h-24 sm:w-32 sm:h-32 object-cover"
                             crossOrigin="anonymous"
+                            unoptimized
                           />
                         </div>
                       )}

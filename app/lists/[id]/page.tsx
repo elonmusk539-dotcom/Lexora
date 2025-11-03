@@ -8,7 +8,6 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { WordListItem } from '@/components/WordListItem';
 import { WordDetailsCard, type Word } from '@/components/WordDetailsCard';
-import { Header } from '@/components/Header';
 
 type FilterType = 'all' | 'started' | 'not-started' | 'mastered';
 

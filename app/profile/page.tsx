@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { User, Mail, Image as ImageIcon, Save, LogOut, Upload, Trophy, Flame, BookPlus, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import imageCompression from 'browser-image-compression';
 
 export default function ProfilePage() {
@@ -285,10 +286,13 @@ export default function ProfilePage() {
             <div className="flex justify-center mb-6 sm:mb-8">
               <div className="relative">
                 {avatarUrl ? (
-                  <img
+                  <Image
                     src={avatarUrl}
                     alt="Profile avatar"
+                    width={128}
+                    height={128}
                     className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-4 border-purple-200"
+                    sizes="(max-width: 640px) 96px, (max-width: 768px) 112px, 128px"
                   />
                 ) : (
                   <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center border-4 border-purple-200">

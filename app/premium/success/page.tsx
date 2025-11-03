@@ -2,7 +2,6 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Header } from '@/components/Header';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 

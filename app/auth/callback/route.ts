@@ -1,7 +1,6 @@
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -22,23 +21,32 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     console.log('[Auth Callback] Processing code...');
-    
-    const cookieStore = await cookies();
-    
+
+  const pendingCookies = new Map<string, { value: string; options?: CookieOptions }>();
+
+    const applyCookies = (response: NextResponse) => {
+      pendingCookies.forEach(({ value, options }, name) => {
+        response.cookies.set({ name, value, ...(options ?? {}) });
+      });
+      return response;
+    };
+
     // Create a Supabase client with cookie support for proper session handling
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
+          getAll() {
+            return request.cookies.getAll().map(cookie => ({
+              name: cookie.name,
+              value: cookie.value,
+            }));
           },
-          set(name: string, value: string, options: any) {
-            cookieStore.set({ name, value, ...options });
-          },
-          remove(name: string, options: any) {
-            cookieStore.set({ name, value: '', ...options });
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              pendingCookies.set(name, { value, options });
+            });
           },
         },
       }
@@ -50,7 +58,7 @@ export async function GET(request: NextRequest) {
       
       if (exchangeError) {
         console.error('[Auth Callback] Token exchange error:', exchangeError);
-        return NextResponse.redirect(`${origin}/login?error=auth_exchange_failed`);
+        return applyCookies(NextResponse.redirect(`${origin}/login?error=auth_exchange_failed`));
       }
 
       if (data?.session) {
@@ -84,12 +92,14 @@ export async function GET(request: NextRequest) {
 
         console.log('[Auth Callback] Session established, redirecting to home...');
         // Redirect directly to home - session is now stored in cookies
-        return NextResponse.redirect(`${origin}/`);
+        return applyCookies(NextResponse.redirect(`${origin}/`));
       }
     } catch (error) {
       console.error('[Auth Callback] Auth callback exception:', error);
-      return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`);
+      return applyCookies(NextResponse.redirect(`${origin}/login?error=auth_callback_failed`));
     }
+    
+    return applyCookies(NextResponse.redirect(`${origin}/login?error=auth_exchange_failed`));
   }
 
   // No code present, redirect to login

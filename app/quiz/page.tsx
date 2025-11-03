@@ -5,8 +5,7 @@ import { Clock, List } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { Header } from '@/components/Header';
-import { FREE_TIER_LISTS, type SubscriptionTier } from '@/lib/subscription/config';
+import { FREE_TIER_LISTS } from '@/lib/subscription/config';
 
 type QuizType = 'mcq' | 'flashcard';
 type QuizDuration = 5 | 10 | 15 | 20 | 'custom';
@@ -36,7 +35,6 @@ export default function QuizPage() {
   const [loading, setLoading] = useState(true);
   const [showListModal, setShowListModal] = useState(false);
   const [userId, setUserId] = useState<string>('');
-  const [userTier, setUserTier] = useState<SubscriptionTier>('free');
   const router = useRouter();
 
   useEffect(() => {
@@ -89,9 +87,8 @@ export default function QuizPage() {
         .eq('user_id', user.id)
         .single();
 
-      const isPro = subscription?.status === 'active' && 
-                    new Date(subscription.current_period_end) > new Date();
-      setUserTier(isPro ? 'pro' : 'free');
+  const isPro = subscription?.status === 'active' && 
+        new Date(subscription.current_period_end) > new Date();
 
       // Fetch default vocabulary lists
       const { data: defaultLists, error: defaultError } = await supabase

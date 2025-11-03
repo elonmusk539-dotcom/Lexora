@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Trash2, Image as ImageIcon, Mic, Crown } from 'lucide-react';
+import { X, Plus, Trash2, Image as ImageIcon, Mic } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useSubscription } from '@/lib/subscription/useSubscription';
 import { canAddCustomWord } from '@/lib/subscription/config';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface Example {
   kanji: string;
@@ -370,10 +371,12 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
                 </label>
                 {imagePreview ? (
                   <div className="relative w-full h-48 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
-                    <img
+                    <Image
                       src={imagePreview}
                       alt="Preview"
-                      className="w-full h-full object-contain"
+                      fill
+                      unoptimized
+                      className="object-contain"
                     />
                     <button
                       type="button"
