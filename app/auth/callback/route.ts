@@ -5,6 +5,7 @@ import type { NextRequest } from 'next/server';
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
+  const next = requestUrl.searchParams.get('next') ?? '/';
   const origin = requestUrl.origin;
   const error = requestUrl.searchParams.get('error');
   const errorDescription = requestUrl.searchParams.get('error_description');
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
   if (code) {
     console.log('[Auth Callback] Processing code...');
 
-  const pendingCookies = new Map<string, { value: string; options?: CookieOptions }>();
+    const pendingCookies = new Map<string, { value: string; options?: CookieOptions }>();
 
     const applyCookies = (response: NextResponse) => {
       pendingCookies.forEach(({ value, options }, name) => {
@@ -51,55 +52,55 @@ export async function GET(request: NextRequest) {
         },
       }
     );
-    
+
     try {
       console.log('[Auth Callback] Exchanging code for session...');
       const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-      
+
       if (exchangeError) {
         console.error('[Auth Callback] Token exchange error:', exchangeError);
         return applyCookies(NextResponse.redirect(`${origin}/login?error=auth_exchange_failed`));
       }
 
-      if (data?.session) {
+      if (data?.user) {
         console.log('[Auth Callback] Session obtained successfully');
-        console.log('[Auth Callback] User ID:', data.user?.id);
-        
-        // Check if user profile exists, create if not
-        if (data.user) {
-          const { error: profileError } = await supabase
+        console.log('[Auth Callback] User ID:', data.user.id);
+
+        const { data: existingProfile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('id')
+          .eq('id', data.user.id)
+          .maybeSingle();
+
+        if (!existingProfile && !profileError) {
+          const { error: createError } = await supabase
             .from('user_profiles')
-            .select('id')
-            .eq('id', data.user.id)
-            .single();
+            .insert({
+              id: data.user.id,
+              email: data.user.email || '',
+              username: data.user.email?.split('@')[0] || 'user',
+              created_at: new Date().toISOString(),
+            });
 
-          if (profileError && profileError.code === 'PGRST116') {
-            // Profile doesn't exist, create it
-            const { error: createError } = await supabase
-              .from('user_profiles')
-              .insert({
-                id: data.user.id,
-                email: data.user.email || '',
-                username: data.user.email?.split('@')[0] || 'user',
-                created_at: new Date().toISOString(),
-              });
-
-            if (createError) {
-              console.error('[Auth Callback] Profile creation error:', createError);
-            }
+          if (createError) {
+            console.error('[Auth Callback] Profile creation error:', createError);
           }
+        } else if (profileError) {
+          console.error('[Auth Callback] Profile lookup error:', profileError);
         }
-
-        console.log('[Auth Callback] Session established, redirecting to home...');
-        // Redirect directly to home - session is now stored in cookies
-        return applyCookies(NextResponse.redirect(`${origin}/`));
       }
-    } catch (error) {
-      console.error('[Auth Callback] Auth callback exception:', error);
+
+      console.log('[Auth Callback] Session established, redirecting...');
+      const redirectUrl = new URL(next, origin);
+      if (redirectUrl.origin !== origin) {
+        redirectUrl.href = `${origin}/`;
+      }
+
+      return applyCookies(NextResponse.redirect(redirectUrl));
+    } catch (callbackError) {
+      console.error('[Auth Callback] Auth callback exception:', callbackError);
       return applyCookies(NextResponse.redirect(`${origin}/login?error=auth_callback_failed`));
     }
-    
-    return applyCookies(NextResponse.redirect(`${origin}/login?error=auth_exchange_failed`));
   }
 
   // No code present, redirect to login

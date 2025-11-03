@@ -1,15 +1,24 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
+import { useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { supabase, getURL } from '@/lib/supabase/client';
 import Link from 'next/link';
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const oauthRedirect = useMemo(() => {
+    const nextParam = searchParams?.get('next') ?? '/';
+    const baseUrl = getURL();
+    const redirectPath = nextParam.startsWith('/') ? nextParam : `/${nextParam}`;
+    return `${baseUrl}auth/callback?next=${encodeURIComponent(redirectPath)}`;
+  }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,14 +48,10 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
-      // Determine the callback URL based on the environment
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                      (typeof window !== 'undefined' ? window.location.origin : '');
-      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${baseUrl}/auth/callback`,
+          redirectTo: oauthRedirect,
         },
       });
 
