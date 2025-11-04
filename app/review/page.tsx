@@ -110,12 +110,12 @@ function SRSReview() {
 
     // First review (repetitions === 0)
     if (progress.repetitions === 0) {
-      return 1;
+      return quality === 5 ? 4 : 3; // Easy: 4 days, Good: 3 days (even for first-time)
     }
 
     // Second review (repetitions === 1)
     if (progress.repetitions === 1) {
-      return quality === 5 ? 4 : 3; // Easy: 4 days, Good: 3 days
+      return quality === 5 ? 6 : 4; // Easy: 6 days, Good: 4 days
     }
 
     // Subsequent reviews

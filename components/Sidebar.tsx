@@ -15,6 +15,7 @@ interface SidebarProps {
 export function Sidebar({ children }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [dueCount, setDueCount] = useState(0);
   const pathname = usePathname();
 
@@ -22,6 +23,17 @@ export function Sidebar({ children }: SidebarProps) {
   const toggleMobileMenu = () => {
     setMobileOpen(!mobileOpen);
   };
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Load collapsed state from localStorage
   useEffect(() => {
@@ -105,7 +117,7 @@ export function Sidebar({ children }: SidebarProps) {
       <motion.aside
         initial={false}
         animate={{ 
-          width: typeof window !== 'undefined' && window.innerWidth < 768 ? '240px' : (collapsed ? '80px' : '240px'),
+          width: isMobile ? '240px' : (collapsed ? '80px' : '240px'),
         }}
         className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-50 transition-transform duration-300 overflow-y-auto ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
@@ -113,7 +125,7 @@ export function Sidebar({ children }: SidebarProps) {
       >
         {/* Upgrade Button & Toggle */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-          {(!collapsed || (typeof window !== 'undefined' && window.innerWidth < 768)) && (
+          {(!collapsed || isMobile) && (
             <Link href="/premium" onClick={() => setMobileOpen(false)}>
               <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity text-sm whitespace-nowrap">
                 Upgrade
@@ -122,7 +134,7 @@ export function Sidebar({ children }: SidebarProps) {
           )}
           <button
             onClick={toggleCollapsed}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-auto md:block hidden"
+            className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${isMobile ? 'hidden' : ''} ${collapsed ? '' : 'ml-auto'}`}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? (

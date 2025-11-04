@@ -30,10 +30,8 @@ export const SUBSCRIPTION_CONFIG = {
 export const FREE_TIER_LISTS = [
   'Family',
   'Numbers',
-  'Body parts',
   'Body Parts',
   'Food & Drinks',
-  'Food & drinks',
   'Time'
 ];
 
@@ -49,7 +47,11 @@ export interface UserSubscription {
 // Helper to check if user can access a list
 export function canAccessList(userTier: SubscriptionTier, listName: string): boolean {
   if (userTier === 'pro') return true;
-  return FREE_TIER_LISTS.includes(listName);
+  // Case-insensitive comparison to handle variations
+  const normalizedListName = listName.trim();
+  return FREE_TIER_LISTS.some(freeName => 
+    freeName.toLowerCase() === normalizedListName.toLowerCase()
+  );
 }
 
 // Helper to check if user can create more custom lists
