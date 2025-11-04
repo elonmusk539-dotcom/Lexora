@@ -21,12 +21,14 @@ export async function GET(request: NextRequest) {
   }
 
   if (code) {
-    console.log('[Auth Callback] Processing code...');
+    console.log('[Auth Callback] Processing code...', code.substring(0, 20) + '...');
 
     const pendingCookies = new Map<string, { value: string; options?: CookieOptions }>();
 
     const applyCookies = (response: NextResponse) => {
+      console.log('[Auth Callback] Applying cookies, count:', pendingCookies.size);
       pendingCookies.forEach(({ value, options }, name) => {
+        console.log('[Auth Callback] Setting cookie:', name, 'length:', value.length);
         response.cookies.set({ name, value, ...(options ?? {}) });
       });
       return response;
@@ -39,12 +41,15 @@ export async function GET(request: NextRequest) {
       {
         cookies: {
           getAll() {
-            return request.cookies.getAll().map(cookie => ({
+            const cookies = request.cookies.getAll().map(cookie => ({
               name: cookie.name,
               value: cookie.value,
             }));
+            console.log('[Auth Callback] Reading cookies, count:', cookies.length);
+            return cookies;
           },
           setAll(cookiesToSet) {
+            console.log('[Auth Callback] Setting cookies, count:', cookiesToSet.length);
             cookiesToSet.forEach(({ name, value, options }) => {
               pendingCookies.set(name, { value, options });
             });
@@ -58,9 +63,20 @@ export async function GET(request: NextRequest) {
       const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
       if (exchangeError) {
-        console.error('[Auth Callback] Token exchange error:', exchangeError);
-        return applyCookies(NextResponse.redirect(`${origin}/login?error=auth_exchange_failed`));
+        console.error('[Auth Callback] Token exchange error:', {
+          message: exchangeError.message,
+          status: exchangeError.status,
+          name: exchangeError.name,
+          code: code?.substring(0, 20) + '...',
+        });
+        return applyCookies(NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(exchangeError.message || 'auth_exchange_failed')}`));
       }
+
+      console.log('[Auth Callback] Exchange response:', {
+        hasUser: !!data?.user,
+        hasSession: !!data?.session,
+        userId: data?.user?.id,
+      });
 
       if (data?.user) {
         console.log('[Auth Callback] Session obtained successfully');

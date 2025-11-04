@@ -19,7 +19,9 @@ function SignupForm() {
     const nextParam = searchParams?.get('next') ?? '/';
     const baseUrl = getURL();
     const redirectPath = nextParam.startsWith('/') ? nextParam : `/${nextParam}`;
-    return `${baseUrl}auth/callback?next=${encodeURIComponent(redirectPath)}`;
+    const fullRedirect = `${baseUrl}auth/callback?next=${encodeURIComponent(redirectPath)}`;
+    console.log('[Signup] OAuth redirect URL will be:', fullRedirect);
+    return fullRedirect;
   }, [searchParams]);
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -66,16 +68,28 @@ function SignupForm() {
 
   const handleGoogleSignup = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log('[Signup] Starting Google OAuth with redirect:', oauthRedirect);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: oauthRedirect,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[Signup] OAuth error:', error);
+        throw error;
+      }
+
+      console.log('[Signup] OAuth initiated:', data);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred with Google signup';
+      console.error('[Signup] Google signup error:', errorMessage);
       setError(errorMessage);
     }
   };

@@ -17,7 +17,9 @@ function LoginForm() {
     const nextParam = searchParams?.get('next') ?? '/';
     const baseUrl = getURL();
     const redirectPath = nextParam.startsWith('/') ? nextParam : `/${nextParam}`;
-    return `${baseUrl}auth/callback?next=${encodeURIComponent(redirectPath)}`;
+    const fullRedirect = `${baseUrl}auth/callback?next=${encodeURIComponent(redirectPath)}`;
+    console.log('[Login] OAuth redirect URL will be:', fullRedirect);
+    return fullRedirect;
   }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -48,16 +50,28 @@ function LoginForm() {
 
   const handleGoogleLogin = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log('[Login] Starting Google OAuth with redirect:', oauthRedirect);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: oauthRedirect,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[Login] OAuth error:', error);
+        throw error;
+      }
+
+      console.log('[Login] OAuth initiated:', data);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred with Google login';
+      console.error('[Login] Google login error:', errorMessage);
       setError(errorMessage);
     }
   };
