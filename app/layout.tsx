@@ -48,10 +48,16 @@ export default function RootLayout({
                 try {
                   const theme = localStorage.getItem('theme') || 
                     (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                  const root = document.documentElement;
+                  const body = document.body;
                   if (theme === 'dark') {
-                    document.documentElement.classList.add('dark');
+                    root.classList.add('dark');
                   } else {
-                    document.documentElement.classList.remove('dark');
+                    root.classList.remove('dark');
+                  }
+                  root.setAttribute('data-theme', theme);
+                  if (body) {
+                    body.setAttribute('data-theme', theme);
                   }
                 } catch (e) {}
               })();

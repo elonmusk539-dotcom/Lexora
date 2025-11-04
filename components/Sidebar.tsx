@@ -108,7 +108,7 @@ export function Sidebar({ children }: SidebarProps) {
       {mobileOpen && (
         <div
           onClick={toggleMobileMenu}
-          className="md:hidden fixed inset-0 bg-black/50 z-40"
+          className="md:hidden fixed inset-0 bg-black/50 z-[80]"
           style={{ touchAction: 'none' }}
         />
       )}
@@ -119,7 +119,7 @@ export function Sidebar({ children }: SidebarProps) {
         animate={{ 
           width: isMobile ? '240px' : (collapsed ? '80px' : '240px'),
         }}
-        className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-50 transition-transform duration-300 overflow-y-auto ${
+        className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-[90] transition-transform duration-300 overflow-y-auto ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >

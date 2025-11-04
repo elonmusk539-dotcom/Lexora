@@ -219,19 +219,72 @@ function SRSReview() {
       }
 
       // Combine: due words first, then new words
-      const allWords = [...dueWordsFromLists, ...newWords];
+      const combinedWords = [...dueWordsFromLists, ...newWords];
 
-      if (allWords.length === 0) {
+      if (combinedWords.length === 0) {
         // No words available
         return;
       }
 
-      // Debug: Check if examples are in the data
-      console.log('Smart Quiz - Sample word data:', allWords[0]);
-      console.log('Smart Quiz - Examples for first word:', allWords[0]?.examples);
+      const combinedWordIds = combinedWords.map((word) => word.id);
+      const { data: examplesData, error: examplesError } = await supabase
+        .from('vocabulary_examples')
+        .select('word_id, kanji, furigana, romaji, translation, order_index')
+        .in('word_id', combinedWordIds)
+        .order('order_index', { ascending: true });
+
+      if (examplesError) {
+        console.error('Error fetching vocabulary examples:', examplesError);
+      }
+
+      interface ExampleRow {
+        word_id: string;
+        kanji: string | null;
+        furigana: string | null;
+        romaji: string | null;
+        translation: string | null;
+      }
+
+      const examplesMap = new Map<string, string[]>();
+      (examplesData || []).forEach((example: ExampleRow) => {
+        const formatted = [
+          example.kanji ?? '',
+          example.furigana ?? '',
+          example.romaji ?? '',
+          example.translation ?? '',
+        ].join('|');
+
+        const currentExamples = examplesMap.get(example.word_id) || [];
+        currentExamples.push(formatted);
+        examplesMap.set(example.word_id, currentExamples);
+      });
+
+      type SupabaseWord = {
+        id: string;
+        word: string;
+        meaning: string;
+        image_url: string;
+        pronunciation_url: string;
+        kanji?: string | null;
+        furigana?: string | null;
+        romaji?: string | null;
+        reading?: string | null;
+      };
+
+      const normalizedWords: Word[] = combinedWords.map((word: SupabaseWord) => ({
+        id: word.id,
+        kanji: word.kanji ?? word.word,
+        furigana: word.furigana ?? null,
+        romaji: word.romaji ?? word.reading ?? null,
+        word: word.word,
+        meaning: word.meaning,
+        image_url: word.image_url,
+        pronunciation_url: word.pronunciation_url,
+        examples: examplesMap.get(word.id) ?? [],
+      }));
 
       // Shuffle to make it less predictable
-      const shuffled = allWords.sort(() => Math.random() - 0.5);
+      const shuffled = [...normalizedWords].sort(() => Math.random() - 0.5);
       setSession(prev => ({ ...prev, words: shuffled }));
 
       // Fetch progress data for all words
@@ -449,18 +502,21 @@ function SRSReview() {
               Show Details
             </button>
 
-            {/* Word Image - Front */}
-            {!session.showAnswer && settings.showImageOnFront && currentWord.image_url && (
-              <div className="relative w-full aspect-square max-w-xs mx-auto rounded-xl overflow-hidden mb-6 bg-gray-100 dark:bg-gray-700">
-                <Image
-                  src={currentWord.image_url}
-                  alt={currentWord.word}
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 768px) 100vw, 300px"
-                  unoptimized
-                />
-              </div>
+            {/* Word Image */}
+            {currentWord.image_url && (
+              ((!session.showAnswer && settings.showImageOnFront) ||
+                (session.showAnswer && settings.showImageOnBack)) && (
+                <div className="relative w-full aspect-square max-w-xs mx-auto rounded-xl overflow-hidden mb-6 bg-gray-100 dark:bg-gray-700">
+                  <Image
+                    src={currentWord.image_url}
+                    alt={currentWord.word}
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 768px) 100vw, 300px"
+                    unoptimized
+                  />
+                </div>
+              )
             )}
 
             {/* Word Info */}
@@ -505,20 +561,6 @@ function SRSReview() {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-6 text-center"
                 >
-                  {/* Word Image - Back (moved to top) */}
-                  {settings.showImageOnBack && currentWord.image_url && (
-                    <div className="relative w-full aspect-square max-w-xs mx-auto rounded-xl overflow-hidden mb-6 bg-gray-100 dark:bg-gray-700">
-                      <Image
-                        src={currentWord.image_url}
-                        alt={currentWord.word}
-                        fill
-                        className="object-contain"
-                        sizes="(max-width: 768px) 100vw, 300px"
-                        unoptimized
-                      />
-                    </div>
-                  )}
-
                   {/* Meaning */}
                   <div className="text-3xl font-semibold text-blue-600 dark:text-blue-400 mb-6">
                     {currentWord.meaning}
@@ -529,11 +571,21 @@ function SRSReview() {
                     <div className="space-y-4 mt-6">
                       <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Examples:</div>
                       {currentWord.examples.slice(0, settings.numberOfExamples).map((example, index) => {
-                        const parts = example.split('|');
+                        const [kanji = '', furigana = '', romaji = '', translation = ''] = example.split('|');
                         return (
-                          <div key={index} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-left">
-                            <div className="font-medium text-gray-900 dark:text-gray-200 mb-1">{parts[0]}</div>
-                            {parts[3] && <div className="text-sm text-blue-600 dark:text-blue-400">{parts[3]}</div>}
+                          <div key={index} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-left space-y-1">
+                            {kanji && (
+                              <div className="font-medium text-gray-900 dark:text-gray-200">{kanji}</div>
+                            )}
+                            {furigana && (
+                              <div className="text-sm text-gray-600 dark:text-gray-300">{furigana}</div>
+                            )}
+                            {romaji && (
+                              <div className="text-sm text-gray-500 dark:text-gray-400">{romaji}</div>
+                            )}
+                            {translation && (
+                              <div className="text-sm text-blue-600 dark:text-blue-400">{translation}</div>
+                            )}
                           </div>
                         );
                       })}

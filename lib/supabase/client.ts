@@ -2,6 +2,11 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 // Determine the site URL based on environment
 const getURL = () => {
+  // For local development, always use localhost
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000/';
+  }
+
   let url =
     process.env.NEXT_PUBLIC_SITE_URL ??
     process.env.NEXT_PUBLIC_APP_URL ??
@@ -17,6 +22,7 @@ const getURL = () => {
     url = `${url}/`;
   }
 
+  console.log('[getURL] Resolved URL:', url);
   return url;
 };
 

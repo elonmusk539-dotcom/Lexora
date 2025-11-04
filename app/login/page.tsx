@@ -15,10 +15,17 @@ function LoginForm() {
 
   const oauthRedirect = useMemo(() => {
     const nextParam = searchParams?.get('next') ?? '/';
-    const baseUrl = getURL();
+    
+    // Force localhost in development
+    const baseUrl = process.env.NODE_ENV === 'development' 
+      ? 'http://localhost:3000/' 
+      : getURL();
+    
     const redirectPath = nextParam.startsWith('/') ? nextParam : `/${nextParam}`;
     const fullRedirect = `${baseUrl}auth/callback?next=${encodeURIComponent(redirectPath)}`;
     console.log('[Login] OAuth redirect URL will be:', fullRedirect);
+    console.log('[Login] Environment:', process.env.NODE_ENV);
+    console.log('[Login] Base URL:', baseUrl);
     return fullRedirect;
   }, [searchParams]);
 

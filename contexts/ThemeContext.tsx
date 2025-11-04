@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 
 type Theme = 'light' | 'dark';
@@ -13,80 +13,50 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const THEME_STORAGE_KEY = 'theme';
+
+const isTheme = (value: unknown): value is Theme => value === 'light' || value === 'dark';
+
+const getPreferredTheme = (): Theme => {
+  if (typeof window === 'undefined') {
+    return 'light';
+  }
+
+  const stored = localStorage.getItem(THEME_STORAGE_KEY);
+  if (isTheme(stored)) {
+    return stored;
+  }
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
+
+const applyThemeToDom = (newTheme: Theme) => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  const root = document.documentElement;
+  const body = document.body;
+
+  root.classList.toggle('dark', newTheme === 'dark');
+  root.setAttribute('data-theme', newTheme);
+
+  if (body) {
+    body.setAttribute('data-theme', newTheme);
+  }
+};
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('light');
+  const [theme, setThemeState] = useState<Theme>(() => getPreferredTheme());
   const [userId, setUserId] = useState<string | null>(null);
+  const [pendingDbTheme, setPendingDbTheme] = useState<Theme | null>(null);
 
-  // Initialize theme on mount
-  useEffect(() => {
-    initializeTheme();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const initializeTheme = async () => {
-    try {
-      // Get user first
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-
-        // If user is logged in, prioritize database theme
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('settings')
-          .eq('user_id', user.id)
-          .single();
-
-        if (profile?.settings?.theme) {
-          const dbTheme = profile.settings.theme as Theme;
-          applyTheme(dbTheme);
-          return;
-        }
-      }
-
-      // Fallback to localStorage
-      const savedTheme = localStorage.getItem('theme') as Theme | null;
-      
-      if (savedTheme) {
-        applyTheme(savedTheme);
-      } else {
-        // Check system preference
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        applyTheme(prefersDark ? 'dark' : 'light');
-      }
-    } catch (error) {
-      console.error('Error initializing theme:', error);
-      // Fallback to localStorage on error
-      const savedTheme = localStorage.getItem('theme') as Theme | null;
-      if (savedTheme) {
-        applyTheme(savedTheme);
-      }
-    }
-  };
-
-  const applyTheme = (newTheme: Theme) => {
-    console.log('Applying theme:', newTheme);
-    setThemeState(newTheme);
-    localStorage.setItem('theme', newTheme);
-    
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-      console.log('Added dark class to html');
-    } else {
-      document.documentElement.classList.remove('dark');
-      console.log('Removed dark class from html');
-    }
-    console.log('Current html classes:', document.documentElement.className);
-  };
-
-  const saveThemeToDatabase = async (newTheme: Theme) => {
-    if (!userId) return;
-
+  const saveThemeToDatabase = useCallback(async (userIdValue: string, newTheme: Theme) => {
     try {
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('settings')
-        .eq('user_id', userId)
+        .eq('user_id', userIdValue)
         .single();
 
       const currentSettings = profile?.settings || {};
@@ -101,7 +71,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           settings: updatedSettings as Record<string, unknown>,
           updated_at: new Date().toISOString(),
         })
-        .eq('user_id', userId);
+        .eq('user_id', userIdValue);
 
       if (error) {
         console.error('Error saving theme:', error);
@@ -109,21 +79,83 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error saving theme:', error);
     }
-  };
+  }, []);
 
-  const setTheme = (newTheme: Theme) => {
-    applyTheme(newTheme);
-    saveThemeToDatabase(newTheme);
-  };
+  const updateTheme = useCallback((newTheme: Theme, persist = true) => {
+    setThemeState(newTheme);
+    applyThemeToDom(newTheme);
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    console.log('Toggle theme from', theme, 'to', newTheme);
-    setTheme(newTheme);
-  };
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+    }
+
+    if (!persist) {
+      return;
+    }
+
+    if (userId) {
+      void saveThemeToDatabase(userId, newTheme);
+    } else {
+      setPendingDbTheme(newTheme);
+    }
+  }, [userId, saveThemeToDatabase]);
+
+  useEffect(() => {
+    const initializeTheme = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (user) {
+          setUserId(user.id);
+
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('settings')
+            .eq('user_id', user.id)
+            .single();
+
+          const dbTheme = profile?.settings?.theme;
+          if (isTheme(dbTheme)) {
+            updateTheme(dbTheme, false);
+            return;
+          }
+        }
+
+        updateTheme(getPreferredTheme(), false);
+      } catch (error) {
+        console.error('Error initializing theme:', error);
+        updateTheme(getPreferredTheme(), false);
+      }
+    };
+
+    initializeTheme();
+  }, [updateTheme]);
+
+  useEffect(() => {
+    if (!userId || !pendingDbTheme) {
+      return;
+    }
+
+    void saveThemeToDatabase(userId, pendingDbTheme);
+    setPendingDbTheme(null);
+  }, [userId, pendingDbTheme, saveThemeToDatabase]);
+
+  const setTheme = useCallback((newTheme: Theme) => {
+    updateTheme(newTheme);
+  }, [updateTheme]);
+
+  const toggleTheme = useCallback(() => {
+    updateTheme(theme === 'dark' ? 'light' : 'dark');
+  }, [theme, updateTheme]);
+
+  const contextValue = useMemo(() => ({
+    theme,
+    toggleTheme,
+    setTheme,
+  }), [theme, toggleTheme, setTheme]);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );
