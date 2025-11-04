@@ -113,16 +113,16 @@ export function Sidebar({ children }: SidebarProps) {
       >
         {/* Upgrade Button & Toggle */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-          {!collapsed && (
-            <Link href="/premium">
-              <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity text-sm">
+          {(!collapsed || (typeof window !== 'undefined' && window.innerWidth < 768)) && (
+            <Link href="/premium" onClick={() => setMobileOpen(false)}>
+              <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity text-sm whitespace-nowrap">
                 Upgrade
               </button>
             </Link>
           )}
           <button
             onClick={toggleCollapsed}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-auto"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ml-auto md:block hidden"
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? (

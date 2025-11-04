@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { User, Mail, Image as ImageIcon, Save, LogOut, Upload, Trophy, Flame, BookPlus, GraduationCap } from 'lucide-react';
-import Link from 'next/link';
 import Image from 'next/image';
 import imageCompression from 'browser-image-compression';
 
@@ -243,30 +242,6 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Header */}
-      <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                Lexora
-              </h1>
-            </Link>
-            <nav className="flex items-center gap-6">
-              <Link href="/" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
-                Home
-              </Link>
-              <Link href="/lists" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
-                Lists
-              </Link>
-              <Link href="/quiz" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
-                Quiz
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
         <motion.div

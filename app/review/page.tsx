@@ -103,20 +103,25 @@ function SRSReview() {
   const calculateNextInterval = (quality: number, currentWordId: string): number => {
     const progress = wordProgress[currentWordId] || { interval: 0, easeFactor: 2.5, repetitions: 0 };
 
-    if (quality >= 3) {
-      if (progress.repetitions === 0) {
-        return 1;
-      }
-
-      if (progress.repetitions === 1) {
-        return quality === 5 ? 4 : 3;
-      }
-
-      const baseInterval = Math.max(1, Math.round(progress.interval * progress.easeFactor));
-      return quality === 5 ? Math.max(1, Math.round(baseInterval * 1.3)) : baseInterval;
+    // Quality 0 (Again) or 1 (Hard) - restart
+    if (quality < 3) {
+      return 1;
     }
 
-    return 1;
+    // First review (repetitions === 0)
+    if (progress.repetitions === 0) {
+      return 1;
+    }
+
+    // Second review (repetitions === 1)
+    if (progress.repetitions === 1) {
+      return quality === 5 ? 4 : 3; // Easy: 4 days, Good: 3 days
+    }
+
+    // Subsequent reviews
+    const currentInterval = Math.max(1, progress.interval);
+    const baseInterval = Math.max(1, Math.round(currentInterval * progress.easeFactor));
+    return quality === 5 ? Math.max(1, Math.round(baseInterval * 1.3)) : baseInterval;
   };
 
   const formatInterval = (days: number): string => {
