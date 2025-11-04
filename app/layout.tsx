@@ -49,16 +49,15 @@ export default function RootLayout({
                   const theme = localStorage.getItem('theme') || 
                     (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
                   const root = document.documentElement;
-                  const body = document.body;
+                  
+                  // Always remove first to ensure clean state
+                  root.classList.remove('dark');
+                  
                   if (theme === 'dark') {
                     root.classList.add('dark');
-                  } else {
-                    root.classList.remove('dark');
                   }
+                  
                   root.setAttribute('data-theme', theme);
-                  if (body) {
-                    body.setAttribute('data-theme', theme);
-                  }
                 } catch (e) {}
               })();
             `,

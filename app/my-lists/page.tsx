@@ -329,10 +329,19 @@ export default function MyListsPage() {
       // Filter by subscription tier - free users only see words from free tier lists
       if (!isPro) {
         const userTier = subscription?.tier ?? 'free';
+        console.log('[My Lists] Filtering for free tier. User tier:', userTier);
+        console.log('[My Lists] Total words before filter:', availableWords.length);
+        
         availableWords = availableWords.filter(word => {
           const listName = word.vocabulary_lists?.name ?? '';
-          return listName.length > 0 && canAccessList(userTier, listName);
+          const canAccess = listName.length > 0 && canAccessList(userTier, listName);
+          if (!canAccess && listName.length > 0) {
+            console.log('[My Lists] Filtered out word from list:', listName);
+          }
+          return canAccess;
         });
+        
+        console.log('[My Lists] Words after free tier filter:', availableWords.length);
       }
 
       setAllAvailableWords(availableWords);

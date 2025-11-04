@@ -49,9 +49,19 @@ export function canAccessList(userTier: SubscriptionTier, listName: string): boo
   if (userTier === 'pro') return true;
   // Case-insensitive comparison to handle variations
   const normalizedListName = listName.trim();
-  return FREE_TIER_LISTS.some(freeName => 
+  const canAccess = FREE_TIER_LISTS.some(freeName => 
     freeName.toLowerCase() === normalizedListName.toLowerCase()
   );
+  
+  console.log('[canAccessList]', {
+    userTier,
+    listName,
+    normalizedListName,
+    canAccess,
+    freeTierLists: FREE_TIER_LISTS,
+  });
+  
+  return canAccess;
 }
 
 // Helper to check if user can create more custom lists

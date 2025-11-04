@@ -37,24 +37,29 @@ const applyThemeToDom = (newTheme: Theme) => {
 
   const root = document.documentElement;
   const body = document.body;
+  
+  // Force remove dark class first
   root.classList.remove('dark');
+  body?.classList.remove('dark');
+  
+  // Then add it only if theme is dark
   if (newTheme === 'dark') {
     root.classList.add('dark');
+    body?.classList.add('dark');
   }
+  
   root.setAttribute('data-theme', newTheme);
+  body?.setAttribute('data-theme', newTheme);
 
-  if (body) {
-    body.classList.remove('dark');
-    if (newTheme === 'dark') {
-      body.classList.add('dark');
-    }
-    body.setAttribute('data-theme', newTheme);
-  }
+  // Force reflow to ensure styles are applied
+  void root.offsetHeight;
 
   console.log('[Theme] Applied theme to DOM:', {
     theme: newTheme,
     rootClasses: root.className,
     bodyClasses: body?.className,
+    rootHasDark: root.classList.contains('dark'),
+    bodyHasDark: body?.classList.contains('dark'),
   });
 };
 
