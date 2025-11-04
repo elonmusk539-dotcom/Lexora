@@ -37,13 +37,25 @@ const applyThemeToDom = (newTheme: Theme) => {
 
   const root = document.documentElement;
   const body = document.body;
-
-  root.classList.toggle('dark', newTheme === 'dark');
+  root.classList.remove('dark');
+  if (newTheme === 'dark') {
+    root.classList.add('dark');
+  }
   root.setAttribute('data-theme', newTheme);
 
   if (body) {
+    body.classList.remove('dark');
+    if (newTheme === 'dark') {
+      body.classList.add('dark');
+    }
     body.setAttribute('data-theme', newTheme);
   }
+
+  console.log('[Theme] Applied theme to DOM:', {
+    theme: newTheme,
+    rootClasses: root.className,
+    bodyClasses: body?.className,
+  });
 };
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

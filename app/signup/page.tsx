@@ -18,14 +18,20 @@ function SignupForm() {
   const oauthRedirect = useMemo(() => {
     const nextParam = searchParams?.get('next') ?? '/';
     
-    // Force localhost in development
-    const baseUrl = process.env.NODE_ENV === 'development' 
+    // Check if we're on localhost
+    const isLocalhost = typeof window !== 'undefined' 
+      ? window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      : false;
+    
+    // Force localhost in development or when on localhost
+    const baseUrl = (isLocalhost || process.env.NODE_ENV === 'development')
       ? 'http://localhost:3000/' 
       : getURL();
     
     const redirectPath = nextParam.startsWith('/') ? nextParam : `/${nextParam}`;
     const fullRedirect = `${baseUrl}auth/callback?next=${encodeURIComponent(redirectPath)}`;
     console.log('[Signup] OAuth redirect URL will be:', fullRedirect);
+    console.log('[Signup] Is localhost:', isLocalhost);
     console.log('[Signup] Environment:', process.env.NODE_ENV);
     console.log('[Signup] Base URL:', baseUrl);
     return fullRedirect;

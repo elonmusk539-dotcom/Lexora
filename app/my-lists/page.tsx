@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { WordListItem } from '@/components/WordListItem';
 import { AddCustomWord } from '@/components/AddCustomWord';
 import { useSubscription } from '@/lib/subscription/useSubscription';
-import { canCreateCustomList, FREE_TIER_LISTS } from '@/lib/subscription/config';
+import { canAccessList, canCreateCustomList } from '@/lib/subscription/config';
 
 interface CustomList {
   id: string;
@@ -328,9 +328,10 @@ export default function MyListsPage() {
 
       // Filter by subscription tier - free users only see words from free tier lists
       if (!isPro) {
+        const userTier = subscription?.tier ?? 'free';
         availableWords = availableWords.filter(word => {
-          const listName = word.vocabulary_lists?.name ?? undefined;
-          return listName !== undefined && FREE_TIER_LISTS.includes(listName);
+          const listName = word.vocabulary_lists?.name ?? '';
+          return listName.length > 0 && canAccessList(userTier, listName);
         });
       }
 
