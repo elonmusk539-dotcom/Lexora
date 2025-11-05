@@ -9,6 +9,8 @@ import Link from 'next/link';
 import { WordListItem } from '@/components/WordListItem';
 import { WordDetailsCard, type Word } from '@/components/WordDetailsCard';
 import { AddCustomWord } from '@/components/AddCustomWord';
+import { useSubscription } from '@/lib/subscription/useSubscription';
+import { canAccessList } from '@/lib/subscription/config';
 
 type FilterType = 'all' | 'started' | 'not-started' | 'mastered';
 
@@ -27,6 +29,7 @@ interface CustomList {
 export default function CustomListDetailPage() {
   const params = useParams();
   const listId = params.id as string;
+  const { subscription, isPro } = useSubscription();
   const [showFilters, setShowFilters] = useState(false);
   const [list, setList] = useState<CustomList | null>(null);
   const [words, setWords] = useState<Word[]>([]);
@@ -224,17 +227,58 @@ export default function CustomListDetailPage() {
 
   const fetchAvailableVocabWords = async () => {
     try {
-      const { data: allVocabWords } = await supabase
+      const { data: vocabWords, error } = await supabase
         .from('vocabulary_words')
-        .select('*')
+        .select(`
+          id,
+          kanji,
+          furigana,
+          romaji,
+          meaning,
+          image_url,
+          pronunciation_url,
+          list_id,
+          vocabulary_lists (
+            id,
+            name
+          )
+        `)
         .order('created_at', { ascending: true });
 
-      // Filter out words already in this list
-      const wordIds = words.map(w => w.id);
-      const available = (allVocabWords || []).filter(w => !wordIds.includes(w.id));
+      if (error) {
+        throw error;
+      }
+
+      type WordWithList = Word & {
+        list_id?: string;
+        vocabulary_lists?: { id?: string; name?: string | null } | null;
+      };
+
+      const existingIds = new Set(words.map((word) => word.id));
+      const userTier = subscription?.tier ?? 'free';
+
+      const available = ((vocabWords ?? []) as unknown as WordWithList[])
+        .filter((word) => !existingIds.has(word.id))
+        .filter((word) => {
+          if (isPro) return true;
+          const listName = word.vocabulary_lists?.name ?? '';
+          if (!listName) {
+            return false;
+          }
+          return canAccessList(userTier, listName);
+        })
+        .map((word) => ({
+          ...word,
+          word: word.kanji || '', // Map kanji to word field (word column doesn't exist in DB)
+          examples: [], // Examples are in separate table, provide empty array
+          word_type: 'regular' as const,
+        }));
+
       setAvailableWords(available);
     } catch (error) {
-      console.error('Error fetching available words:', error);
+      const message = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error('Error fetching available words:', message);
+      setAvailableWords([]);
     }
   };
 

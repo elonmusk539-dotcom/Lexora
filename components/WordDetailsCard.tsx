@@ -30,6 +30,11 @@ export interface Word {
   pronunciation_url: string;
   examples: string[];
   word_type?: 'regular' | 'custom'; // Add word_type field
+  list_id?: string;
+  vocabulary_lists?: {
+    id?: string;
+    name?: string | null;
+  } | null;
 }
 
 interface WordDetailsCardProps {

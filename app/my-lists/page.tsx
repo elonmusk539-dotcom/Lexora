@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { WordListItem } from '@/components/WordListItem';
 import { AddCustomWord } from '@/components/AddCustomWord';
+import type { Word } from '@/components/WordDetailsCard';
 import { useSubscription } from '@/lib/subscription/useSubscription';
 import { canAccessList, canCreateCustomList } from '@/lib/subscription/config';
 
@@ -16,20 +17,6 @@ interface CustomList {
   description: string | null;
   word_count: number;
   created_at: string;
-}
-
-interface Word {
-  id: string;
-  kanji?: string | null;
-  furigana?: string | null;
-  romaji?: string | null;
-  word: string;
-  reading?: string | null;
-  meaning: string;
-  image_url: string;
-  pronunciation_url: string;
-  examples: string[];
-  word_type?: 'custom' | 'regular';
 }
 
 export default function MyListsPage() {
@@ -297,57 +284,71 @@ export default function MyListsPage() {
   const fetchAllAvailableWords = async (currentListId: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        return;
+      }
 
-      // Fetch vocabulary words with their list information
-      const { data: allVocabWords } = await supabase
+      const { data: allVocabWords, error: vocabError } = await supabase
         .from('vocabulary_words')
         .select(`
-          *,
+          id,
+          kanji,
+          furigana,
+          romaji,
+          meaning,
+          image_url,
+          pronunciation_url,
+          list_id,
           vocabulary_lists (
+            id,
             name
           )
         `)
-        .order('kanji', { ascending: true });
+        .order('created_at', { ascending: true });
 
-      type WordWithList = Word & { vocabulary_lists?: { name?: string | null } | null };
+      if (vocabError) throw vocabError;
+
+      type WordWithList = Word & {
+        list_id?: string;
+        vocabulary_lists?: { id?: string; name?: string | null } | null;
+      };
+
       const vocabWords = (allVocabWords ?? []) as unknown as WordWithList[];
 
-      // Get words already in current list
-      const { data: existingWords } = await supabase
+      const { data: existingWords, error: existingError } = await supabase
         .from('user_custom_list_words')
         .select('word_id')
         .eq('list_id', currentListId);
-      
-      const existingWordIds = existingWords?.map(w => w.word_id) || [];
 
-      // Filter out words already in the list
-      let availableWords = vocabWords.filter(
-        word => !existingWordIds.includes(word.id)
-      );
+      if (existingError) throw existingError;
 
-      // Filter by subscription tier - free users only see words from free tier lists
-      if (!isPro) {
-        const userTier = subscription?.tier ?? 'free';
-        console.log('[My Lists] Filtering for free tier. User tier:', userTier);
-        console.log('[My Lists] Total words before filter:', availableWords.length);
-        
-        availableWords = availableWords.filter(word => {
+      const existingWordIds = new Set((existingWords ?? []).map((item) => item.word_id));
+      const userTier = subscription?.tier ?? 'free';
+
+      const filtered = vocabWords
+        .filter((word) => !existingWordIds.has(word.id))
+        .filter((word) => {
+          if (isPro) return true;
           const listName = word.vocabulary_lists?.name ?? '';
-          const canAccess = listName.length > 0 && canAccessList(userTier, listName);
-          if (!canAccess && listName.length > 0) {
-            console.log('[My Lists] Filtered out word from list:', listName);
+          if (!listName) {
+            return false;
           }
-          return canAccess;
-        });
-        
-        console.log('[My Lists] Words after free tier filter:', availableWords.length);
-      }
+          return canAccessList(userTier, listName);
+        })
+        .map((word) => ({
+          ...word,
+          word: word.kanji || '', // Map kanji to word field (word column doesn't exist in DB)
+          examples: [], // Examples are in separate table, provide empty array
+          word_type: 'regular' as const,
+        }));
 
-      setAllAvailableWords(availableWords);
-      setSearchResults(availableWords);
+      setAllAvailableWords(filtered);
+      setSearchResults(filtered);
     } catch (error) {
-      console.error('Error fetching all words:', error);
+      const message = error instanceof Error ? error.message : JSON.stringify(error);
+      console.error('Error fetching all words:', message);
+      setAllAvailableWords([]);
+      setSearchResults([]);
     }
   };
 

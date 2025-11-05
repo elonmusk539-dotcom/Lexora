@@ -46,18 +46,39 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  const theme = localStorage.getItem('theme') || 
-                    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-                  const root = document.documentElement;
-                  
-                  // Always remove first to ensure clean state
-                  root.classList.remove('dark');
-                  
-                  if (theme === 'dark') {
-                    root.classList.add('dark');
+                  const stored = localStorage.getItem('theme');
+                  const theme = stored === 'dark' || stored === 'light'
+                    ? stored
+                    : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+                  const applyTheme = (nextTheme) => {
+                    const root = document.documentElement;
+                    const body = document.body;
+                    const isDark = nextTheme === 'dark';
+
+                    // Explicitly remove dark class from both root and body
+                    root.classList.remove('dark');
+                    if (body) body.classList.remove('dark');
+                    
+                    // Add dark class only if theme is dark
+                    if (isDark) {
+                      root.classList.add('dark');
+                      if (body) body.classList.add('dark');
+                    }
+
+                    root.setAttribute('data-theme', nextTheme);
+                    root.setAttribute('data-mode', nextTheme);
+                    root.style.colorScheme = nextTheme;
+                  };
+
+                  applyTheme(theme);
+
+                  if (!document.body) {
+                    document.addEventListener('DOMContentLoaded', function onReady() {
+                      document.removeEventListener('DOMContentLoaded', onReady);
+                      applyTheme(theme);
+                    });
                   }
-                  
-                  root.setAttribute('data-theme', theme);
                 } catch (e) {}
               })();
             `,

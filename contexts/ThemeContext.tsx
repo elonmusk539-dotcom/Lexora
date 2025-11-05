@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase/client';
 
 type Theme = 'light' | 'dark';
@@ -37,36 +37,44 @@ const applyThemeToDom = (newTheme: Theme) => {
 
   const root = document.documentElement;
   const body = document.body;
-  
-  // Force remove dark class first
+  const isDark = newTheme === 'dark';
+
+  console.log('[applyThemeToDom] Theme:', newTheme, 'isDark:', isDark);
+  console.log('[applyThemeToDom] BEFORE - root.classList:', root.classList.value);
+  console.log('[applyThemeToDom] BEFORE - body.classList:', body?.classList.value);
+
+  // Explicitly remove dark class from both root and body
   root.classList.remove('dark');
   body?.classList.remove('dark');
   
-  // Then add it only if theme is dark
-  if (newTheme === 'dark') {
+  // Add dark class only if theme is dark
+  if (isDark) {
     root.classList.add('dark');
     body?.classList.add('dark');
   }
-  
+
   root.setAttribute('data-theme', newTheme);
-  body?.setAttribute('data-theme', newTheme);
+  root.setAttribute('data-mode', newTheme);
 
-  // Force reflow to ensure styles are applied
+  root.style.colorScheme = newTheme;
+  
+  console.log('[applyThemeToDom] AFTER - root.classList:', root.classList.value);
+  console.log('[applyThemeToDom] AFTER - body.classList:', body?.classList.value);
+  
+  // Force reflow to ensure CSS recalculation
   void root.offsetHeight;
-
-  console.log('[Theme] Applied theme to DOM:', {
-    theme: newTheme,
-    rootClasses: root.className,
-    bodyClasses: body?.className,
-    rootHasDark: root.classList.contains('dark'),
-    bodyHasDark: body?.classList.contains('dark'),
-  });
+  void body?.offsetHeight;
 };
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => getPreferredTheme());
   const [userId, setUserId] = useState<string | null>(null);
-  const [pendingDbTheme, setPendingDbTheme] = useState<Theme | null>(null);
+  const [hasMounted, setHasMounted] = useState(false);
+  const shouldPersistRef = useRef(true);
+
+  type UpdateThemeOptions = {
+    persist?: boolean;
+  };
 
   const saveThemeToDatabase = useCallback(async (userIdValue: string, newTheme: Theme) => {
     try {
@@ -98,24 +106,36 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const updateTheme = useCallback((newTheme: Theme, persist = true) => {
-    setThemeState(newTheme);
-    applyThemeToDom(newTheme);
+  const updateTheme = useCallback((newTheme: Theme, options: UpdateThemeOptions = {}) => {
+    shouldPersistRef.current = options.persist ?? true;
+    setThemeState((current) => (current === newTheme ? current : newTheme));
+  }, []);
 
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasMounted) {
+      return;
     }
 
-    if (!persist) {
+    console.log('[Theme Effect] Applying theme:', theme, 'hasMounted:', hasMounted);
+    applyThemeToDom(theme);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
+    }
+
+    if (!shouldPersistRef.current) {
+      shouldPersistRef.current = true;
       return;
     }
 
     if (userId) {
-      void saveThemeToDatabase(userId, newTheme);
-    } else {
-      setPendingDbTheme(newTheme);
+      void saveThemeToDatabase(userId, theme);
     }
-  }, [userId, saveThemeToDatabase]);
+  }, [theme, hasMounted, userId, saveThemeToDatabase]);
 
   useEffect(() => {
     const initializeTheme = async () => {
@@ -133,15 +153,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
           const dbTheme = profile?.settings?.theme;
           if (isTheme(dbTheme)) {
-            updateTheme(dbTheme, false);
+            updateTheme(dbTheme, { persist: false });
             return;
           }
         }
 
-        updateTheme(getPreferredTheme(), false);
+        updateTheme(getPreferredTheme(), { persist: false });
       } catch (error) {
         console.error('Error initializing theme:', error);
-        updateTheme(getPreferredTheme(), false);
+        updateTheme(getPreferredTheme(), { persist: false });
       }
     };
 
@@ -149,20 +169,28 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [updateTheme]);
 
   useEffect(() => {
-    if (!userId || !pendingDbTheme) {
+    if (typeof window === 'undefined') {
       return;
     }
 
-    void saveThemeToDatabase(userId, pendingDbTheme);
-    setPendingDbTheme(null);
-  }, [userId, pendingDbTheme, saveThemeToDatabase]);
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === THEME_STORAGE_KEY && isTheme(event.newValue)) {
+        updateTheme(event.newValue, { persist: false });
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [updateTheme]);
 
   const setTheme = useCallback((newTheme: Theme) => {
     updateTheme(newTheme);
   }, [updateTheme]);
 
   const toggleTheme = useCallback(() => {
-    updateTheme(theme === 'dark' ? 'light' : 'dark');
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    console.log('[Theme Toggle] Current theme:', theme, '→ New theme:', newTheme);
+    updateTheme(newTheme);
   }, [theme, updateTheme]);
 
   const contextValue = useMemo(() => ({

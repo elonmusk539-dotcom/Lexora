@@ -45,23 +45,34 @@ export interface UserSubscription {
 }
 
 // Helper to check if user can access a list
+const slugifyListName = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
 export function canAccessList(userTier: SubscriptionTier, listName: string): boolean {
   if (userTier === 'pro') return true;
-  // Case-insensitive comparison to handle variations
-  const normalizedListName = listName.trim();
-  const canAccess = FREE_TIER_LISTS.some(freeName => 
-    freeName.toLowerCase() === normalizedListName.toLowerCase()
+
+  const normalized = listName.trim().toLowerCase();
+  const nameMatch = FREE_TIER_LISTS.some(
+    (freeName) => freeName.trim().toLowerCase() === normalized,
   );
-  
-  console.log('[canAccessList]', {
-    userTier,
-    listName,
-    normalizedListName,
-    canAccess,
-    freeTierLists: FREE_TIER_LISTS,
-  });
-  
-  return canAccess;
+  if (nameMatch) {
+    return true;
+  }
+
+  const allowedSlugs = SUBSCRIPTION_CONFIG.FREE.allowedLists;
+  if (Array.isArray(allowedSlugs)) {
+    const slug = slugifyListName(listName);
+    if (allowedSlugs.includes(slug)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 // Helper to check if user can create more custom lists
