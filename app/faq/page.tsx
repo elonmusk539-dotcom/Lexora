@@ -23,8 +23,8 @@ export default function FAQPage() {
           {/* What is Spaced Repetition */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
             <div className="flex items-start gap-4 mb-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                <Brain className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+                <Brain className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
@@ -45,8 +45,8 @@ export default function FAQPage() {
           {/* Normal Quiz vs Smart Quiz */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
             <div className="flex items-start gap-4 mb-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                <Zap className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
@@ -89,8 +89,8 @@ export default function FAQPage() {
           {/* How does the rating system work */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
             <div className="flex items-start gap-4 mb-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                <Target className="w-6 h-6 text-green-600 dark:text-green-400" />
+              <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                <Target className="w-4 h-4 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
@@ -141,8 +141,8 @@ export default function FAQPage() {
           {/* When is a word mastered */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
             <div className="flex items-start gap-4 mb-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
-                <Award className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+              <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
+                <Award className="w-4 h-4 sm:w-6 sm:h-6 text-yellow-600 dark:text-yellow-400" />
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
@@ -190,8 +190,8 @@ export default function FAQPage() {
           {/* How are review dates calculated */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
             <div className="flex items-start gap-4 mb-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+              <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
+                <Calendar className="w-4 h-4 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">

@@ -35,6 +35,19 @@ export function Sidebar({ children }: SidebarProps) {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen && isMobile) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileOpen, isMobile]);
+
   // Load collapsed state from localStorage
   useEffect(() => {
     const savedState = localStorage.getItem('sidebarCollapsed');
@@ -108,8 +121,7 @@ export function Sidebar({ children }: SidebarProps) {
       {mobileOpen && (
         <div
           onClick={toggleMobileMenu}
-          className="md:hidden fixed inset-0 bg-black/50 z-[80]"
-          style={{ touchAction: 'none' }}
+          className="md:hidden fixed inset-0 bg-black/50 z-[80] overflow-hidden"
         />
       )}
 
@@ -124,7 +136,7 @@ export function Sidebar({ children }: SidebarProps) {
         }`}
       >
         {/* Upgrade Button & Toggle */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0 md:mt-0 mt-16">
           {(!collapsed || isMobile) && (
             <Link href="/premium" onClick={() => setMobileOpen(false)}>
               <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity text-sm whitespace-nowrap">
@@ -132,9 +144,11 @@ export function Sidebar({ children }: SidebarProps) {
               </button>
             </Link>
           )}
+          
+          {/* Desktop collapse toggle */}
           <button
             onClick={toggleCollapsed}
-            className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${isMobile ? 'hidden' : ''} ${collapsed ? '' : 'ml-auto'}`}
+            className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hidden md:block ${collapsed ? '' : 'ml-auto'}`}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? (
@@ -142,6 +156,15 @@ export function Sidebar({ children }: SidebarProps) {
             ) : (
               <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             )}
+          </button>
+          
+          {/* Mobile close button */}
+          <button
+            onClick={toggleMobileMenu}
+            className="md:hidden ml-auto p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </button>
         </div>
 
@@ -166,7 +189,7 @@ export function Sidebar({ children }: SidebarProps) {
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
                 {!collapsed && <span className="font-medium">{item.label}</span>}
-                {item.badge && item.badge > 0 && (
+                {item.badge && item.badge > 0 && (!collapsed || isMobile) && (
                   <span className={`ml-auto px-2 py-0.5 text-xs font-bold rounded-full ${
                     active 
                       ? 'bg-white text-purple-600' 

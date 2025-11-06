@@ -375,7 +375,7 @@ export default function ProfilePage() {
                   className="flex-1 py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <Save className="w-5 h-5" />
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  {saving ? 'Saving...' : <><span className="md:hidden">Save</span><span className="hidden md:inline">Save Changes</span></>}
                 </motion.button>
 
                 <motion.button
@@ -412,7 +412,7 @@ export default function ProfilePage() {
                   </div>
                   <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Words Mastered</h4>
                 </div>
-                <p className="text-3xl font-bold text-green-700 dark:text-green-400">{stats.wordsMastered}</p>
+                <p className="text-3xl font-bold text-green-700 dark:text-green-400 text-center md:text-left">{stats.wordsMastered}</p>
               </div>
 
               {/* Longest Streak */}
@@ -423,7 +423,7 @@ export default function ProfilePage() {
                   </div>
                   <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Longest Streak</h4>
                 </div>
-                <p className="text-3xl font-bold text-orange-700 dark:text-orange-400">{stats.longestStreak}</p>
+                <p className="text-3xl font-bold text-orange-700 dark:text-orange-400 text-center md:text-left">{stats.longestStreak}</p>
               </div>
 
               {/* User Added Words */}
@@ -434,7 +434,7 @@ export default function ProfilePage() {
                   </div>
                   <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Custom Words</h4>
                 </div>
-                <p className="text-3xl font-bold text-purple-700 dark:text-purple-400">{stats.userAddedWords}</p>
+                <p className="text-3xl font-bold text-purple-700 dark:text-purple-400 text-center md:text-left">{stats.userAddedWords}</p>
               </div>
 
               {/* Words Started Learning */}
@@ -445,7 +445,7 @@ export default function ProfilePage() {
                   </div>
                   <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Words Learning</h4>
                 </div>
-                <p className="text-3xl font-bold text-blue-700 dark:text-blue-400">{stats.wordsStartedLearning}</p>
+                <p className="text-3xl font-bold text-blue-700 dark:text-blue-400 text-center md:text-left">{stats.wordsStartedLearning}</p>
               </div>
             </div>
           </motion.div>

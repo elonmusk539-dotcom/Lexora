@@ -225,7 +225,7 @@ export default function QuizPage() {
                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-base sm:text-xl font-bold text-gray-900 dark:text-white mb-2">
                   Multiple Choice
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -241,7 +241,7 @@ export default function QuizPage() {
                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-base sm:text-xl font-bold text-gray-900 dark:text-white mb-2">
                   Flashcards
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -288,8 +288,8 @@ export default function QuizPage() {
               <Clock className="inline w-5 h-5 mr-2" />
               Quiz Duration (words)
             </label>
-            <div className="grid grid-cols-5 gap-3">
-              {([5, 10, 15, 20] as const).map((d) => (
+            <div className="grid grid-cols-2 gap-3">
+              {([5, 10, 15] as const).map((d) => (
                 <button
                   key={d}
                   onClick={() => setDuration(d)}
@@ -371,14 +371,14 @@ export default function QuizPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[80vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 p-4 sm:p-6"
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl max-h-[80vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 p-4 sm:p-6"
             >
               <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Select Lists</h3>
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Select Lists</h3>
                   <button
                     onClick={toggleSelectAll}
-                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                    className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
                   >
                     {selectedLists.length === lists.length ? 'Deselect All' : 'Select All'}
                   </button>
@@ -415,9 +415,9 @@ export default function QuizPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <p className="text-sm text-gray-600">
-                    {selectedLists.length} of {lists.length} lists selected
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {selectedLists.length} of {lists.length} selected
                   </p>
                   <button
                     onClick={() => setShowListModal(false)}

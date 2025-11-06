@@ -278,8 +278,8 @@ export default function SmartQuizSetupPage() {
               <Clock className="inline w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Review Duration (words)
             </label>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3">
-              {([5, 10, 15, 20] as const).map((d) => (
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              {([5, 10, 15] as const).map((d) => (
                 <button
                   key={d}
                   onClick={() => setDuration(d)}
@@ -294,7 +294,7 @@ export default function SmartQuizSetupPage() {
               ))}
               <button
                 onClick={() => setDuration('custom')}
-                className={`py-2 sm:py-3 rounded-lg text-sm sm:text-base font-semibold transition-all col-span-3 sm:col-span-1 ${
+                className={`py-2 sm:py-3 rounded-lg text-sm sm:text-base font-semibold transition-all ${
                   duration === 'custom'
                     ? 'bg-purple-600 text-white shadow-md'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
