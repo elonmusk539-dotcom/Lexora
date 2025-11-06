@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, BookOpen, PlayCircle, User, Settings, List, Brain, HelpCircle, Menu, X } from 'lucide-react';
@@ -17,6 +17,14 @@ export function Sidebar({ children }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [dueCount, setDueCount] = useState(0);
+  const scrollPositionRef = useRef(0);
+  const previousStylesRef = useRef<{
+    bodyOverflow: string;
+    bodyPosition: string;
+    bodyTop: string;
+    bodyWidth: string;
+    htmlOverflow: string;
+  } | null>(null);
   const pathname = usePathname();
 
   // Toggle mobile menu
@@ -37,15 +45,55 @@ export function Sidebar({ children }: SidebarProps) {
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
+    const html = document.documentElement;
+
     if (mobileOpen && isMobile) {
+      previousStylesRef.current = {
+        bodyOverflow: document.body.style.overflow,
+        bodyPosition: document.body.style.position,
+        bodyTop: document.body.style.top,
+        bodyWidth: document.body.style.width,
+        htmlOverflow: html.style.overflow,
+      };
+
+      scrollPositionRef.current = window.scrollY;
+
       document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollPositionRef.current}px`;
+      document.body.style.width = '100%';
+      html.style.overflow = 'hidden';
+
+      return () => {
+        if (previousStylesRef.current) {
+          const { bodyOverflow, bodyPosition, bodyTop, bodyWidth, htmlOverflow } = previousStylesRef.current;
+          document.body.style.overflow = bodyOverflow;
+          document.body.style.position = bodyPosition;
+          document.body.style.top = bodyTop;
+          document.body.style.width = bodyWidth;
+          html.style.overflow = htmlOverflow;
+          window.scrollTo(0, scrollPositionRef.current);
+          previousStylesRef.current = null;
+        }
+      };
+    }
+
+    if (previousStylesRef.current) {
+      const { bodyOverflow, bodyPosition, bodyTop, bodyWidth, htmlOverflow } = previousStylesRef.current;
+      document.body.style.overflow = bodyOverflow;
+      document.body.style.position = bodyPosition;
+      document.body.style.top = bodyTop;
+      document.body.style.width = bodyWidth;
+      html.style.overflow = htmlOverflow;
+      window.scrollTo(0, scrollPositionRef.current);
+      previousStylesRef.current = null;
     } else {
       document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      html.style.overflow = '';
     }
-    
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [mobileOpen, isMobile]);
 
   // Load collapsed state from localStorage
@@ -122,6 +170,7 @@ export function Sidebar({ children }: SidebarProps) {
         <div
           onClick={toggleMobileMenu}
           className="md:hidden fixed inset-0 bg-black/50 z-[80] overflow-hidden"
+          style={{ touchAction: 'none' }}
         />
       )}
 
@@ -131,12 +180,16 @@ export function Sidebar({ children }: SidebarProps) {
         animate={{ 
           width: isMobile ? '240px' : (collapsed ? '80px' : '240px'),
         }}
-        className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-[90] transition-transform duration-300 overflow-y-auto ${
+        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+        className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-[90] transition-transform duration-300 overflow-y-auto overscroll-contain ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
         {/* Upgrade Button & Toggle */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0 md:mt-0 mt-16">
+        <div
+          className="px-4 pb-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0 pt-4"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
+        >
           {(!collapsed || isMobile) && (
             <Link href="/premium" onClick={() => setMobileOpen(false)}>
               <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity text-sm whitespace-nowrap">
@@ -178,8 +231,8 @@ export function Sidebar({ children }: SidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-colors relative ${
-                  collapsed ? 'justify-center aspect-square' : 'justify-start'
+                className={`flex items-center gap-3 py-3 rounded-lg transition-all relative ${
+                  collapsed ? 'justify-center px-0 h-12' : 'justify-start px-3'
                 } ${
                   active
                     ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'

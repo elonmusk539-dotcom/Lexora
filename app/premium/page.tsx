@@ -294,9 +294,7 @@ export default function PremiumPage() {
               </button>
             ) : (
               <div className="w-full">
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-2">
-                  <div id={`paypal-button-container-${billingInterval}`} className="w-full" />
-                </div>
+                <div id={`paypal-button-container-${billingInterval}`} className="w-full" />
                 {!paypalLoaded && (
                   <div className="flex items-center justify-center py-3">
                     <Loader2 className="w-5 h-5 animate-spin text-white" />
