@@ -348,61 +348,59 @@ export default function SmartQuizSetupPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl max-h-[80vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 p-4 sm:p-6"
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 flex flex-col max-h-[80vh]"
             >
-              <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-gray-200 dark:border-gray-700">
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Select Lists</h3>
-                  <button
-                    onClick={toggleSelectAll}
-                    className="text-xs sm:text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
-                  >
-                    {selectedLists.length === lists.length ? 'Deselect All' : 'Select All'}
-                  </button>
-                </div>
+              <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Select Lists</h3>
+                <button
+                  onClick={toggleSelectAll}
+                  className="text-xs sm:text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
+                >
+                  {selectedLists.length === lists.length ? 'Deselect All' : 'Select All'}
+                </button>
+              </div>
 
-                <div className="flex-1 overflow-y-auto mb-3 sm:mb-4">
-                  <div className="space-y-2">
-                    {lists.map((list) => (
-                      <label
-                        key={list.id}
-                        className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer rounded-lg border border-gray-200 dark:border-gray-700"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedLists.includes(list.id)}
-                          onChange={() => toggleList(list.id)}
-                          className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 rounded focus:ring-0 focus:ring-offset-0 flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <div className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{list.name}</div>
-                            {list.isCustom && (
-                              <span className="px-1.5 sm:px-2 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full">
-                                Custom
-                              </span>
-                            )}
-                          </div>
-                          {list.description && (
-                            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">{list.description}</div>
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 py-3 sm:py-4">
+                <div className="space-y-2">
+                  {lists.map((list) => (
+                    <label
+                      key={list.id}
+                      className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer rounded-lg border border-gray-200 dark:border-gray-700"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedLists.includes(list.id)}
+                        onChange={() => toggleList(list.id)}
+                        className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 rounded focus:ring-0 focus:ring-offset-0 flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{list.name}</div>
+                          {list.isCustom && (
+                            <span className="px-1.5 sm:px-2 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full">
+                              Custom
+                            </span>
                           )}
                         </div>
-                      </label>
-                    ))}
-                  </div>
+                        {list.description && (
+                          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">{list.description}</div>
+                        )}
+                      </div>
+                    </label>
+                  ))}
                 </div>
+              </div>
 
-                <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                    {selectedLists.length} of {lists.length} selected
-                  </p>
-                  <button
-                    onClick={() => setShowListModal(false)}
-                    className="px-4 sm:px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm sm:text-base font-medium"
-                  >
-                    Done
-                  </button>
-                </div>
+              <div className="flex items-center justify-between p-4 sm:p-6 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  {selectedLists.length} of {lists.length} selected
+                </p>
+                <button
+                  onClick={() => setShowListModal(false)}
+                  className="px-4 sm:px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm sm:text-base font-medium"
+                >
+                  Done
+                </button>
               </div>
             </motion.div>
           </>

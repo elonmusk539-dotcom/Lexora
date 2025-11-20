@@ -187,38 +187,44 @@ export function Sidebar({ children }: SidebarProps) {
       >
         {/* Upgrade Button & Toggle */}
         <div
-          className="px-4 pb-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0 pt-4"
+          className="px-3 pt-4 pb-4 border-b border-gray-200 dark:border-gray-700 space-y-2 flex-shrink-0"
           style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
         >
-          {(!collapsed || isMobile) && (
-            <Link href="/premium" onClick={() => setMobileOpen(false)}>
-              <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity text-sm whitespace-nowrap">
-                Upgrade
+          {(!collapsed || isMobile) ? (
+            <div className="flex items-center gap-2">
+              <Link href="/premium" onClick={() => setMobileOpen(false)} className="flex-1">
+                <button className="w-full h-12 px-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity text-sm whitespace-nowrap flex items-center justify-center">
+                  Upgrade
+                </button>
+              </Link>
+              
+              {/* Desktop collapse toggle */}
+              <button
+                onClick={toggleCollapsed}
+                className="hidden md:flex items-center justify-center w-12 h-12 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
+                aria-label="Collapse sidebar"
+              >
+                <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               </button>
-            </Link>
-          )}
-          
-          {/* Desktop collapse toggle */}
-          <button
-            onClick={toggleCollapsed}
-            className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hidden md:block ${collapsed ? '' : 'ml-auto'}`}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed ? (
+              
+              {/* Mobile close button */}
+              <button
+                onClick={toggleMobileMenu}
+                className="md:hidden flex items-center justify-center w-12 h-12 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
+                aria-label="Close menu"
+              >
+                <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={toggleCollapsed}
+              className="w-full flex items-center justify-center h-12 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Expand sidebar"
+            >
               <Menu className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            ) : (
-              <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            )}
-          </button>
-          
-          {/* Mobile close button */}
-          <button
-            onClick={toggleMobileMenu}
-            className="md:hidden ml-auto p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            aria-label="Close menu"
-          >
-            <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </button>
+            </button>
+          )}
         </div>
 
         {/* Navigation */}

@@ -7,25 +7,26 @@ import { Check, Crown, Zap, Infinity, List, FileText, Loader2 } from 'lucide-rea
 import { supabase } from '@/lib/supabase/client';
 import Script from 'next/script';
 
-// Declare PayPal types
+// Declare PayPal SDK v5 types for subscriptions
 declare global {
   interface Window {
     paypal?: {
       Buttons: (config: {
-        style: {
-          shape: string;
-          color: string;
-          layout: string;
-          label: string;
+        style?: {
+          shape?: string;
+          color?: string;
+          layout?: string;
+          label?: string;
         };
         createSubscription: (data: unknown, actions: {
           subscription: {
             create: (params: { plan_id: string }) => Promise<string>;
           };
         }) => Promise<string>;
-        onApprove: (data: { subscriptionID: string }, actions: unknown) => void;
+        onApprove: (data: { subscriptionID: string }, actions: unknown) => Promise<void>;
+        onError?: (err: unknown) => void;
       }) => {
-        render: (selector: string) => void;
+        render: (selector: string) => Promise<void>;
       };
     };
   }
@@ -36,9 +37,10 @@ export default function PremiumPage() {
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
   const [paypalLoaded, setPaypalLoaded] = useState(false);
 
-  // PayPal Plan IDs
-  const PAYPAL_PLAN_ID_MONTHLY = 'P-46L67236992761240ND6OTJI';
-  const PAYPAL_PLAN_ID_YEARLY = 'P-5WV83425FL4882210ND6PAQY';
+  // PayPal Plan IDs from environment variables
+  const PAYPAL_PLAN_ID_MONTHLY = process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID_MONTHLY || 'P-46L67236992761240ND6OTJI';
+  const PAYPAL_PLAN_ID_YEARLY = process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID_YEARLY || 'P-5WV83425FL4882210ND6PAQY';
+  const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'Afo4JDNyPVqFHlF4ra_SJdDCXAfM4pBmx1VW19eLcWd73vNZSUTjSdp1Lo7ILyHLmyFReEBitVFwf7Ut';
 
   useEffect(() => {
     if (paypalLoaded && !isPro && window.paypal) {
@@ -59,10 +61,11 @@ export default function PremiumPage() {
       container.innerHTML = '';
     }
 
+    // Render PayPal subscription button (automatically includes card option)
     window.paypal.Buttons({
       style: {
-        shape: 'pill',
-        color: 'blue',
+        shape: 'rect',
+        color: 'gold',
         layout: 'vertical',
         label: 'subscribe'
       },
@@ -75,10 +78,13 @@ export default function PremiumPage() {
         try {
           // Get current user
           const { data: { session } } = await supabase.auth.getSession();
-          if (!session) return;
+          if (!session) {
+            alert('Please log in to subscribe');
+            return;
+          }
 
           // Call API to save subscription
-          await fetch('/api/paypal/subscription', {
+          const response = await fetch('/api/paypal/subscription', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -88,12 +94,20 @@ export default function PremiumPage() {
             }),
           });
 
+          if (!response.ok) {
+            throw new Error('Failed to save subscription');
+          }
+
           // Redirect to success page
           window.location.href = `/premium/success?subscription_id=${data.subscriptionID}`;
         } catch (error) {
           console.error('Error processing subscription:', error);
-          alert('Subscription created but there was an error. Please contact support.');
+          alert('Subscription created but there was an error saving it. Please contact support with your subscription ID: ' + data.subscriptionID);
         }
+      },
+      onError: function(err) {
+        console.error('PayPal error:', err);
+        alert('Payment failed. Please try again or contact support if the issue persists.');
       }
     }).render(`#${containerId}`);
   };
@@ -115,9 +129,9 @@ export default function PremiumPage() {
 
   return (
     <>
-      {/* PayPal SDK Script */}
+      {/* PayPal SDK Script - Subscription with vault */}
       <Script
-        src="https://www.paypal.com/sdk/js?client-id=Afo4JDNyPVqFHlF4ra_SJdDCXAfM4pBmx1VW19eLcWd73vNZSUTjSdp1Lo7ILyHLmyFReEBitVFwf7Ut&vault=true&intent=subscription"
+        src={`https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&vault=true&intent=subscription`}
         onLoad={() => setPaypalLoaded(true)}
         strategy="lazyOnload"
       />
@@ -293,13 +307,13 @@ export default function PremiumPage() {
                 Current Plan
               </button>
             ) : (
-              <div className="w-full">
-                <div id={`paypal-button-container-${billingInterval}`} className="w-full" />
-                {!paypalLoaded && (
-                  <div className="flex items-center justify-center py-3">
-                    <Loader2 className="w-5 h-5 animate-spin text-white" />
-                  </div>
-                )}
+              <div className="w-full rounded-xl p-2">
+                  <div id={`paypal-button-container-${billingInterval}`} className="w-full" />
+                  {!paypalLoaded && (
+                    <div className="flex items-center justify-center py-3">
+                      <Loader2 className="w-5 h-5 animate-spin text-white" />
+                    </div>
+                  )}
               </div>
             )}
           </motion.div>

@@ -42,6 +42,7 @@ export interface UserSubscription {
   status: 'active' | 'canceled' | 'past_due' | 'none';
   currentPeriodEnd?: string;
   cancelAtPeriodEnd?: boolean;
+  interval?: 'month' | 'year';
 }
 
 // Helper to check if user can access a list

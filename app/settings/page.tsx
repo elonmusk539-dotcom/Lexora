@@ -9,6 +9,7 @@ import { Settings as SettingsIcon, Save, Moon, Sun, MessageSquare, Upload, X } f
 import { useTheme } from '@/contexts/ThemeContext';
 import imageCompression from 'browser-image-compression';
 import Image from 'next/image';
+import { SubscriptionManagement } from '@/components/SubscriptionManagement';
 
 interface ScreenshotPreviewProps {
   file: File;
@@ -771,6 +772,19 @@ export default function SettingsPage() {
                 )}
               </div>
             </form>
+
+            {/* Subscription Management Section */}
+            <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  Subscription
+                </h3>
+                <p className="text-gray-700 dark:text-gray-300">
+                  Manage your Lexora Pro subscription
+                </p>
+              </div>
+              <SubscriptionManagement />
+            </div>
 
             {/* Feedback Form - Separate from settings */}
             <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">

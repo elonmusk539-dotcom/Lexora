@@ -49,6 +49,7 @@ export function useSubscription() {
         status: (data.status as 'active' | 'canceled' | 'past_due') || 'none',
         currentPeriodEnd: data.current_period_end as string,
         cancelAtPeriodEnd: data.cancel_at_period_end as boolean,
+        interval: data.interval as 'month' | 'year',
       });
     } catch (error) {
       console.error('Error checking subscription:', error);

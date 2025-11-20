@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { LogOut, User, Menu, X } from 'lucide-react';
+import { LogOut, User, Menu, X, Crown } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { StreakDisplay } from './StreakDisplay';
+import { useSubscription } from '@/lib/subscription/useSubscription';
 
 interface UserProfile {
   username: string | null;
@@ -21,6 +22,7 @@ interface HeaderProps {
 export function Header({ onMenuToggle, menuOpen }: HeaderProps = {}) {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const { isPro } = useSubscription();
 
   useEffect(() => {
     fetchProfile();
@@ -52,7 +54,7 @@ export function Header({ onMenuToggle, menuOpen }: HeaderProps = {}) {
   }
 
   return (
-    <header className="bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-[70]">
+    <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-[70]">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
@@ -73,9 +75,19 @@ export function Header({ onMenuToggle, menuOpen }: HeaderProps = {}) {
             )}
             
             <Link href="/" className="md:pl-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity">
-                Lexora
-              </h1>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity">
+                  Lexora
+                </h1>
+                {isPro && (
+                  <div className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full shadow-sm">
+                    <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                    <span className="text-[9px] sm:text-[10px] md:text-xs font-bold text-white uppercase tracking-wide">
+                      Pro
+                    </span>
+                  </div>
+                )}
+              </div>
             </Link>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
