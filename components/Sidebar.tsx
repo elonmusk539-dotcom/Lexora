@@ -262,7 +262,7 @@ export function Sidebar({ children }: SidebarProps) {
 
       {/* Main Content */}
       <div
-        className="flex-1 transition-all duration-300 ml-0 md:ml-20 lg:ml-60"
+        className={`flex-1 transition-all duration-300 ml-0 md:ml-20 ${collapsed ? '' : 'lg:ml-60'}`}
       >
         {/* Don't show Header on login/signup/smart-quiz pages (smart quiz only on mobile) */}
         {pathname !== '/login' && pathname !== '/signup' && (
