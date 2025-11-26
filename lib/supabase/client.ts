@@ -2,15 +2,21 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 // Determine the site URL based on environment
 const getURL = () => {
+  // Check if we're on client side and have access to window
+  if (typeof window !== 'undefined' && window.location.origin) {
+    console.log('[getURL] Using window.location.origin:', window.location.origin);
+    return window.location.origin;
+  }
+
   // Check if we're on localhost/development
-  const isLocalhost = typeof window !== 'undefined' 
+  const isLocalhost = typeof window !== 'undefined'
     ? window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     : false;
 
   // For local development, always use localhost
   if (isLocalhost || process.env.NODE_ENV === 'development') {
     console.log('[getURL] Using localhost for development');
-    return 'http://localhost:3000/';
+    return 'http://localhost:3000';
   }
 
   let url =

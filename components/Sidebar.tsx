@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, PlayCircle, User, Settings, List, Brain, HelpCircle, Menu, X } from 'lucide-react';
+import { Home, BookOpen, PlayCircle, User, Settings, List, Brain, HelpCircle, Menu, X, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
 import { Header } from './Header';
@@ -37,7 +37,7 @@ export function Sidebar({ children }: SidebarProps) {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -102,10 +102,10 @@ export function Sidebar({ children }: SidebarProps) {
     if (savedState) {
       setCollapsed(savedState === 'true');
     }
-    
+
     // Load due words count
     loadDueCount();
-    
+
     // Refresh count every 5 minutes
     const interval = setInterval(loadDueCount, 5 * 60 * 1000);
     return () => clearInterval(interval);
@@ -148,6 +148,7 @@ export function Sidebar({ children }: SidebarProps) {
     { href: '/quiz', label: 'Normal Quiz', icon: PlayCircle },
     { href: '/faq', label: 'FAQ', icon: HelpCircle },
     { href: '/profile', label: 'Profile', icon: User },
+    { href: '/feedback', label: 'Feedback', icon: MessageSquare },
     { href: '/settings', label: 'Settings', icon: Settings },
   ];
 
@@ -177,13 +178,12 @@ export function Sidebar({ children }: SidebarProps) {
       {/* Sidebar */}
       <motion.aside
         initial={false}
-        animate={{ 
+        animate={{
           width: isMobile ? '240px' : (collapsed ? '80px' : '240px'),
         }}
         transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-        className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-[90] transition-transform duration-300 overflow-y-auto overscroll-contain ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
+        className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-[90] transition-transform duration-300 overflow-y-auto overscroll-contain ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+          }`}
       >
         {/* Upgrade Button & Toggle */}
         <div
@@ -197,7 +197,7 @@ export function Sidebar({ children }: SidebarProps) {
                   Upgrade
                 </button>
               </Link>
-              
+
               {/* Desktop collapse toggle */}
               <button
                 onClick={toggleCollapsed}
@@ -206,7 +206,7 @@ export function Sidebar({ children }: SidebarProps) {
               >
                 <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               </button>
-              
+
               {/* Mobile close button */}
               <button
                 onClick={toggleMobileMenu}
@@ -232,28 +232,25 @@ export function Sidebar({ children }: SidebarProps) {
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
-            
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 py-3 rounded-lg transition-all relative ${
-                  collapsed ? 'justify-center px-0 h-12' : 'justify-start px-3'
-                } ${
-                  active
+                className={`flex items-center gap-3 py-3 rounded-lg transition-all relative ${collapsed ? 'justify-center px-0 h-12' : 'justify-start px-3'
+                  } ${active
                     ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
+                  }`}
                 title={collapsed ? item.label : undefined}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
                 {!collapsed && <span className="font-medium">{item.label}</span>}
                 {item.badge && item.badge > 0 && (!collapsed || isMobile) && (
-                  <span className={`ml-auto px-2 py-0.5 text-xs font-bold rounded-full ${
-                    active 
-                      ? 'bg-white text-purple-600' 
-                      : 'bg-red-500 text-white'
-                  }`}>
+                  <span className={`ml-auto px-2 py-0.5 text-xs font-bold rounded-full ${active
+                    ? 'bg-white text-purple-600'
+                    : 'bg-red-500 text-white'
+                    }`}>
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 )}

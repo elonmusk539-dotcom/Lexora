@@ -15,23 +15,17 @@ function LoginForm() {
 
   const oauthRedirect = useMemo(() => {
     const nextParam = searchParams?.get('next') ?? '/';
-    
-    // Check if we're on localhost
-    const isLocalhost = typeof window !== 'undefined' 
-      ? window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      : false;
-    
-    // Force localhost in development or when on localhost
-    const baseUrl = (isLocalhost || process.env.NODE_ENV === 'development')
-      ? 'http://localhost:3000/' 
-      : getURL();
-    
+
+    // Always prefer window.location.origin if available (client-side)
+    // This ensures we redirect back to exactly where we came from (localhost, 127.0.0.1, etc.)
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const baseUrl = origin || getURL();
+
     const redirectPath = nextParam.startsWith('/') ? nextParam : `/${nextParam}`;
-    const fullRedirect = `${baseUrl}auth/callback?next=${encodeURIComponent(redirectPath)}`;
+    const fullRedirect = `${baseUrl}/auth/callback?next=${encodeURIComponent(redirectPath)}`;
+
     console.log('[Login] OAuth redirect URL will be:', fullRedirect);
-    console.log('[Login] Is localhost:', isLocalhost);
-    console.log('[Login] Environment:', process.env.NODE_ENV);
-    console.log('[Login] Base URL:', baseUrl);
+    console.log('[Login] Origin:', origin);
     return fullRedirect;
   }, [searchParams]);
 
@@ -64,7 +58,7 @@ function LoginForm() {
   const handleGoogleLogin = async () => {
     try {
       console.log('[Login] Starting Google OAuth with redirect:', oauthRedirect);
-      
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

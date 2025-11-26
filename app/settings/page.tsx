@@ -5,55 +5,12 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
-import { Settings as SettingsIcon, Save, Moon, Sun, MessageSquare, Upload, X } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
-import imageCompression from 'browser-image-compression';
-import Image from 'next/image';
+
 import { SubscriptionManagement } from '@/components/SubscriptionManagement';
 
-interface ScreenshotPreviewProps {
-  file: File;
-  index: number;
-  onRemove: () => void;
-}
 
-function ScreenshotPreview({ file, index, onRemove }: ScreenshotPreviewProps) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-    return () => {
-      URL.revokeObjectURL(url);
-    };
-  }, [file]);
-
-  if (!previewUrl) {
-    return null;
-  }
-
-  return (
-    <div className="relative group">
-      <div className="relative w-full h-24 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
-        <Image
-          src={previewUrl}
-          alt={`Screenshot ${index + 1}`}
-          fill
-          unoptimized
-          className="object-cover"
-          sizes="(max-width: 768px) 33vw, 200px"
-        />
-      </div>
-      <button
-        type="button"
-        onClick={onRemove}
-        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        <X className="w-4 h-4" />
-      </button>
-    </div>
-  );
-}
 
 interface UserSettings {
   flashcard: {
@@ -125,13 +82,7 @@ export default function SettingsPage() {
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
 
-  // Feedback form states
-  const [feedbackCategory, setFeedbackCategory] = useState<'bug' | 'feature_request' | 'improvement' | 'other'>('bug');
-  const [feedbackMessage, setFeedbackMessage] = useState('');
-  const [feedbackScreenshots, setFeedbackScreenshots] = useState<File[]>([]);
-  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
-  const [feedbackSuccess, setFeedbackSuccess] = useState('');
-  const [feedbackError, setFeedbackError] = useState('');
+
 
   useEffect(() => {
     checkUserAndLoadSettings();
@@ -141,7 +92,7 @@ export default function SettingsPage() {
   async function checkUserAndLoadSettings() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         router.push('/login');
         return;
@@ -248,118 +199,7 @@ export default function SettingsPage() {
     }));
   };
 
-  const handleScreenshotChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
 
-    const newFiles = Array.from(files);
-    
-    // Check total count
-    if (feedbackScreenshots.length + newFiles.length > 3) {
-      setFeedbackError('Maximum 3 screenshots allowed');
-      setTimeout(() => setFeedbackError(''), 3000);
-      return;
-    }
-
-    // Validate and compress each file
-    const validFiles: File[] = [];
-    for (const file of newFiles) {
-      if (!file.type.startsWith('image/')) {
-        setFeedbackError('Only image files are allowed');
-        setTimeout(() => setFeedbackError(''), 3000);
-        continue;
-      }
-
-      if (file.size > 2 * 1024 * 1024) {
-        try {
-          const compressed = await imageCompression(file, {
-            maxSizeMB: 2,
-            maxWidthOrHeight: 1920,
-          });
-          validFiles.push(compressed);
-        } catch (error) {
-          console.error('Error compressing image:', error);
-          setFeedbackError('Failed to compress image. Please try a smaller file.');
-          setTimeout(() => setFeedbackError(''), 3000);
-        }
-      } else {
-        validFiles.push(file);
-      }
-    }
-
-    setFeedbackScreenshots(prev => [...prev, ...validFiles]);
-  };
-
-  const removeScreenshot = (index: number) => {
-    setFeedbackScreenshots(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleFeedbackSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user) {
-      setFeedbackError('You must be logged in');
-      return;
-    }
-
-    if (!feedbackMessage.trim()) {
-      setFeedbackError('Please enter a message');
-      setTimeout(() => setFeedbackError(''), 3000);
-      return;
-    }
-
-    setFeedbackSubmitting(true);
-    setFeedbackError('');
-    setFeedbackSuccess('');
-
-    try {
-      const screenshotUrls: string[] = [];
-
-      // Upload screenshots if any
-      for (const file of feedbackScreenshots) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        
-        const { data, error: uploadError } = await supabase.storage
-          .from('feedback-screenshots')
-          .upload(fileName, file);
-
-        if (uploadError) {
-          console.error('Error uploading screenshot:', uploadError);
-          continue; // Skip this file but continue with others
-        }
-
-        if (data) {
-          screenshotUrls.push(data.path);
-        }
-      }
-
-      // Insert feedback
-      const { error: insertError } = await supabase
-        .from('user_feedback')
-        .insert({
-          user_id: user.id,
-          category: feedbackCategory,
-          message: feedbackMessage.trim(),
-          screenshots: screenshotUrls,
-          status: 'pending',
-        });
-
-      if (insertError) throw insertError;
-
-      setFeedbackSuccess('Feedback submitted successfully! Thank you for helping us improve.');
-      setFeedbackMessage('');
-      setFeedbackScreenshots([]);
-      setFeedbackCategory('bug');
-      
-      setTimeout(() => setFeedbackSuccess(''), 5000);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to submit feedback';
-      setFeedbackError(errorMessage);
-    } finally {
-      setFeedbackSubmitting(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -407,7 +247,7 @@ export default function SettingsPage() {
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
                   Appearance
                 </h3>
-                
+
                 <div className="p-3 sm:p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
                     <div className="flex-1">
@@ -444,7 +284,7 @@ export default function SettingsPage() {
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
                   Flashcard Quiz Settings
                 </h3>
-                
+
                 <div className="space-y-4">
                   {/* Show Furigana on Front */}
                   <label
@@ -517,7 +357,7 @@ export default function SettingsPage() {
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
                   Multiple Choice Quiz Settings
                 </h3>
-                
+
                 <div className="space-y-4">
                   {/* Show Furigana in MCQ */}
                   <label
@@ -584,7 +424,7 @@ export default function SettingsPage() {
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
                   Smart Quiz Settings
                 </h3>
-                
+
                 <div className="space-y-4">
                   {/* Show Furigana on Front */}
                   <label
@@ -787,124 +627,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Feedback Form - Separate from settings */}
-            <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
-              <div className="mb-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <MessageSquare className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Send Feedback</h3>
-                </div>
-                <p className="text-gray-700 dark:text-gray-300">Help us improve Lexora by sharing your thoughts</p>
-              </div>
 
-              {/* Feedback Success Message */}
-              {feedbackSuccess && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-600 dark:text-green-400 text-sm"
-                >
-                  {feedbackSuccess}
-                </motion.div>
-              )}
-
-              {/* Feedback Error Message */}
-              {feedbackError && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm"
-                >
-                  {feedbackError}
-                </motion.div>
-              )}
-
-              <form onSubmit={handleFeedbackSubmit} className="space-y-4">
-                {/* Category Selection */}
-                <div>
-                  <label htmlFor="feedback-category" className="block font-medium text-gray-900 dark:text-white mb-2">
-                    Category
-                  </label>
-                  <select
-                    id="feedback-category"
-                    value={feedbackCategory}
-                    onChange={(e) => setFeedbackCategory(e.target.value as 'bug' | 'feature_request' | 'improvement' | 'other')}
-                    className="w-full px-4 py-2 border border-gray-400 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 text-gray-900 dark:text-gray-300"
-                  >
-                    <option className="text-gray-700 dark:text-gray-300" value="bug">🐛 Bug Report</option>
-                    <option className="text-gray-700 dark:text-gray-300" value="feature_request">✨ Feature Request</option>
-                    <option className="text-gray-700 dark:text-gray-300" value="improvement">💡 Improvement Suggestion</option>
-                    <option className="text-gray-700 dark:text-gray-300" value="other">💬 Other</option>
-                  </select>
-                </div>
-
-                {/* Message */}
-                <div>
-                  <label htmlFor="feedback-message" className="block font-medium text-gray-900 dark:text-white mb-2">
-                    Message
-                  </label>
-                  <textarea
-                    id="feedback-message"
-                    value={feedbackMessage}
-                    onChange={(e) => setFeedbackMessage(e.target.value)}
-                    rows={5}
-                    placeholder="Tell us what's on your mind..."
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 resize-none dark:bg-gray-800 text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500"
-                  />
-                </div>
-
-                {/* Screenshot Upload */}
-                <div>
-                  <label className="block font-medium text-gray-900 dark:text-white mb-2">
-                    Screenshots (Optional)
-                  </label>
-                  <p className="text-sm text-gray-900 dark:text-gray-200 mb-2">
-                    Upload up to 3 screenshots (max 2MB each)
-                  </p>
-                  
-                  {/* Screenshot Preview */}
-                  {feedbackScreenshots.length > 0 && (
-                    <div className="grid grid-cols-3 gap-2 mb-3">
-                      {feedbackScreenshots.map((file, index) => (
-                        <ScreenshotPreview
-                          key={`${file.name}-${index}`}
-                          file={file}
-                          index={index}
-                          onRemove={() => removeScreenshot(index)}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  {feedbackScreenshots.length < 3 && (
-                    <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 dark:hover:border-purple-400 transition-colors">
-                      <Upload className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                      <span className="text-sm text-gray-900 dark:text-gray-200">
-                        {feedbackScreenshots.length === 0 ? 'Upload Screenshots' : `Add More (${3 - feedbackScreenshots.length} remaining)`}
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleScreenshotChange}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-                </div>
-
-                {/* Submit Button */}
-                <motion.button
-                  type="submit"
-                  disabled={feedbackSubmitting || !feedbackMessage.trim()}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  <MessageSquare className="w-5 h-5" />
-                  {feedbackSubmitting ? 'Submitting...' : 'Submit Feedback'}
-                </motion.button>
-              </form>
-            </div>
           </div>
         </motion.div>
       </div>
