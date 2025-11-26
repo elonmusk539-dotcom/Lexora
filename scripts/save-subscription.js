@@ -1,14 +1,10 @@
 /**
  * Manual Subscription Fix Script
- * This script manually saves the PayPal subscription that was created
  * Usage: node scripts/save-subscription.js
  */
 
 require('dotenv').config({ path: '.env.local' });
 const { createClient } = require('@supabase/supabase-js');
-
-const SUBSCRIPTION_ID = 'I-027GGD654S32'; // Your PayPal subscription ID
-const PLAN_ID = process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID_MONTHLY || 'P-8VX60180U0802633NNEHDLXQ';
 
 async function saveSubscription() {
   console.log('\n🔧 Manual Subscription Saver\n');
@@ -34,30 +30,12 @@ async function saveSubscription() {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    // Determine if yearly
-    const yearlyPlanIds = [
-      'P-5WV83425FL4882210ND6PAQY',
-      'P-3KS569328K403315NNEHDLXY',
-      process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID_YEARLY
-    ];
-    const isYearly = yearlyPlanIds.includes(PLAN_ID);
-    const interval = isYearly ? 'year' : 'month';
-
-    // Calculate period end
-    const currentPeriodEnd = new Date();
-    if (isYearly) {
-      currentPeriodEnd.setFullYear(currentPeriodEnd.getFullYear() + 1);
-    } else {
-      currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1);
-    }
-
+    // TODO: Update this for Dodo Payments or other providers if needed
     const subscriptionData = {
       user_id: userId,
-      paypal_subscription_id: SUBSCRIPTION_ID,
-      paypal_plan_id: PLAN_ID,
       status: 'active',
-      interval: interval,
-      current_period_end: currentPeriodEnd.toISOString(),
+      interval: 'month',
+      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       updated_at: new Date().toISOString(),
     };
 

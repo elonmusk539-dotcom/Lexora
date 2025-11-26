@@ -106,12 +106,3 @@ body, html {
   overflow-x: hidden;
   max-width: 100vw;
 }
-
-/* Ensure PayPal area blends with parent gradient */
-div[id^="paypal-button-container"],
-div[id^="paypal-button-container"] > div,
-div[id^="paypal-button-container"] iframe {
-  background: transparent !important;
-}
-
-/* Removed PayPal transparency overrides so it always renders in light style */
