@@ -61,7 +61,18 @@ Update your deployment platform's environment variables with LIVE credentials:
 2. Update/Add these variables:
 
 ```env
-# LIVE Dodo Credentials (get from Dodo Dashboard - LIVE MODE)
+# ==========================================
+# SUPABASE (Database)
+# ==========================================
+# Keep same as development (unless you have separate production DB)
+NEXT_PUBLIC_SUPABASE_URL=https://your-supabase-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key_here
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here
+
+# ==========================================
+# LIVE DODO CREDENTIALS
+# ==========================================
+# Get from Dodo Dashboard - LIVE MODE
 NEXT_PUBLIC_DODO_API_KEY=pk_live_xxxxxxxxxxxxx
 DODO_API_KEY=live_api_key_xxxxxxxxxxxxx
 DODO_PAYMENTS_WEBHOOK_SECRET=whsec_live_xxxxxxxxxxxxx
@@ -70,12 +81,16 @@ DODO_PAYMENTS_WEBHOOK_SECRET=whsec_live_xxxxxxxxxxxxx
 NEXT_PUBLIC_DODO_PLAN_ID_MONTHLY=pdt_live_monthly_xxxxx
 NEXT_PUBLIC_DODO_PLAN_ID_YEARLY=pdt_live_yearly_xxxxx
 
-# LIVE App URL (your production domain)
+# ==========================================
+# APP URLS (your production domain)
+# ==========================================
 NEXT_PUBLIC_APP_URL=https://your-domain.com
 NEXT_PUBLIC_SITE_URL=https://your-domain.com
 NEXT_PUBLIC_VERCEL_URL=https://your-domain.com
 
-# CRITICAL: Enable production mode
+# ==========================================
+# ENVIRONMENT (CRITICAL - must be production)
+# ==========================================
 NODE_ENV=production
 ```
 
