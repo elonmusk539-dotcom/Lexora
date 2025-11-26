@@ -141,6 +141,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true, status: 'cancelled' });
     }
 
+    // Handle checkout.session.failed event
+    if (event === 'checkout.session.failed' || event === 'checkout.failed') {
+      const { data: sessionData } = body;
+
+      if (!sessionData) {
+        console.error('No session data in failed webhook');
+        return NextResponse.json(
+          { error: 'Invalid webhook data' },
+          { status: 400 }
+        );
+      }
+
+      const userId = sessionData.metadata?.user_id || sessionData.customer_id;
+      console.log('Checkout failed for user:', userId);
+      console.log('Failure reason:', sessionData.error);
+
+      // Don't save subscription for failed payments, just log
+      // The pending_payment status will remain until success
+      return NextResponse.json({ received: true, status: 'failed' });
+    }
+
     // For other events, just acknowledge receipt
     console.log('Ignoring webhook event:', event);
     return NextResponse.json({ received: true });
