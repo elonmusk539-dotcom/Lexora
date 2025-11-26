@@ -5,139 +5,87 @@ import { useSubscription } from '@/lib/subscription/useSubscription';
 import { motion } from 'framer-motion';
 import { Check, Crown, Zap, Infinity, List, FileText, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
-import Script from 'next/script';
-
-// Declare PayPal SDK v5 types for subscriptions
-declare global {
-  interface Window {
-    paypal?: {
-      Buttons: (config: {
-        style?: {
-          shape?: string;
-          color?: string;
-          layout?: string;
-          label?: string;
-        };
-        createSubscription: (data: unknown, actions: {
-          subscription: {
-            create: (params: { plan_id: string }) => Promise<string>;
-          };
-        }) => Promise<string>;
-        onApprove: (data: { subscriptionID: string }, actions: unknown) => Promise<void>;
-        onError?: (err: unknown) => void;
-      }) => {
-        render: (selector: string) => Promise<void>;
-      };
-    };
-  }
-}
+import { isTestMode } from '@/lib/dodo/config';
 
 export default function PremiumPage() {
   const { subscription, isPro, loading: subLoading } = useSubscription();
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
-  const [paypalLoaded, setPaypalLoaded] = useState(false);
+  const [processingSubscription, setProcessingSubscription] = useState(false);
 
-  // PayPal Plan IDs from environment variables
-  const PAYPAL_PLAN_ID_MONTHLY = process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID_MONTHLY || 'P-46L67236992761240ND6OTJI';
-  const PAYPAL_PLAN_ID_YEARLY = process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID_YEARLY || 'P-5WV83425FL4882210ND6PAQY';
-  const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'Afo4JDNyPVqFHlF4ra_SJdDCXAfM4pBmx1VW19eLcWd73vNZSUTjSdp1Lo7ILyHLmyFReEBitVFwf7Ut';
+  // Dodo Plan IDs from environment variables
+  const DODO_PLAN_ID_MONTHLY = process.env.NEXT_PUBLIC_DODO_PLAN_ID_MONTHLY;
+  const DODO_PLAN_ID_YEARLY = process.env.NEXT_PUBLIC_DODO_PLAN_ID_YEARLY;
+  const DODO_PUBLIC_KEY = process.env.NEXT_PUBLIC_DODO_API_KEY;
 
-  useEffect(() => {
-    if (paypalLoaded && !isPro && window.paypal) {
-      renderPayPalButton();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paypalLoaded, billingInterval, isPro]);
+  const handleSubscribeClick = async () => {
+    try {
+      setProcessingSubscription(true);
 
-  const renderPayPalButton = () => {
-    if (!window.paypal) return;
-
-    const planId = billingInterval === 'month' ? PAYPAL_PLAN_ID_MONTHLY : PAYPAL_PLAN_ID_YEARLY;
-    const containerId = `paypal-button-container-${billingInterval}`;
-    
-    // Clear existing button
-    const container = document.getElementById(containerId);
-    if (container) {
-      container.innerHTML = '';
-    }
-
-    // Render PayPal subscription button (automatically includes card option)
-    window.paypal.Buttons({
-      style: {
-        shape: 'rect',
-        color: 'gold',
-        layout: 'vertical',
-        label: 'subscribe'
-      },
-      createSubscription: function(data, actions) {
-        return actions.subscription.create({
-          plan_id: planId
-        });
-      },
-      onApprove: async function(data) {
-        try {
-          // Get current user
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) {
-            alert('Please log in to subscribe');
-            return;
-          }
-
-          // Call API to save subscription
-          const response = await fetch('/api/paypal/subscription', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              subscriptionId: data.subscriptionID,
-              userId: session.user.id,
-              planId: planId,
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to save subscription');
-          }
-
-          // Redirect to success page
-          window.location.href = `/premium/success?subscription_id=${data.subscriptionID}`;
-        } catch (error) {
-          console.error('Error processing subscription:', error);
-          alert('Subscription created but there was an error saving it. Please contact support with your subscription ID: ' + data.subscriptionID);
-        }
-      },
-      onError: function(err) {
-        console.error('PayPal error:', err);
-        alert('Payment failed. Please try again or contact support if the issue persists.');
+      // Get current user
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Please log in to subscribe');
+        setProcessingSubscription(false);
+        return;
       }
-    }).render(`#${containerId}`);
-  };
 
-  const monthlyPrice = '$2.99';
-  const yearlyPrice = '$28.99';
-  const yearlyMonthly = '$2.41';
-  const savingsPercent = '17';
-
-  if (subLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-        <div className="flex items-center justify-center h-screen">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      {/* PayPal SDK Script - Subscription with vault */}
-      <Script
-        src={`https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&vault=true&intent=subscription`}
-        onLoad={() => setPaypalLoaded(true)}
-        strategy="lazyOnload"
-      />
+      // Determine plan ID based on billing interval
+      const planId = billingInterval === 'month' ? DODO_PLAN_ID_MONTHLY : DODO_PLAN_ID_YEARLY;
       
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
+      if (!planId) {
+        alert('Subscription plan is not configured. Please contact support.');
+        setProcessingSubscription(false);
+        return;
+      }
+
+      // Create checkout session with Dodo Payments
+      const response = await fetch('/api/dodo/subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planId: planId,
+          userId: session.user.id,
+          interval: billingInterval,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.details || error.error || 'Failed to create checkout session');
+      }
+
+      const { checkoutUrl } = await response.json();
+      
+      if (!checkoutUrl) {
+        throw new Error('No checkout URL received from Dodo');
+      }
+
+      // Redirect user to Dodo checkout page
+      window.location.href = checkoutUrl;
+    } catch (error) {
+      console.error('Error processing subscription:', error);
+      alert(error instanceof Error ? error.message : 'Subscription failed. Please try again.');
+    } finally {
+      setProcessingSubscription(false);
+    }
+  };
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+      {/* Test Mode Banner */}
+      {isTestMode() && (
+        <div className="w-full bg-yellow-100 border-b-2 border-yellow-400 dark:bg-yellow-900/30 dark:border-yellow-700">
+          <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🧪</span>
+              <p className="text-sm sm:text-base text-yellow-800 dark:text-yellow-200 font-medium">
+                <strong>Test Mode Active:</strong> Subscriptions will not charge real credit cards. Use test cards only.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12 md:mb-16">
           <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mb-4 sm:mb-6">
@@ -185,7 +133,7 @@ export default function PremiumPage() {
             <span className={`text-sm sm:text-base font-medium ${billingInterval === 'year' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-500'}`}>
               Yearly
               <span className="ml-2 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
-                Save {savingsPercent}%
+                Save 17%
               </span>
             </span>
           </div>
@@ -257,13 +205,13 @@ export default function PremiumPage() {
               Pro
             </h3>
             <div className="text-3xl sm:text-4xl font-bold text-white mb-2">
-              {billingInterval === 'month' ? monthlyPrice : yearlyPrice}
+              {billingInterval === 'month' ? '$2.99' : '$28.99'}
               <span className="text-base sm:text-lg text-purple-200 font-normal">
                 /{billingInterval}
               </span>
             </div>
             {billingInterval === 'year' && (
-              <p className="text-sm text-purple-200 mb-6">That&apos;s {yearlyMonthly}/month</p>
+              <p className="text-sm text-purple-200 mb-6">That&apos;s $2.41/month</p>
             )}
             
             <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
@@ -307,14 +255,20 @@ export default function PremiumPage() {
                 Current Plan
               </button>
             ) : (
-              <div className="w-full rounded-xl p-2">
-                  <div id={`paypal-button-container-${billingInterval}`} className="w-full" />
-                  {!paypalLoaded && (
-                    <div className="flex items-center justify-center py-3">
-                      <Loader2 className="w-5 h-5 animate-spin text-white" />
-                    </div>
-                  )}
-              </div>
+              <button
+                onClick={handleSubscribeClick}
+                disabled={processingSubscription || !DODO_PLAN_ID_MONTHLY || !DODO_PLAN_ID_YEARLY}
+                className="w-full py-3 bg-white text-purple-600 rounded-xl font-bold text-base sm:text-lg hover:bg-gray-100 transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {processingSubscription ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  'Subscribe Now'
+                )}
+              </button>
             )}
           </motion.div>
         </div>
@@ -340,7 +294,7 @@ export default function PremiumPage() {
                 What payment methods do you accept?
               </summary>
               <p className="mt-3 text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                We accept PayPal for subscriptions. You can pay with your PayPal balance, credit cards, or debit cards through PayPal&apos;s secure checkout.
+                We accept all major credit cards, debit cards, and digital payment methods through Dodo Payments. Dodo supports over 100 payment methods globally.
               </p>
             </details>
 
@@ -354,8 +308,7 @@ export default function PremiumPage() {
             </details>
           </div>
         </div>
-        </div>
       </div>
-    </>
+    </div>
   );
 }

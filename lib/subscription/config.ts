@@ -15,12 +15,12 @@ export const SUBSCRIPTION_CONFIG = {
       monthly: {
         amount: 299, // $2.99 in cents
         interval: 'month',
-        planId: process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID_MONTHLY || '',
+        planId: process.env.NEXT_PUBLIC_DODO_PLAN_ID_MONTHLY || '',
       },
       yearly: {
         amount: 2899, // $28.99 in cents
         interval: 'year',
-        planId: process.env.NEXT_PUBLIC_PAYPAL_PLAN_ID_YEARLY || '',
+        planId: process.env.NEXT_PUBLIC_DODO_PLAN_ID_YEARLY || '',
       },
     },
   },

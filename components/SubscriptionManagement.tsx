@@ -27,7 +27,7 @@ export function SubscriptionManagement() {
 
       console.log('Sending cancel request for user:', user.id);
 
-      const response = await fetch('/api/paypal/cancel', {
+      const response = await fetch('/api/dodo/cancel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
