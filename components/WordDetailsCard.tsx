@@ -55,16 +55,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
   useEffect(() => {
     if (isOpen && word.id) {
       fetchDetailedExamples();
-      // Prevent body scroll when modal is open
-      document.body.style.overflow = 'hidden';
-    } else {
-      // Restore body scroll when modal is closed
-      document.body.style.overflow = 'unset';
     }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, word.id]);
 
@@ -77,10 +68,10 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
         .order('id', { ascending: true });
 
       if (error) throw error;
-      
+
       // Debug: Log the fetched examples to console
       console.log('Fetched examples for word:', word.id, data);
-      
+
       setDetailedExamples(data || []);
     } catch (error) {
       console.error('Error fetching examples:', error);
@@ -135,22 +126,24 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
   };
 
   // Lock body scroll when modal is open
+  // Lock body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      const scrollY = window.scrollY;
       document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
       document.body.style.width = '100%';
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        const scrollY = document.body.style.top;
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      };
     }
-    
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-    };
   }, [isOpen]);
 
   return (
@@ -278,7 +271,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                     // Parse pipe-separated format: kanji|furigana|romaji|translation
                     const parts = typeof example === 'string' ? example.split('|') : [];
                     const [kanji, furigana, romaji, translation] = parts;
-                    
+
                     return (
                       <motion.div
                         key={index}
@@ -326,7 +319,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                   onClick={(e) => e.stopPropagation()}
                 >
                   <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">Report an Issue</h3>
-                  
+
                   {reportSuccess ? (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
