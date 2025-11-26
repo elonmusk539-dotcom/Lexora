@@ -68,8 +68,11 @@ export async function POST(req: NextRequest) {
     // Endpoint: POST /checkouts
     // For test mode, use: https://test.dodopayments.com
     // For live mode, use: https://live.dodopayments.com
-    // Authentication: Bearer token (use the publishable key for test mode)
-    const dodoResponse = await fetch('https://test.dodopayments.com/checkouts', {
+    const isProduction = process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_APP_URL?.includes('https');
+    const dodoBaseUrl = isProduction ? 'https://live.dodopayments.com' : 'https://test.dodopayments.com';
+    console.log('Using Dodo base URL:', dodoBaseUrl);
+    
+    const dodoResponse = await fetch(`${dodoBaseUrl}/checkouts`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
