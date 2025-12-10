@@ -125,7 +125,7 @@ export default function ListsPage() {
 
           {/* Info message */}
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {isPro 
+            {isPro
               ? 'Browse and study all available word collections'
               : `You have access to ${FREE_TIER_LISTS.length} free lists. Unlock all lists with Pro!`
             }
@@ -143,62 +143,64 @@ export default function ListsPage() {
             </p>
           </motion.div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredLists.map((list, index) => {
-              const isLocked = !canAccessList(subscription.tier, list.name);
-              
-              return (
-                <motion.div
-                  key={list.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  {isLocked ? (
-                    <div className="relative block p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 opacity-75">
-                      <div className="absolute top-4 right-4">
-                        <Lock className="w-5 h-5 text-gray-400" />
+          <div className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredLists.map((list, index) => {
+                const isLocked = !canAccessList(subscription?.tier || 'free', list.name);
+
+                return (
+                  <motion.div
+                    key={list.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    {isLocked ? (
+                      <div className="relative block p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 opacity-75">
+                        <div className="absolute top-4 right-4">
+                          <Lock className="w-5 h-5 text-gray-400" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                          {list.name}
+                        </h3>
+                        {list.description && (
+                          <p className="text-gray-600 dark:text-gray-400 mb-4">{list.description}</p>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {list.word_count} word{list.word_count !== 1 ? 's' : ''}
+                          </span>
+                          <span className="text-sm font-medium text-purple-600 dark:text-purple-400 flex items-center gap-1">
+                            <Crown className="w-4 h-4" />
+                            Pro Only
+                          </span>
+                        </div>
                       </div>
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                        {list.name}
-                      </h3>
-                      {list.description && (
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">{list.description}</p>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          {list.word_count} word{list.word_count !== 1 ? 's' : ''}
-                        </span>
-                        <span className="text-sm font-medium text-purple-600 dark:text-purple-400 flex items-center gap-1">
-                          <Crown className="w-4 h-4" />
-                          Pro Only
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <Link
-                      href={`/lists/${list.id}`}
-                      className="block p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg transition-all"
-                    >
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                        {list.name}
-                      </h3>
-                      {list.description && (
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">{list.description}</p>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          {list.word_count} word{list.word_count !== 1 ? 's' : ''}
-                        </span>
-                        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                          View →
-                        </span>
-                      </div>
-                    </Link>
-                  )}
-                </motion.div>
-              );
-            })}
+                    ) : (
+                      <Link
+                        href={`/lists/${list.id}`}
+                        className="block p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg transition-all"
+                      >
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                          {list.name}
+                        </h3>
+                        {list.description && (
+                          <p className="text-gray-600 dark:text-gray-400 mb-4">{list.description}</p>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {list.word_count} word{list.word_count !== 1 ? 's' : ''}
+                          </span>
+                          <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                            View →
+                          </span>
+                        </div>
+                      </Link>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         )}
       </main>

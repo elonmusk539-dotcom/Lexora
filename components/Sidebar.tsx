@@ -193,7 +193,7 @@ export function Sidebar({ children }: SidebarProps) {
           {(!collapsed || isMobile) ? (
             <div className="flex items-center gap-2">
               <Link href="/premium" onClick={() => setMobileOpen(false)} className="flex-1">
-                <button className="w-full h-12 px-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity text-sm whitespace-nowrap flex items-center justify-center">
+                <button className="w-full h-12 px-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity text-base whitespace-nowrap flex items-center justify-center">
                   Upgrade
                 </button>
               </Link>

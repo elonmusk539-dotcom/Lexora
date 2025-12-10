@@ -37,7 +37,7 @@ export default function MyListsPage() {
   const [showAddCustomWord, setShowAddCustomWord] = useState(false);
   const [allAvailableWords, setAllAvailableWords] = useState<Word[]>([]);
   const [filterByList, setFilterByList] = useState<string>('all');
-  const [allLists, setAllLists] = useState<{id: string, name: string, isCustom?: boolean}[]>([]);
+  const [allLists, setAllLists] = useState<{ id: string, name: string, isCustom?: boolean }[]>([]);
 
   useEffect(() => {
     fetchLists();
@@ -74,8 +74,8 @@ export default function MyListsPage() {
             .select('*', { count: 'exact', head: true })
             .eq('list_id', list.id);
 
-          return { 
-            ...list, 
+          return {
+            ...list,
             word_count: (regularCount || 0) + (customCount || 0)
           };
         })
@@ -93,7 +93,7 @@ export default function MyListsPage() {
     if (!newListName.trim()) return;
 
     // Check if user can create more lists
-    if (!canCreateCustomList(subscription.tier, lists.length)) {
+    if (!canCreateCustomList(subscription?.tier || 'free', lists.length)) {
       alert(`Free users can only create 2 custom lists. Upgrade to Pro for unlimited custom lists!`);
       setShowCreateModal(false);
       return;
@@ -173,10 +173,10 @@ export default function MyListsPage() {
 
     // Fetch all available lists for filtering
     await fetchAllListsForFilter();
-    
+
     // Fetch words currently in this list
     await fetchCurrentListWords(list);
-    
+
     // Fetch all available words to add
     await fetchAllAvailableWords(list.id);
   };
@@ -245,7 +245,7 @@ export default function MyListsPage() {
         ...item.vocabulary_words,
         word_type: 'regular' as const,
       }));
-      
+
       interface CustomWordItem {
         custom_word_id: string;
         user_custom_words: {
@@ -260,7 +260,7 @@ export default function MyListsPage() {
           [key: string]: unknown;
         };
       }
-      
+
       const customWordItems = (customWordsData ?? []) as unknown as CustomWordItem[];
       const customWords: Word[] = customWordItems.map((item) => {
         const word = item.user_custom_words;
@@ -364,7 +364,7 @@ export default function MyListsPage() {
           .from('vocabulary_words')
           .select('id')
           .eq('list_id', filterByList);
-        
+
         const wordIdsInList = wordsInList?.map(w => w.id) || [];
         filteredWords = filteredWords.filter(word => wordIdsInList.includes(word.id));
       }
@@ -489,7 +489,7 @@ export default function MyListsPage() {
           {/* Info and Create button row */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {isPro 
+              {isPro
                 ? 'Create and manage unlimited custom vocabulary collections'
                 : `${lists.length}/2 custom lists used. Upgrade to Pro for unlimited!`
               }
@@ -498,7 +498,7 @@ export default function MyListsPage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => {
-                if (!canCreateCustomList(subscription.tier, lists.length)) {
+                if (!canCreateCustomList(subscription?.tier || 'free', lists.length)) {
                   if (confirm('You have reached the limit of 2 custom lists on the free plan. Upgrade to Pro for unlimited custom lists?')) {
                     router.push('/premium');
                   }
@@ -506,7 +506,7 @@ export default function MyListsPage() {
                 }
                 setShowCreateModal(true);
               }}
-              disabled={!canCreateCustomList(subscription.tier, lists.length) && !isPro}
+              disabled={!canCreateCustomList(subscription?.tier || 'free', lists.length) && !isPro}
               className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base whitespace-nowrap"
             >
               <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -538,55 +538,57 @@ export default function MyListsPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredLists.map((list) => (
-              <motion.div
-                key={list.id}
-                whileHover={{ scale: 1.02 }}
-                onClick={() => router.push(`/my-lists/${list.id}`)}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-blue-500 transition-all"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{list.name}</h3>
-                    {list.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{list.description}</p>
-                    )}
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredLists.map((list) => (
+                <motion.div
+                  key={list.id}
+                  whileHover={{ scale: 1.02 }}
+                  onClick={() => router.push(`/my-lists/${list.id}`)}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-blue-500 transition-all"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{list.name}</h3>
+                      {list.description && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{list.description}</p>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingList(list);
+                          setNewListName(list.name);
+                          setNewListDescription(list.description || '');
+                        }}
+                        className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteList(list.id);
+                        }}
+                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingList(list);
-                        setNewListName(list.name);
-                        setNewListDescription(list.description || '');
-                      }}
-                      className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteList(list.id);
-                      }}
-                      className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {list.word_count} {list.word_count === 1 ? 'word' : 'words'}
-                  </span>
-                  <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                    Click to view →
-                  </span>
-                </div>
-              </motion.div>
-            ))}
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {list.word_count} {list.word_count === 1 ? 'word' : 'words'}
+                    </span>
+                    <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                      Click to view →
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -743,7 +745,7 @@ export default function MyListsPage() {
                       ))}
                     </select>
                   </div>
-                  
+
                   {/* Search Input */}
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -811,17 +813,16 @@ export default function MyListsPage() {
         </AnimatePresence>
 
         {/* Add Custom Word Modal */}
-        {selectedList && (
-          <AddCustomWord
-            isOpen={showAddCustomWord}
-            onClose={() => setShowAddCustomWord(false)}
-            listId={selectedList.id}
-            onWordAdded={() => {
+        <AddCustomWord
+          isOpen={showAddCustomWord}
+          onClose={() => setShowAddCustomWord(false)}
+          onSuccess={() => {
+            if (selectedList) {
               viewListWords(selectedList);
-              fetchLists();
-            }}
-          />
-        )}
+            }
+          }}
+          initialListId={selectedList?.id}
+        />
       </div>
     </div>
   );

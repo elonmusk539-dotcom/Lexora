@@ -5,6 +5,7 @@ import { Filter, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { Pagination } from '@/components/Pagination';
 import { WordListItem } from '@/components/WordListItem';
 import { WordDetailsCard, type Word } from '@/components/WordDetailsCard';
 import { FREE_TIER_LISTS, type SubscriptionTier } from '@/lib/subscription/config';
@@ -27,6 +28,11 @@ export default function Home() {
   const [showCustomWords, setShowCustomWords] = useState(true);
   const [userTier, setUserTier] = useState<SubscriptionTier>('free');
   const [showFilters, setShowFilters] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -54,8 +60,8 @@ export default function Home() {
         .eq('user_id', session.user.id)
         .single();
 
-      const isPro = subscription?.status === 'active' && 
-                    new Date(subscription.current_period_end) > new Date();
+      const isPro = subscription?.status === 'active' &&
+        new Date(subscription.current_period_end) > new Date();
       setUserTier(isPro ? 'pro' : 'free');
 
       // Fetch regular vocabulary words
@@ -74,7 +80,7 @@ export default function Home() {
         .from('user_custom_words')
         .select('*')
         .eq('user_id', session.user.id)
-        .order('created_at', { ascending: true});
+        .order('created_at', { ascending: true });
 
       if (customError) throw customError;
 
@@ -102,7 +108,7 @@ export default function Home() {
         vocabulary_lists: { name: string };
         [key: string]: unknown;
       }
-      
+
       const allWords = [
         ...(regularWords || []).map((w: VocabularyWord) => ({
           ...w,
@@ -114,8 +120,8 @@ export default function Home() {
           reading: w.romaji,
           word_type: 'custom',
           // Convert JSONB examples to string array format for WordDetailsCard
-          examples: w.examples ? 
-            w.examples.map((ex) => 
+          examples: w.examples ?
+            w.examples.map((ex) =>
               `${ex.kanji}|${ex.furigana}|${ex.romaji}|${ex.translation}`
             ) : []
         } as Word))
@@ -150,7 +156,7 @@ export default function Home() {
   const getProgress = (wordId: string) => {
     const wordProgress = progress[wordId];
     if (!wordProgress) return { progress: 0, isMastered: false };
-    
+
     const progressPercent = (wordProgress.correct_streak / 7) * 100;
     return {
       progress: Math.min(progressPercent, 100),
@@ -160,7 +166,7 @@ export default function Home() {
 
   const filteredWords = words.filter((word) => {
     const wordProgress = progress[word.id];
-    
+
     // Filter by subscription tier - free users only see words from free lists
     if (userTier === 'free') {
       const wordWithList = word as Word & { list_name?: string };
@@ -168,7 +174,7 @@ export default function Home() {
         return false;
       }
     }
-    
+
     // Apply status filter
     let matchesFilter = false;
     switch (filter) {
@@ -185,29 +191,39 @@ export default function Home() {
       default:
         matchesFilter = true;
     }
-    
+
     if (!matchesFilter) return false;
-    
+
     // Apply custom words filter
     if (!showCustomWords && 'word_type' in word && word.word_type === 'custom') {
       return false;
     }
-    
+
     // Apply search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      const matchesSearch = 
+      const matchesSearch =
         (word.kanji?.toLowerCase().includes(query)) ||
         (word.word?.toLowerCase().includes(query)) ||
         (word.furigana?.toLowerCase().includes(query)) ||
         (word.romaji?.toLowerCase().includes(query)) ||
         (word.meaning?.toLowerCase().includes(query));
-      
+
       return matchesSearch;
     }
-    
+
     return true;
   });
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchQuery, showCustomWords]);
+
+  const paginatedWords = filteredWords.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   if (loading) {
     return (
@@ -237,7 +253,7 @@ export default function Home() {
                   {showFilters ? 'Hide Filters' : 'Show Filters'}
                 </span>
               </button>
-              
+
               <div className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
                 {filteredWords.length} word{filteredWords.length !== 1 ? 's' : ''}
               </div>
@@ -273,11 +289,10 @@ export default function Home() {
                       <button
                         key={f}
                         onClick={() => setFilter(f)}
-                        className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all ${
-                          filter === f
-                            ? 'bg-blue-600 text-white shadow-md'
-                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
-                        }`}
+                        className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all ${filter === f
+                          ? 'bg-blue-600 text-white shadow-md'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                          }`}
                       >
                         {f === 'all' && 'All'}
                         {f === 'started' && 'In Progress'}
@@ -287,7 +302,7 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-                
+
                 {/* Custom Words Toggle */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
                   <label className="flex items-center gap-2 cursor-pointer px-3 sm:px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full sm:w-auto">
@@ -318,25 +333,36 @@ export default function Home() {
             </p>
           </motion.div>
         ) : (
-          <div className="grid gap-4">
-            {filteredWords.map((word, index) => {
-              const { progress: wordProgress, isMastered } = getProgress(word.id);
-              return (
-                <motion.div
-                  key={word.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <WordListItem
-                    word={word}
-                    progress={wordProgress}
-                    isMastered={isMastered}
-                    onClick={() => setSelectedWord(word)}
-                  />
-                </motion.div>
-              );
-            })}
+          <div className="space-y-6">
+            <div className="grid gap-4">
+              {paginatedWords.map((word, index) => {
+                const { progress: wordProgress, isMastered } = getProgress(word.id);
+                return (
+                  <motion.div
+                    key={word.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <WordListItem
+                      word={word}
+                      progress={wordProgress}
+                      isMastered={isMastered}
+                      onClick={() => setSelectedWord(word)}
+                    />
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredWords.length / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              onItemsPerPageChange={setItemsPerPage}
+              totalItems={filteredWords.length}
+            />
           </div>
         )}
       </main>

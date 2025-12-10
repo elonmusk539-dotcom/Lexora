@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { Pagination } from '@/components/Pagination';
 import { WordListItem } from '@/components/WordListItem';
 import { WordDetailsCard, type Word } from '@/components/WordDetailsCard';
 import { AddCustomWord } from '@/components/AddCustomWord';
@@ -45,6 +46,15 @@ export default function CustomListDetailPage() {
   const [selectedWordsToAdd, setSelectedWordsToAdd] = useState<string[]>([]);
   const [vocabSearchQuery, setVocabSearchQuery] = useState('');
   const router = useRouter();
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+
+  // Reset page when filter or search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchQuery]);
 
   useEffect(() => {
     checkUser();
@@ -113,7 +123,7 @@ export default function CustomListDetailPage() {
         ...item.vocabulary_words,
         word_type: 'regular' as const,
       }));
-      
+
       interface CustomWordItem {
         custom_word_id: string;
         user_custom_words: {
@@ -128,7 +138,7 @@ export default function CustomListDetailPage() {
           [key: string]: unknown;
         };
       }
-      
+
       const customWordItems = (customWordsData ?? []) as unknown as CustomWordItem[];
       const customWords: Word[] = customWordItems.map((item) => {
         const word = item.user_custom_words;
@@ -138,8 +148,8 @@ export default function CustomListDetailPage() {
           reading: word.romaji,
           word_type: 'custom' as const,
           // Custom words store examples as JSONB, convert to string array for compatibility
-          examples: word.examples ? 
-            word.examples.map((ex) => 
+          examples: word.examples ?
+            word.examples.map((ex) =>
               `${ex.kanji}|${ex.furigana}|${ex.romaji}|${ex.translation}`
             ) : []
         };
@@ -179,7 +189,7 @@ export default function CustomListDetailPage() {
   const getProgress = (wordId: string) => {
     const wordProgress = progress[wordId];
     if (!wordProgress) return { progress: 0, isMastered: false };
-    
+
     const progressPercent = (wordProgress.correct_streak / 7) * 100;
     return {
       progress: Math.min(progressPercent, 100),
@@ -189,7 +199,7 @@ export default function CustomListDetailPage() {
 
   const filteredWords = words.filter((word) => {
     const wordProgress = progress[word.id];
-    
+
     // Apply filter
     let matchesFilter = false;
     switch (filter) {
@@ -206,24 +216,29 @@ export default function CustomListDetailPage() {
       default:
         matchesFilter = true;
     }
-    
+
     if (!matchesFilter) return false;
-    
+
     // Apply search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      const matchesSearch = 
+      const matchesSearch =
         (word.kanji?.toLowerCase().includes(query)) ||
         (word.word?.toLowerCase().includes(query)) ||
         (word.furigana?.toLowerCase().includes(query)) ||
         (word.romaji?.toLowerCase().includes(query)) ||
         (word.meaning?.toLowerCase().includes(query));
-      
+
       return matchesSearch;
     }
-    
+
     return true;
   });
+
+  const paginatedWords = filteredWords.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const fetchAvailableVocabWords = async () => {
     try {
@@ -413,7 +428,7 @@ export default function CustomListDetailPage() {
                   {showFilters ? 'Hide Filters' : 'Show Filters'}
                 </span>
               </button>
-              
+
               <div className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
                 {filteredWords.length} word{filteredWords.length !== 1 ? 's' : ''}
               </div>
@@ -448,11 +463,10 @@ export default function CustomListDetailPage() {
                     <button
                       key={f}
                       onClick={() => setFilter(f)}
-                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all ${
-                        filter === f
-                          ? 'bg-purple-600 text-white shadow-md'
-                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
-                      }`}
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all ${filter === f
+                        ? 'bg-purple-600 text-white shadow-md'
+                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                        }`}
                     >
                       {f === 'all' && 'All'}
                       {f === 'started' && 'In Progress'}
@@ -478,36 +492,47 @@ export default function CustomListDetailPage() {
             </p>
           </motion.div>
         ) : (
-          <div className="grid gap-4">
-            {filteredWords.map((word, index) => {
-              const { progress: wordProgress, isMastered } = getProgress(word.id);
-              return (
-                <motion.div
-                  key={word.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="relative group"
-                >
-                  <WordListItem
-                    word={word}
-                    progress={wordProgress}
-                    isMastered={isMastered}
-                    onClick={() => setSelectedWord(word)}
-                  />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeWord(word.id, 'word_type' in word && word.word_type === 'custom');
-                    }}
-                    className="absolute top-2 right-2 p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Remove from list"
+          <div className="space-y-6">
+            <div className="grid gap-4">
+              {paginatedWords.map((word, index) => {
+                const { progress: wordProgress, isMastered } = getProgress(word.id);
+                return (
+                  <motion.div
+                    key={word.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="relative group"
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </motion.div>
-              );
-            })}
+                    <WordListItem
+                      word={word}
+                      progress={wordProgress}
+                      isMastered={isMastered}
+                      onClick={() => setSelectedWord(word)}
+                    />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeWord(word.id, 'word_type' in word && word.word_type === 'custom');
+                      }}
+                      className="absolute top-2 right-2 p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Remove from list"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredWords.length / itemsPerPage)}
+              onPageChange={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              onItemsPerPageChange={setItemsPerPage}
+              totalItems={filteredWords.length}
+            />
           </div>
         )}
       </main>
