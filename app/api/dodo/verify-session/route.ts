@@ -16,8 +16,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Correctly determine Dodo Environment
-    // Priority: Explicit Mode Variable -> Node Env -> Default Live
-    const mode = process.env.NEXT_PUBLIC_DODO_MODE || (process.env.NODE_ENV === 'production' ? 'live' : 'test');
+    // Match logic from app/api/dodo/subscription/route.ts to ensure consistency
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const isProduction = process.env.NODE_ENV === 'production' && appUrl.startsWith('https');
+
+    // If we are in production conform, FORCE live mode. 
+    // Only use DODO_MODE if not in strict production detected environment.
+    const mode = isProduction ? 'live' : (process.env.NEXT_PUBLIC_DODO_MODE || 'test');
+
     const dodoBaseUrl = mode === 'test'
       ? 'https://test.dodopayments.com'
       : 'https://live.dodopayments.com';
