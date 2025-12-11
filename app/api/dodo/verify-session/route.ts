@@ -57,14 +57,25 @@ export async function POST(req: NextRequest) {
 
     // 2. Check Status
     const status = sessionData.status || sessionData.data?.status;
+    const paymentStatus = sessionData.payment_status || sessionData.data?.payment_status;
 
-    // Accept 'completed' (standard) or 'active' (subs)
-    if (status !== 'completed' && status !== 'active') {
-      console.log(`Session status is ${status}, not completed.`);
+    console.log(`Session Check: Status=${status}, PaymentStatus=${paymentStatus}`);
+
+    // Accept various simplified success states
+    // 100% discount might result in 'succeeded' or 'paid' immediately
+    const validStatuses = ['completed', 'active', 'succeeded', 'paid', 'no_payment_required'];
+    const validPaymentStatuses = ['paid', 'no_payment_required', 'succeeded'];
+
+    const isStatusValid = validStatuses.includes(status);
+    const isPaymentValid = paymentStatus ? validPaymentStatuses.includes(paymentStatus) : true;
+
+    if (!isStatusValid && !isPaymentValid) {
+      console.log(`Payment validation failed. Status: ${status}, PaymentStatus: ${paymentStatus}`);
       return NextResponse.json({
         verified: false,
         status: status,
-        message: `Payment status is ${status}`
+        payment_status: paymentStatus,
+        message: `Payment status is ${status} (Payment: ${paymentStatus})`
       });
     }
 
