@@ -11,87 +11,99 @@ function SuccessContent() {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [subscriptionValid, setSubscriptionValid] = useState(false);
-  const [error, setError] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>('');
 
   useEffect(() => {
     const validateSubscription = async () => {
+      let debug = '';
       try {
         // Get current user session
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session?.user?.id) {
-          setError('Not authenticated');
+          setError('Not authenticated. Please log in and try again.');
           setLoading(false);
           return;
         }
 
+        debug += `User ID: ${session.user.id}\n`;
+
         // Wait a bit for webhook to process
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
         // Check if subscription exists and is active
-        const { data: subscription, error: dbError } = await supabase
+        const { data: activeSub, error: activeError } = await supabase
           .from('subscriptions')
           .select('*')
           .eq('user_id', session.user.id)
           .eq('status', 'active')
           .single();
 
-        if (dbError || !subscription) {
-          console.log('No active subscription found for user:', session.user.id);
+        if (activeSub && !activeError) {
+          debug += 'Found active subscription!\n';
+          console.log('Active subscription confirmed:', activeSub);
+          setSubscriptionValid(true);
+          setError(null);
+          setDebugInfo(debug);
+          setLoading(false);
+          return;
+        }
 
-          // Fallback: Look for a pending_payment subscription to get the session ID
-          // We stored the session ID in DB when creating the checkout
-          const { data: pendingSub } = await supabase
-            .from('subscriptions')
-            .select('dodo_session_id')
-            .eq('user_id', session.user.id)
-            .eq('status', 'pending_payment')
-            .single();
+        debug += activeError ? `Active check error: ${activeError.message}\n` : 'No active subscription found\n';
 
-          // Use session ID from DB, or fall back to URL param
-          const sessionId = pendingSub?.dodo_session_id || searchParams.get('session_id');
+        // Check for ANY subscription for this user (pending_payment or otherwise)
+        const { data: anySub, error: anyError } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .single();
 
-          if (sessionId) {
-            console.log('Attempting direct verification for session:', sessionId);
+        if (anyError) {
+          debug += `Any sub error: ${anyError.message}\n`;
+        } else if (anySub) {
+          debug += `Found subscription with status: ${anySub.status}\n`;
+
+          // If there's a subscription with pending_payment status, try to verify with Dodo
+          if (anySub.status === 'pending_payment') {
+            debug += 'Attempting server-side verification...\n';
+
+            // Call the verify endpoint with user ID - let the server handle it
             try {
-              const verifyRes = await fetch('/api/dodo/verify-session', {
+              const verifyRes = await fetch('/api/dodo/verify-user', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sessionId })
+                body: JSON.stringify({ userId: session.user.id })
               });
               const verifyData = await verifyRes.json();
 
+              debug += `Verify response: ${JSON.stringify(verifyData)}\n`;
+
               if (verifyRes.ok && verifyData.verified) {
-                console.log('Direct verification successful!');
+                console.log('Server verification successful!');
                 setSubscriptionValid(true);
                 setError(null);
+                setDebugInfo(debug);
+                setLoading(false);
                 return;
               } else {
-                console.error('Direct verification failed:', verifyData);
-                // Show specific error from verification if possible
-                if (verifyData.message) {
-                  setError(`Verification failed: ${verifyData.message}`);
-                } else if (verifyData.error) {
-                  setError(`Verification error: ${verifyData.error}`);
-                }
+                debug += `Verification failed: ${verifyData.message || verifyData.error || 'Unknown'}\n`;
               }
-            } catch (fallbackError) {
-              console.error('Fallback verification error:', fallbackError);
+            } catch (verifyErr) {
+              debug += `Verify fetch error: ${verifyErr}\n`;
             }
-          } else {
-            console.log('No session ID found in DB or URL');
           }
-
-          setError('Payment was not completed. Please try again.');
-          setSubscriptionValid(false);
         } else {
-          console.log('Active subscription confirmed:', subscription);
-          setSubscriptionValid(true);
-          setError(null);
+          debug += 'No subscription record found at all\n';
         }
+
+        setError('Payment verification failed. If you were charged, please contact support.');
+        setDebugInfo(debug);
+        setSubscriptionValid(false);
       } catch (err) {
         console.error('Error validating subscription:', err);
-        setError('Error validating subscription');
+        setError('Error validating subscription: ' + (err instanceof Error ? err.message : 'Unknown'));
+        setDebugInfo(debug + `Exception: ${err}\n`);
         setSubscriptionValid(false);
       } finally {
         setLoading(false);
@@ -99,7 +111,7 @@ function SuccessContent() {
     };
 
     validateSubscription();
-  }, [router]);
+  }, [router, searchParams]);
 
   if (loading) {
     return (
@@ -125,40 +137,48 @@ function SuccessContent() {
             </div>
 
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Payment Failed ❌
+              Payment Verification Issue
             </h1>
 
-            <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 sm:mb-8 break-words text-left bg-gray-100 dark:bg-gray-700 p-4 rounded text-sm font-mono">
-              {error || 'Your payment was not completed successfully.'}
+            <p className="text-lg text-gray-600 dark:text-gray-300 mb-4">
+              {error || 'Your payment could not be verified.'}
             </p>
 
-            <div className="space-y-4 text-left bg-red-50 dark:bg-red-900/20 rounded-lg p-4 sm:p-6 mb-6 sm:mb-8 border border-red-200 dark:border-red-800">
+            {/* Debug info for troubleshooting */}
+            <details className="text-left mb-6">
+              <summary className="cursor-pointer text-sm text-gray-500">Technical Details</summary>
+              <pre className="mt-2 p-3 bg-gray-100 dark:bg-gray-700 rounded text-xs overflow-auto whitespace-pre-wrap">
+                {debugInfo}
+              </pre>
+            </details>
+
+            <div className="space-y-4 text-left bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 sm:p-6 mb-6 sm:mb-8 border border-yellow-200 dark:border-yellow-800">
               <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
-                What to do next:
+                What to do:
               </h3>
               <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-gray-400" />
-                  Check your payment details
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-5 h-5 text-yellow-500 mt-0.5" />
+                  <span>If you were charged, don&apos;t worry - your payment is safe. Contact support with the debug info above.</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-gray-400" />
-                  Try a different payment method
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-5 h-5 text-yellow-500 mt-0.5" />
+                  <span>Try refreshing this page in a few seconds.</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-gray-400" />
-                  Contact support if the issue persists
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-5 h-5 text-yellow-500 mt-0.5" />
+                  <span>If the issue persists, try logging out and back in.</span>
                 </li>
               </ul>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/premium"
+              <button
+                onClick={() => window.location.reload()}
                 className="px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors"
               >
-                Try Again
-              </Link>
+                Refresh Page
+              </button>
               <Link
                 href="/"
                 className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
