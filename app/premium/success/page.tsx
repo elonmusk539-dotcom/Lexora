@@ -39,8 +39,18 @@ function SuccessContent() {
         if (dbError || !subscription) {
           console.log('No active subscription found for user:', session.user.id);
 
-          // Fallback: Verify directly with Dodo (handling localhost/webhook delays)
-          const sessionId = searchParams.get('session_id');
+          // Fallback: Look for a pending_payment subscription to get the session ID
+          // We stored the session ID in DB when creating the checkout
+          const { data: pendingSub } = await supabase
+            .from('subscriptions')
+            .select('dodo_session_id')
+            .eq('user_id', session.user.id)
+            .eq('status', 'pending_payment')
+            .single();
+
+          // Use session ID from DB, or fall back to URL param
+          const sessionId = pendingSub?.dodo_session_id || searchParams.get('session_id');
+
           if (sessionId) {
             console.log('Attempting direct verification for session:', sessionId);
             try {
@@ -61,11 +71,15 @@ function SuccessContent() {
                 // Show specific error from verification if possible
                 if (verifyData.message) {
                   setError(`Verification failed: ${verifyData.message}`);
+                } else if (verifyData.error) {
+                  setError(`Verification error: ${verifyData.error}`);
                 }
               }
             } catch (fallbackError) {
               console.error('Fallback verification error:', fallbackError);
             }
+          } else {
+            console.log('No session ID found in DB or URL');
           }
 
           setError('Payment was not completed. Please try again.');
