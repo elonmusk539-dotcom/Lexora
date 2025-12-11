@@ -37,7 +37,7 @@ export function SubscriptionManagement() {
       });
 
       console.log('Cancel response status:', response.status);
-      
+
       let data;
       try {
         data = await response.json();
@@ -45,7 +45,7 @@ export function SubscriptionManagement() {
         console.error('Failed to parse response JSON:', e);
         data = { error: 'Invalid response from server' };
       }
-      
+
       console.log('Cancel response data:', data);
 
       if (!response.ok) {
@@ -57,7 +57,7 @@ export function SubscriptionManagement() {
       alert(data.message || 'Subscription cancelled successfully');
       setShowCancelModal(false);
       setCancelReason('');
-      
+
       // Refresh the page to update subscription status
       router.refresh();
       window.location.reload();
@@ -111,12 +111,12 @@ export function SubscriptionManagement() {
   }
 
   const isCancelled = subscription.status === 'canceled' || subscription.cancelAtPeriodEnd;
-  const currentPeriodEnd = subscription.currentPeriodEnd 
+  const currentPeriodEnd = subscription.currentPeriodEnd
     ? new Date(subscription.currentPeriodEnd).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
     : 'N/A';
 
   return (
@@ -201,7 +201,7 @@ export function SubscriptionManagement() {
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
               Cancel Subscription?
             </h3>
-            
+
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               We&apos;re sorry to see you go! You&apos;ll retain Pro access until the end of your current billing period ({currentPeriodEnd}).
             </p>
