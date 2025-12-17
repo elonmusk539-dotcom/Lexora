@@ -9,6 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
     "@google-cloud/text-to-speech": "^6.3.1",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.75.0",

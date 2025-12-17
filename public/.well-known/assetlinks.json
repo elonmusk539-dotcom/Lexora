@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.lexora.app",
+      "sha256_cert_fingerprints": [
+        "D8:04:E7:2C:21:B7:C3:05:63:85:0C:00:1A:1A:37:AC:79:9C:4D:34:C0:52:32:C4:FB:FC:6A:7F:E5:C0:3E:F5"
+      ]
+    }
+  }
+]
