@@ -1,10 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useMemo, useState, Suspense } from 'react';
+import { useMemo, useState, Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase, getURL } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { isNativeApp, setupDeepLinkListener, closeInAppBrowser } from '@/lib/capacitor';
 
 function SignupForm() {
   const searchParams = useSearchParams();
@@ -15,25 +16,46 @@ function SignupForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  // Handle deep link callbacks for OAuth in native app
+  useEffect(() => {
+    const cleanup = setupDeepLinkListener(async (url) => {
+      console.log('[Signup] Deep link received:', url);
+      await closeInAppBrowser();
+      const urlObj = new URL(url);
+      const code = urlObj.searchParams.get('code');
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          setError(error.message);
+        } else {
+          window.location.href = '/';
+        }
+      }
+    });
+    return cleanup;
+  }, []);
+
   const oauthRedirect = useMemo(() => {
     const nextParam = searchParams?.get('next') ?? '/';
-    
+
+    // For native app, use the production URL for callback
+    if (isNativeApp()) {
+      return `https://lexora-nu.vercel.app/auth/callback?next=${encodeURIComponent(nextParam)}`;
+    }
+
     // Check if we're on localhost
-    const isLocalhost = typeof window !== 'undefined' 
+    const isLocalhost = typeof window !== 'undefined'
       ? window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       : false;
-    
+
     // Force localhost in development or when on localhost
     const baseUrl = (isLocalhost || process.env.NODE_ENV === 'development')
-      ? 'http://localhost:3000/' 
+      ? 'http://localhost:3000/'
       : getURL();
-    
+
     const redirectPath = nextParam.startsWith('/') ? nextParam : `/${nextParam}`;
     const fullRedirect = `${baseUrl}auth/callback?next=${encodeURIComponent(redirectPath)}`;
     console.log('[Signup] OAuth redirect URL will be:', fullRedirect);
-    console.log('[Signup] Is localhost:', isLocalhost);
-    console.log('[Signup] Environment:', process.env.NODE_ENV);
-    console.log('[Signup] Base URL:', baseUrl);
     return fullRedirect;
   }, [searchParams]);
 
@@ -82,11 +104,12 @@ function SignupForm() {
   const handleGoogleSignup = async () => {
     try {
       console.log('[Signup] Starting Google OAuth with redirect:', oauthRedirect);
-      
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: oauthRedirect,
+          skipBrowserRedirect: isNativeApp(),
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -100,6 +123,12 @@ function SignupForm() {
       }
 
       console.log('[Signup] OAuth initiated:', data);
+
+      // For native app, open the auth URL in the in-app browser
+      if (isNativeApp() && data.url) {
+        const { Browser } = await import('@capacitor/browser');
+        await Browser.open({ url: data.url });
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred with Google signup';
       console.error('[Signup] Google signup error:', errorMessage);

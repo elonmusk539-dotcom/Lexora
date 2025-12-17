@@ -1,10 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useMemo, useState, Suspense } from 'react';
+import { useMemo, useState, Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase, getURL } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { isNativeApp, setupDeepLinkListener, closeInAppBrowser } from '@/lib/capacitor';
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -13,8 +14,41 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Handle deep link callbacks for OAuth in native app
+  useEffect(() => {
+    const cleanup = setupDeepLinkListener(async (url) => {
+      console.log('[Login] Deep link received:', url);
+
+      // Close the in-app browser
+      await closeInAppBrowser();
+
+      // Extract the code from the callback URL
+      const urlObj = new URL(url);
+      const code = urlObj.searchParams.get('code');
+
+      if (code) {
+        console.log('[Login] Exchanging code for session...');
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          console.error('[Login] Session exchange error:', error);
+          setError(error.message);
+        } else {
+          console.log('[Login] Session established, redirecting...');
+          window.location.href = '/';
+        }
+      }
+    });
+
+    return cleanup;
+  }, []);
+
   const oauthRedirect = useMemo(() => {
     const nextParam = searchParams?.get('next') ?? '/';
+
+    // For native app, use the production URL for callback
+    if (isNativeApp()) {
+      return `https://lexora-nu.vercel.app/auth/callback?next=${encodeURIComponent(nextParam)}`;
+    }
 
     // Always prefer window.location.origin if available (client-side)
     // This ensures we redirect back to exactly where we came from (localhost, 127.0.0.1, etc.)
@@ -58,11 +92,13 @@ function LoginForm() {
   const handleGoogleLogin = async () => {
     try {
       console.log('[Login] Starting Google OAuth with redirect:', oauthRedirect);
+      console.log('[Login] Is native app:', isNativeApp());
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: oauthRedirect,
+          skipBrowserRedirect: isNativeApp(), // Don't auto-redirect in native app
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -76,6 +112,12 @@ function LoginForm() {
       }
 
       console.log('[Login] OAuth initiated:', data);
+
+      // For native app, open the auth URL in the in-app browser
+      if (isNativeApp() && data.url) {
+        const { Browser } = await import('@capacitor/browser');
+        await Browser.open({ url: data.url });
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred with Google login';
       console.error('[Login] Google login error:', errorMessage);
