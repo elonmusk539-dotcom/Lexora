@@ -1,21 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSubscription } from '@/lib/subscription/useSubscription';
 import { motion } from 'framer-motion';
 import { Check, Crown, Zap, Infinity, List, FileText, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
-import { isTestMode } from '@/lib/dodo/config';
+import { isAndroid } from '@/lib/billing/platform';
+import { purchaseSubscription } from '@/lib/billing/revenuecat';
 
 export default function PremiumPage() {
   const { subscription, isPro, loading: subLoading } = useSubscription();
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
   const [processingSubscription, setProcessingSubscription] = useState(false);
-
-  // Dodo Plan IDs from environment variables
-  const DODO_PLAN_ID_MONTHLY = process.env.NEXT_PUBLIC_DODO_PLAN_ID_MONTHLY;
-  const DODO_PLAN_ID_YEARLY = process.env.NEXT_PUBLIC_DODO_PLAN_ID_YEARLY;
-  const DODO_PUBLIC_KEY = process.env.NEXT_PUBLIC_DODO_API_KEY;
+  const isNativeAndroid = isAndroid();
 
   const handleSubscribeClick = async () => {
     try {
@@ -29,39 +26,34 @@ export default function PremiumPage() {
         return;
       }
 
-      // Determine plan ID based on billing interval
-      const planId = billingInterval === 'month' ? DODO_PLAN_ID_MONTHLY : DODO_PLAN_ID_YEARLY;
-      
-      if (!planId) {
-        alert('Subscription plan is not configured. Please contact support.');
+      // Only allow subscriptions on Android app
+      if (!isNativeAndroid) {
+        alert('Subscriptions are currently only available on the Android app. Please download the app from Google Play Store.');
         setProcessingSubscription(false);
         return;
       }
 
-      // Create checkout session with Dodo Payments
-      const response = await fetch('/api/dodo/subscription', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          planId: planId,
-          userId: session.user.id,
-          interval: billingInterval,
-        }),
-      });
+      // Determine package identifier based on billing interval
+      const packageId = billingInterval === 'month' ? 'monthly' : 'yearly';
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.details || error.error || 'Failed to create checkout session');
+      // Purchase via RevenueCat (Google Play Billing)
+      const result = await purchaseSubscription(packageId);
+
+      if (result) {
+        // Sync to Supabase
+        await fetch('/api/subscription/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: session.user.id,
+            platform: 'google_play',
+            productId: result.customerInfo.entitlements.active.pro?.productIdentifier,
+          }),
+        });
+
+        alert('Subscription successful! Thank you for upgrading to Pro.');
+        window.location.reload();
       }
-
-      const { checkoutUrl } = await response.json();
-      
-      if (!checkoutUrl) {
-        throw new Error('No checkout URL received from Dodo');
-      }
-
-      // Redirect user to Dodo checkout page
-      window.location.href = checkoutUrl;
     } catch (error) {
       console.error('Error processing subscription:', error);
       alert(error instanceof Error ? error.message : 'Subscription failed. Please try again.');
@@ -71,19 +63,6 @@ export default function PremiumPage() {
   };
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      {/* Test Mode Banner */}
-      {isTestMode() && (
-        <div className="w-full bg-yellow-100 border-b-2 border-yellow-400 dark:bg-yellow-900/30 dark:border-yellow-700">
-          <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🧪</span>
-              <p className="text-sm sm:text-base text-yellow-800 dark:text-yellow-200 font-medium">
-                <strong>Test Mode Active:</strong> Subscriptions will not charge real credit cards. Use test cards only.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
         {/* Header */}
@@ -120,14 +99,12 @@ export default function PremiumPage() {
             </span>
             <button
               onClick={() => setBillingInterval(billingInterval === 'month' ? 'year' : 'month')}
-              className={`relative inline-flex h-7 w-14 sm:h-8 sm:w-16 items-center rounded-full transition-colors ${
-                billingInterval === 'year' ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'
-              }`}
+              className={`relative inline-flex h-7 w-14 sm:h-8 sm:w-16 items-center rounded-full transition-colors ${billingInterval === 'year' ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'
+                }`}
             >
               <span
-                className={`inline-block h-5 w-5 sm:h-6 sm:w-6 transform rounded-full bg-white transition-transform ${
-                  billingInterval === 'year' ? 'translate-x-8 sm:translate-x-9' : 'translate-x-1'
-                }`}
+                className={`inline-block h-5 w-5 sm:h-6 sm:w-6 transform rounded-full bg-white transition-transform ${billingInterval === 'year' ? 'translate-x-8 sm:translate-x-9' : 'translate-x-1'
+                  }`}
               />
             </button>
             <span className={`text-sm sm:text-base font-medium ${billingInterval === 'year' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-500'}`}>
@@ -152,12 +129,12 @@ export default function PremiumPage() {
               $0
               <span className="text-base sm:text-lg text-gray-500 dark:text-gray-400 font-normal">/month</span>
             </div>
-            
+
             <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
               <li className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <span className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                  Access to <strong>4 vocabulary lists</strong><br/>
+                  Access to <strong>4 vocabulary lists</strong><br />
                   <span className="text-xs sm:text-sm text-gray-500">(Family, Numbers, Body parts, Food & Drinks)</span>
                 </span>
               </li>
@@ -199,7 +176,7 @@ export default function PremiumPage() {
             <div className="absolute top-0 right-0 bg-yellow-400 text-purple-900 px-4 py-1 text-xs sm:text-sm font-bold rounded-bl-lg">
               BEST VALUE
             </div>
-            
+
             <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 flex items-center gap-2">
               <Crown className="w-6 h-6" />
               Pro
@@ -213,7 +190,7 @@ export default function PremiumPage() {
             {billingInterval === 'year' && (
               <p className="text-sm text-purple-200 mb-6">That&apos;s $2.41/month</p>
             )}
-            
+
             <ul className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
               <li className="flex items-start gap-3">
                 <Infinity className="w-5 h-5 text-yellow-300 flex-shrink-0 mt-0.5" />
@@ -257,7 +234,7 @@ export default function PremiumPage() {
             ) : (
               <button
                 onClick={handleSubscribeClick}
-                disabled={processingSubscription || !DODO_PLAN_ID_MONTHLY || !DODO_PLAN_ID_YEARLY}
+                disabled={processingSubscription}
                 className="w-full py-3 bg-white text-purple-600 rounded-xl font-bold text-base sm:text-lg hover:bg-gray-100 transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {processingSubscription ? (
@@ -278,7 +255,7 @@ export default function PremiumPage() {
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6 sm:mb-8 text-center">
             Frequently Asked Questions
           </h2>
-          
+
           <div className="space-y-4">
             <details className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6">
               <summary className="font-semibold text-base sm:text-lg text-gray-900 dark:text-white cursor-pointer">
@@ -294,7 +271,7 @@ export default function PremiumPage() {
                 What payment methods do you accept?
               </summary>
               <p className="mt-3 text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                We accept all major credit cards, debit cards, and digital payment methods through Dodo Payments. Dodo supports over 100 payment methods globally.
+                We accept all major credit cards, debit cards, carrier billing, and Google Play balance. Subscriptions are only available through the Android app via Google Play.
               </p>
             </details>
 
