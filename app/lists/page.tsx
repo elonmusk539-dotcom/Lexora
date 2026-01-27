@@ -1,13 +1,14 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { BookOpen, Lock, Crown, Search } from 'lucide-react';
+import { BookOpen, Lock, Crown, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSubscription } from '@/lib/subscription/useSubscription';
 import { FREE_TIER_LISTS, canAccessList } from '@/lib/subscription/config';
+import { SearchBar } from '@/components/SearchBar';
 
 interface VocabularyList {
   id: string;
@@ -71,8 +72,8 @@ export default function ListsPage() {
 
   if (loading || subLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+      <div className="min-h-screen flex items-center justify-center bg-mesh">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
       </div>
     );
   }
@@ -89,7 +90,7 @@ export default function ListsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-mesh">
       <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -99,37 +100,40 @@ export default function ListsPage() {
           {/* Top Row - Title with count and Search */}
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3">
-              <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" />
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-ocean-500 to-ocean-600 shadow-glow">
+                <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)]">
                   Vocabulary Lists
                 </h2>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  {filteredLists.length} list{filteredLists.length !== 1 ? 's' : ''}
-                </p>
+                <div className="flex items-center gap-2 text-sm">
+                  <Sparkles className="w-3.5 h-3.5 text-coral-500" />
+                  <span className="text-[var(--color-text-muted)]">
+                    {filteredLists.length} list{filteredLists.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* Search input */}
-            <div className="relative flex-1 min-w-[200px] sm:min-w-[250px] max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search lists..."
-                className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-full"
-              />
-            </div>
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search lists..."
+              className="flex-1 min-w-[200px] sm:min-w-[250px] max-w-sm"
+            />
           </div>
 
           {/* Info message */}
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {isPro
-              ? 'Browse and study all available word collections'
-              : `You have access to ${FREE_TIER_LISTS.length} free lists. Unlock all lists with Pro!`
-            }
-          </p>
+          <div className="p-3 glass rounded-xl">
+            <p className="text-sm text-[var(--color-text-muted)]">
+              {isPro
+                ? '✨ You have access to all vocabulary lists'
+                : `Free plan: Access to ${FREE_TIER_LISTS.length} lists. Upgrade to Pro for all lists!`
+              }
+            </p>
+          </div>
         </motion.div>
 
         {filteredLists.length === 0 ? (
@@ -138,13 +142,16 @@ export default function ListsPage() {
             animate={{ opacity: 1 }}
             className="text-center py-16"
           >
-            <p className="text-gray-600 text-lg">
-              {searchQuery.trim() ? 'No lists match your search.' : 'No vocabulary lists available yet.'}
+            <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-ocean-500/20 to-ocean-600/20 flex items-center justify-center">
+              <BookOpen className="w-8 h-8 text-[var(--color-text-muted)]" />
+            </div>
+            <p className="text-[var(--color-text-muted)] text-lg font-medium">
+              {searchQuery.trim() ? 'No lists match your search' : 'No vocabulary lists available'}
             </p>
           </motion.div>
         ) : (
           <div className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filteredLists.map((list, index) => {
                 const isLocked = !canAccessList(subscription?.tier || 'free', list.name);
 
@@ -153,48 +160,50 @@ export default function ListsPage() {
                     key={list.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
+                    transition={{ delay: index * 0.05 }}
                   >
                     {isLocked ? (
-                      <div className="relative block p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 opacity-75">
-                        <div className="absolute top-4 right-4">
-                          <Lock className="w-5 h-5 text-gray-400" />
+                      <div className="relative p-5 sm:p-6 card opacity-75 cursor-not-allowed">
+                        <div className="absolute top-4 right-4 p-2 rounded-lg bg-[var(--color-surface-overlay)]">
+                          <Lock className="w-4 h-4 text-[var(--color-text-muted)]" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                        <h3 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] mb-2 pr-10">
                           {list.name}
                         </h3>
                         {list.description && (
-                          <p className="text-gray-600 dark:text-gray-400 mb-4">{list.description}</p>
+                          <p className="text-sm text-[var(--color-text-muted)] mb-4 line-clamp-2">{list.description}</p>
                         )}
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                          <span className="text-sm text-[var(--color-text-muted)]">
                             {list.word_count} word{list.word_count !== 1 ? 's' : ''}
                           </span>
-                          <span className="text-sm font-medium text-purple-600 dark:text-purple-400 flex items-center gap-1">
-                            <Crown className="w-4 h-4" />
-                            Pro Only
+                          <span className="badge badge-pro flex items-center gap-1">
+                            <Crown className="w-3 h-3" />
+                            Pro
                           </span>
                         </div>
                       </div>
                     ) : (
-                      <Link
-                        href={`/lists/${list.id}`}
-                        className="block p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg transition-all"
-                      >
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                          {list.name}
-                        </h3>
-                        {list.description && (
-                          <p className="text-gray-600 dark:text-gray-400 mb-4">{list.description}</p>
-                        )}
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
-                            {list.word_count} word{list.word_count !== 1 ? 's' : ''}
-                          </span>
-                          <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                            View →
-                          </span>
-                        </div>
+                      <Link href={`/lists/${list.id}`}>
+                        <motion.div
+                          whileHover={{ y: -3 }}
+                          className="p-5 sm:p-6 card cursor-pointer group"
+                        >
+                          <h3 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] mb-2 group-hover:text-[var(--color-accent-primary)] transition-colors">
+                            {list.name}
+                          </h3>
+                          {list.description && (
+                            <p className="text-sm text-[var(--color-text-muted)] mb-4 line-clamp-2">{list.description}</p>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-[var(--color-text-muted)]">
+                              {list.word_count} word{list.word_count !== 1 ? 's' : ''}
+                            </span>
+                            <span className="text-sm font-semibold text-[var(--color-accent-primary)] group-hover:translate-x-1 transition-transform">
+                              View →
+                            </span>
+                          </div>
+                        </motion.div>
                       </Link>
                     )}
                   </motion.div>

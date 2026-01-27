@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BookOpen, PlayCircle, User, Settings, List, Brain, HelpCircle, Menu, X, MessageSquare } from 'lucide-react';
+import { Home, BookOpen, PlayCircle, User, Settings, List, Brain, HelpCircle, Menu, X, MessageSquare, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
 import { Header } from './Header';
@@ -165,12 +165,15 @@ export function Sidebar({ children }: SidebarProps) {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex min-h-screen bg-mesh">
       {/* Mobile Overlay */}
       {mobileOpen && (
-        <div
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           onClick={toggleMobileMenu}
-          className="md:hidden fixed inset-0 bg-black/50 z-[80] overflow-hidden"
+          className="md:hidden fixed inset-0 bg-night-400/60 backdrop-blur-sm z-[80] overflow-hidden"
           style={{ touchAction: 'none' }}
         />
       )}
@@ -179,56 +182,61 @@ export function Sidebar({ children }: SidebarProps) {
       <motion.aside
         initial={false}
         animate={{
-          width: isMobile ? '240px' : (collapsed ? '80px' : '240px'),
+          width: isMobile ? '260px' : (collapsed ? '80px' : '260px'),
         }}
         transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-        className={`fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-[90] transition-transform duration-300 overflow-y-auto overscroll-contain ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        className={`fixed left-0 top-0 h-full glass-strong z-[90] transition-transform duration-300 overflow-y-auto overscroll-contain ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           }`}
       >
         {/* Upgrade Button & Toggle */}
         <div
-          className="px-3 pt-4 pb-4 border-b border-gray-200 dark:border-gray-700 space-y-2 flex-shrink-0"
+          className="px-3 pt-4 pb-4 border-b border-[var(--color-border)] space-y-2 flex-shrink-0"
           style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
         >
           {(!collapsed || isMobile) ? (
             <div className="flex items-center gap-2">
               <Link href="/premium" onClick={() => setMobileOpen(false)} className="flex-1">
-                <button className="w-full h-12 px-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity text-base whitespace-nowrap flex items-center justify-center">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full h-12 px-4 bg-gradient-to-r from-coral-500 to-coral-400 text-white font-semibold rounded-xl shadow-glow-coral hover:shadow-lg transition-all text-base whitespace-nowrap flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4" />
                   Upgrade
-                </button>
+                </motion.button>
               </Link>
 
               {/* Desktop collapse toggle */}
               <button
                 onClick={toggleCollapsed}
-                className="hidden md:flex items-center justify-center w-12 h-12 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
+                className="hidden md:flex items-center justify-center w-12 h-12 rounded-xl glass hover:bg-[var(--color-surface-overlay)] transition-all"
                 aria-label="Collapse sidebar"
               >
-                <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <X className="w-5 h-5 text-[var(--color-text-secondary)]" />
               </button>
 
               {/* Mobile close button */}
               <button
                 onClick={toggleMobileMenu}
-                className="md:hidden flex items-center justify-center w-12 h-12 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
+                className="md:hidden flex items-center justify-center w-12 h-12 rounded-xl glass hover:bg-[var(--color-surface-overlay)] transition-all"
                 aria-label="Close menu"
               >
-                <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <X className="w-5 h-5 text-[var(--color-text-secondary)]" />
               </button>
             </div>
           ) : (
             <button
               onClick={toggleCollapsed}
-              className="w-full flex items-center justify-center h-12 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="w-full flex items-center justify-center h-12 rounded-xl glass hover:bg-[var(--color-surface-overlay)] transition-all"
               aria-label="Expand sidebar"
             >
-              <Menu className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <Menu className="w-5 h-5 text-[var(--color-text-secondary)]" />
             </button>
           )}
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-2">
+        <nav className="flex-1 p-3 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -237,19 +245,19 @@ export function Sidebar({ children }: SidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 py-3 rounded-lg transition-all relative ${collapsed ? 'justify-center px-0 h-12' : 'justify-start px-3'
+                className={`flex items-center gap-3 py-3 rounded-xl transition-all relative group ${collapsed ? 'justify-center px-0 h-12' : 'justify-start px-4'
                   } ${active
-                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    ? 'bg-gradient-to-r from-ocean-600 to-ocean-500 text-white shadow-glow'
+                    : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] hover:text-[var(--color-text-primary)]'
                   }`}
                 title={collapsed ? item.label : undefined}
               >
-                <Icon className="w-5 h-5 flex-shrink-0" />
+                <Icon className={`w-5 h-5 flex-shrink-0 transition-transform ${active ? '' : 'group-hover:scale-110'}`} />
                 {!collapsed && <span className="font-medium">{item.label}</span>}
                 {item.badge && item.badge > 0 && (!collapsed || isMobile) && (
                   <span className={`ml-auto px-2 py-0.5 text-xs font-bold rounded-full ${active
-                    ? 'bg-white text-purple-600'
-                    : 'bg-red-500 text-white'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-coral-500 text-white shadow-glow-coral'
                     }`}>
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
@@ -262,7 +270,7 @@ export function Sidebar({ children }: SidebarProps) {
 
       {/* Main Content */}
       <div
-        className={`flex-1 transition-all duration-300 ml-0 md:ml-20 ${collapsed ? '' : 'lg:ml-60'}`}
+        className={`flex-1 transition-all duration-300 ml-0 md:ml-20 ${collapsed ? '' : 'lg:ml-[260px]'}`}
       >
         {/* Don't show Header on login/signup/smart-quiz pages (smart quiz only on mobile) */}
         {pathname !== '/login' && pathname !== '/signup' && (

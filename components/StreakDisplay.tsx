@@ -120,29 +120,29 @@ export function StreakDisplay({ compact = false }: StreakDisplayProps) {
 
   if (compact) {
     return (
-      <div className="flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 sm:py-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-        <Flame className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-orange-600 dark:text-orange-400" />
-        <span className="text-sm sm:text-base font-bold text-orange-600 dark:text-orange-400">{streakData.current_streak}</span>
+      <div className="flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 sm:py-2 glass rounded-lg border border-coral-500/30">
+        <Flame className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-coral-500" />
+        <span className="text-sm sm:text-base font-bold text-coral-500">{streakData.current_streak}</span>
       </div>
     );
   }
 
   return (
     <>
-      <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl border border-orange-200 dark:border-orange-800">
+      <div className="flex items-center gap-4 p-4 glass rounded-xl bg-gradient-to-r from-coral-500/10 to-orange-500/10 border border-coral-500/30">
         <div className="flex items-center gap-2">
-          <Flame className="w-8 h-8 text-orange-600 dark:text-orange-400" />
+          <Flame className="w-8 h-8 text-coral-500" />
           <div>
-            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+            <div className="text-2xl font-bold text-coral-500">
               {streakData.current_streak}
             </div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">day streak</div>
+            <div className="text-xs text-[var(--color-text-muted)]">day streak</div>
           </div>
         </div>
-        <div className="h-10 w-px bg-orange-300 dark:bg-orange-700"></div>
+        <div className="h-10 w-px bg-coral-500/30"></div>
         <div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Best</div>
-          <div className="text-lg font-bold text-gray-900 dark:text-white">{streakData.longest_streak}</div>
+          <div className="text-sm text-[var(--color-text-muted)]">Best</div>
+          <div className="text-lg font-bold text-[var(--color-text-primary)]">{streakData.longest_streak}</div>
         </div>
       </div>
 
@@ -155,29 +155,31 @@ export function StreakDisplay({ compact = false }: StreakDisplayProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowMissedModal(false)}
-              className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+              className="fixed inset-0 bg-night-400/70 z-50 backdrop-blur-md"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-4 sm:p-6"
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md glass-strong rounded-2xl shadow-xl z-[60] p-4 sm:p-6"
             >
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setShowMissedModal(false)}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="absolute top-4 right-4 p-2 rounded-xl glass hover:bg-[var(--color-surface-overlay)] transition-all"
               >
-                <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              </button>
+                <X className="w-5 h-5 text-[var(--color-text-muted)]" />
+              </motion.button>
 
               <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full mb-4">
-                  <Flame className="w-8 h-8 text-orange-600 dark:text-orange-400" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-coral-500 to-orange-500 rounded-2xl mb-4 shadow-glow-coral">
+                  <Flame className="w-8 h-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
                   {daysMissed === 1 ? 'You missed yesterday!' : `${daysMissed} days missed`}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-[var(--color-text-muted)]">
                   {daysMissed === 1
                     ? 'Your streak is at risk. But don\'t worry, it happens to everyone!'
                     : 'Your streak has been lost, but you can start fresh anytime.'}
@@ -190,7 +192,7 @@ export function StreakDisplay({ compact = false }: StreakDisplayProps) {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={useStreakFreeze}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center gap-2"
+                    className="w-full py-3 px-4 bg-gradient-to-r from-coral-500 to-orange-500 text-white rounded-xl font-medium shadow-glow-coral flex items-center justify-center gap-2"
                   >
                     <Gift className="w-5 h-5" />
                     Use Streak Freeze (One-time)
@@ -201,22 +203,22 @@ export function StreakDisplay({ compact = false }: StreakDisplayProps) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={restartStreak}
-                  className="w-full py-3 px-4 bg-blue-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-shadow"
+                  className="w-full btn-primary py-3"
                 >
                   Start Fresh (No worries!)
                 </motion.button>
 
                 <button
                   onClick={() => setShowMissedModal(false)}
-                  className="w-full py-3 px-4 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                  className="w-full py-3 px-4 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
                 >
                   Remind me later
                 </button>
               </div>
 
               {daysMissed === 1 && !streakData.streak_freeze_used && (
-                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <p className="text-xs text-blue-800 dark:text-blue-300">
+                <div className="mt-4 p-3 glass rounded-xl">
+                  <p className="text-xs text-[var(--color-text-muted)]">
                     💡 <strong>Streak Freeze:</strong> Covers one missed day. Everyone deserves a break sometimes!
                   </p>
                 </div>

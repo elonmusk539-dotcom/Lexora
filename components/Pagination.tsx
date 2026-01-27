@@ -1,4 +1,6 @@
-import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+'use client';
+
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface PaginationProps {
@@ -18,107 +20,138 @@ export function Pagination({
   onItemsPerPageChange,
   totalItems,
 }: PaginationProps) {
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
+  const itemsPerPageOptions = [10, 25, 50, 100];
 
-    if (totalPages <= maxVisiblePages) {
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const showPages = 5;
+
+    if (totalPages <= showPages + 2) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
       if (currentPage <= 3) {
-        for (let i = 1; i <= 3; i++) pages.push(i);
+        for (let i = 1; i <= showPages; i++) {
+          pages.push(i);
+        }
         pages.push('...');
         pages.push(totalPages);
       } else if (currentPage >= totalPages - 2) {
         pages.push(1);
         pages.push('...');
-        for (let i = totalPages - 2; i <= totalPages; i++) pages.push(i);
+        for (let i = totalPages - showPages + 1; i <= totalPages; i++) {
+          pages.push(i);
+        }
       } else {
         pages.push(1);
         pages.push('...');
-        pages.push(currentPage);
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
         pages.push('...');
         pages.push(totalPages);
       }
     }
+
     return pages;
   };
 
-  const startItem = Math.min((currentPage - 1) * itemsPerPage + 1, totalItems);
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-
-  if (totalItems === 0) return null;
+  if (totalPages <= 1) return null;
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-2">
-      {/* Items per page and count */}
-      <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-        <div className="flex items-center gap-2">
-          <span>Show</span>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => {
-              onItemsPerPageChange(Number(e.target.value));
-              onPageChange(1); // Reset to first page when changing page size
-            }}
-            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm py-1 px-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-          >
-            {[25, 50, 75, 100].map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-        </div>
-        <span className="hidden sm:inline">|</span>
-        <span>
-          {startItem}-{endItem} of {totalItems}
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 p-4 card">
+      {/* Items per page selector */}
+      <div className="flex items-center gap-2 text-sm">
+        <span className="text-[var(--color-text-muted)]">Show</span>
+        <select
+          value={itemsPerPage}
+          onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+          className="input py-1.5 px-2 text-sm min-w-[70px]"
+        >
+          {itemsPerPageOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        <span className="text-[var(--color-text-muted)]">
+          of {totalItems}
         </span>
       </div>
 
       {/* Page navigation */}
-      <div className="flex items-center gap-2">
-        <button
+      <div className="flex items-center gap-1">
+        {/* First page */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => onPageChange(1)}
+          disabled={currentPage === 1}
+          className="p-2 rounded-lg glass text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-overlay)] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          aria-label="First page"
+        >
+          <ChevronsLeft className="w-4 h-4" />
+        </motion.button>
+
+        {/* Previous page */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-2 rounded-lg glass text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-overlay)] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
           aria-label="Previous page"
         >
-          <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-        </button>
+          <ChevronLeft className="w-4 h-4" />
+        </motion.button>
 
-        <div className="flex items-center gap-1">
+        {/* Page numbers */}
+        <div className="flex items-center gap-1 mx-1">
           {getPageNumbers().map((page, index) => (
-            <div key={index}>
+            <span key={index}>
               {page === '...' ? (
-                <span className="px-2 text-gray-400">
-                  <MoreHorizontal className="w-4 h-4" />
-                </span>
+                <span className="px-2 text-[var(--color-text-muted)]">...</span>
               ) : (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => onPageChange(page as number)}
-                  className={`min-w-[32px] h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${currentPage === page
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  className={`w-9 h-9 rounded-lg font-medium transition-all ${currentPage === page
+                      ? 'bg-gradient-to-r from-ocean-600 to-ocean-500 text-white shadow-glow'
+                      : 'glass text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] hover:text-[var(--color-text-primary)]'
                     }`}
                 >
                   {page}
-                </button>
+                </motion.button>
               )}
-            </div>
+            </span>
           ))}
         </div>
 
-        <button
+        {/* Next page */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="p-2 rounded-lg glass text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-overlay)] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
           aria-label="Next page"
         >
-          <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-        </button>
+          <ChevronRight className="w-4 h-4" />
+        </motion.button>
+
+        {/* Last page */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          className="p-2 rounded-lg glass text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-overlay)] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          aria-label="Last page"
+        >
+          <ChevronsRight className="w-4 h-4" />
+        </motion.button>
       </div>
     </div>
   );

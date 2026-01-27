@@ -184,7 +184,7 @@ function SRSReview() {
           .or(selectedListIds.map(id => `list_id.eq.${id}`).join(','));
 
         const allWordIdsInLists = allWordsInLists?.map(w => w.id) || [];
-        
+
         // Get all progress for this user
         const { data: allProgress } = await supabase
           .from('user_progress')
@@ -218,8 +218,9 @@ function SRSReview() {
         newWords = newWordsData || [];
       }
 
-      // Combine: due words first, then new words
-      const combinedWords = [...dueWordsFromLists, ...newWords];
+      // Combine: due words first, then new words, LIMITED to the requested duration
+      const allWordsUnlimited = [...dueWordsFromLists, ...newWords];
+      const combinedWords = allWordsUnlimited.slice(0, duration);
 
       if (combinedWords.length === 0) {
         // No words available
@@ -335,13 +336,13 @@ function SRSReview() {
         5: 'easy',
       };
       const statKey = qualityToStat[quality];
-      
+
       // Calculate updated stats immediately
       const updatedStats = {
         ...session.sessionStats,
         [statKey]: session.sessionStats[statKey] + 1,
       };
-      
+
       setSession(prev => ({
         ...prev,
         sessionStats: updatedStats,
@@ -365,19 +366,19 @@ function SRSReview() {
           if (user) {
             // Update user streak
             await supabase.rpc('update_user_streak', { p_user_id: user.id });
-            
+
             // Log quiz activity
             const today = new Date().toISOString().split('T')[0];
             await supabase.from('user_activity_log').insert({
               user_id: user.id,
               activity_date: today,
               activity_type: 'quiz_completed',
-          details: { 
-            quiz_type: 'smart_quiz',
-            words_reviewed: session.words.length,
-            stats: updatedStats,
-          }
-        });            // Store session data for results page
+              details: {
+                quiz_type: 'smart_quiz',
+                words_reviewed: session.words.length,
+                stats: updatedStats,
+              }
+            });            // Store session data for results page
             const reviewSession = {
               words: session.words.map(w => ({
                 id: w.id,
@@ -416,33 +417,33 @@ function SRSReview() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+      <div className="min-h-screen flex items-center justify-center bg-mesh">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
       </div>
     );
   }
 
   if (session.words.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen bg-mesh">
         <div className="max-w-2xl mx-auto px-4 py-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-12 text-center"
+            className="card-elevated p-12 text-center"
           >
-            <div className="w-24 h-24 mx-auto mb-6 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-              <RotateCcw className="w-12 h-12 text-green-600 dark:text-green-400" />
+            <div className="w-24 h-24 mx-auto mb-6 bg-green-500/10 rounded-2xl flex items-center justify-center">
+              <RotateCcw className="w-12 h-12 text-green-500" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            <h1 className="text-3xl font-bold text-[var(--color-text-primary)] mb-4">
               All Caught Up!
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">
+            <p className="text-[var(--color-text-muted)] mb-8">
               You have no words due for review right now. Great job staying on top of your studies!
             </p>
             <button
               onClick={() => router.push('/')}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+              className="px-6 py-3 btn-primary font-semibold"
             >
               Back to Home
             </button>
@@ -456,30 +457,30 @@ function SRSReview() {
   const progress = ((session.currentIndex + 1) / session.words.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-mesh">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={() => router.push('/')}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
             <span className="font-medium">Back</span>
           </button>
-          
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
+
+          <div className="text-sm font-medium text-[var(--color-text-muted)]">
             {session.currentIndex + 1} / {session.words.length}
           </div>
         </div>
 
         {/* Progress Bar */}
         <div className="mb-8">
-          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div className="h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
-              className="h-full bg-gradient-to-r from-blue-600 to-purple-600"
+              className="h-full bg-gradient-to-r from-ocean-600 to-ocean-500"
               transition={{ duration: 0.3 }}
             />
           </div>
@@ -492,12 +493,12 @@ function SRSReview() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-8 mb-6 relative"
+            className="card-elevated p-4 sm:p-8 mb-6 relative"
           >
             {/* Show Details Button - moved to avoid overlap */}
             <button
               onClick={() => setSelectedWord(currentWord)}
-              className="absolute top-2 right-2 sm:top-4 sm:right-4 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors z-10 shadow-md"
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gradient-to-r from-ocean-600 to-ocean-500 text-white rounded-lg hover:from-ocean-700 hover:to-ocean-600 transition-all z-10 shadow-glow"
             >
               Show Details
             </button>
@@ -506,7 +507,7 @@ function SRSReview() {
             {currentWord.image_url && (
               ((!session.showAnswer && settings.showImageOnFront) ||
                 (session.showAnswer && settings.showImageOnBack)) && (
-                <div className="relative w-full aspect-square max-w-xs mx-auto rounded-xl overflow-hidden mb-6 bg-gray-100 dark:bg-gray-700">
+                <div className="relative w-full aspect-square max-w-xs mx-auto rounded-xl overflow-hidden mt-10 mb-6 glass">
                   <Image
                     src={currentWord.image_url}
                     alt={currentWord.word}
@@ -522,25 +523,25 @@ function SRSReview() {
             {/* Word Info */}
             <div className="text-center mb-6">
               <div className="flex items-center justify-center gap-3 mb-4">
-                <h2 className="text-4xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-4xl font-bold text-[var(--color-text-primary)]">
                   {currentWord.kanji || currentWord.word}
                 </h2>
                 <button
                   onClick={playPronunciation}
-                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="p-2 rounded-full glass hover:bg-ocean-500/10 transition-colors"
                 >
-                  <Volume2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <Volume2 className="w-6 h-6 text-[var(--color-accent-primary)]" />
                 </button>
               </div>
-              
+
               {((session.showAnswer && currentWord.furigana) || (!session.showAnswer && settings.showFuriganaOnFront && currentWord.furigana)) && (
-                <p className="text-xl text-gray-600 dark:text-gray-400 mb-2">
+                <p className="text-xl text-[var(--color-text-secondary)] mb-2">
                   {currentWord.furigana}
                 </p>
               )}
-              
+
               {((session.showAnswer && currentWord.romaji) || (!session.showAnswer && settings.showRomajiOnFront && currentWord.romaji)) && (
-                <p className="text-xl text-gray-600 dark:text-gray-400 mb-2">
+                <p className="text-xl text-[var(--color-text-muted)] mb-2">
                   {currentWord.romaji}
                 </p>
               )}
@@ -550,7 +551,7 @@ function SRSReview() {
             {!session.showAnswer ? (
               <button
                 onClick={() => setSession(prev => ({ ...prev, showAnswer: true }))}
-                className="w-full py-4 bg-blue-600 text-white rounded-xl font-semibold text-lg hover:bg-blue-700 transition-colors"
+                className="w-full py-4 bg-gradient-to-r from-ocean-600 to-ocean-500 text-white rounded-xl font-semibold text-lg hover:from-ocean-700 hover:to-ocean-600 transition-all shadow-glow"
               >
                 Show Answer
               </button>
@@ -562,36 +563,36 @@ function SRSReview() {
                   className="mb-6 text-center"
                 >
                   {/* Meaning */}
-                  <div className="text-3xl font-semibold text-blue-600 dark:text-blue-400 mb-6">
+                  <div className="text-3xl font-semibold text-[var(--color-accent-primary)] mb-6">
                     {currentWord.meaning}
                   </div>
-                  
+
                   {/* Examples */}
                   {settings.showExamples && currentWord.examples && currentWord.examples.length > 0 ? (
                     <div className="space-y-4 mt-6">
-                      <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Examples:</div>
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">Examples:</div>
                       {currentWord.examples.slice(0, settings.numberOfExamples).map((example, index) => {
                         const [kanji = '', furigana = '', romaji = '', translation = ''] = example.split('|');
                         return (
-                          <div key={index} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-left space-y-1">
+                          <div key={index} className="glass rounded-lg p-3 text-left space-y-1">
                             {kanji && (
-                              <div className="font-medium text-gray-900 dark:text-gray-200">{kanji}</div>
+                              <div className="font-medium text-[var(--color-text-primary)]">{kanji}</div>
                             )}
                             {furigana && (
-                              <div className="text-sm text-gray-600 dark:text-gray-300">{furigana}</div>
+                              <div className="text-sm text-[var(--color-text-secondary)]">{furigana}</div>
                             )}
                             {romaji && (
-                              <div className="text-sm text-gray-500 dark:text-gray-400">{romaji}</div>
+                              <div className="text-sm text-[var(--color-text-muted)]">{romaji}</div>
                             )}
                             {translation && (
-                              <div className="text-sm text-blue-600 dark:text-blue-400">{translation}</div>
+                              <div className="text-sm text-[var(--color-accent-primary)]">{translation}</div>
                             )}
                           </div>
                         );
                       })}
                     </div>
                   ) : (
-                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-4">
+                    <div className="text-xs text-[var(--color-text-muted)] mt-4">
                       {!settings.showExamples && '(Examples hidden in settings)'}
                       {settings.showExamples && (!currentWord.examples || currentWord.examples.length === 0) && '(No examples available for this word)'}
                     </div>
@@ -600,38 +601,46 @@ function SRSReview() {
 
                 {/* Rating Buttons */}
                 <div className="grid grid-cols-4 gap-2 sm:gap-3">
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => handleRating(0)}
                     disabled={submitting}
-                    className="py-2.5 sm:py-3 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors text-sm sm:text-base"
+                    className="py-2.5 sm:py-3 bg-gradient-to-r from-coral-600 to-coral-500 disabled:from-gray-400 disabled:to-gray-400 text-white rounded-xl font-semibold transition-all shadow-glow-coral text-sm sm:text-base"
                   >
                     Again
                     <div className="text-[10px] sm:text-xs opacity-75">{formatInterval(calculateNextInterval(0, currentWord.id))}</div>
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => handleRating(1)}
                     disabled={submitting}
-                    className="py-2.5 sm:py-3 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors text-sm sm:text-base"
+                    className="py-2.5 sm:py-3 bg-gradient-to-r from-amber-500 to-amber-400 disabled:from-gray-400 disabled:to-gray-400 text-white rounded-xl font-semibold transition-all text-sm sm:text-base"
                   >
                     Hard
                     <div className="text-[10px] sm:text-xs opacity-75">{formatInterval(calculateNextInterval(1, currentWord.id))}</div>
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => handleRating(3)}
                     disabled={submitting}
-                    className="py-2.5 sm:py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors text-sm sm:text-base"
+                    className="py-2.5 sm:py-3 bg-gradient-to-r from-green-600 to-green-500 disabled:from-gray-400 disabled:to-gray-400 text-white rounded-xl font-semibold transition-all text-sm sm:text-base"
                   >
                     Good
                     <div className="text-[10px] sm:text-xs opacity-75">{formatInterval(calculateNextInterval(3, currentWord.id))}</div>
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => handleRating(5)}
                     disabled={submitting}
-                    className="py-2.5 sm:py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors text-sm sm:text-base"
+                    className="py-2.5 sm:py-3 bg-gradient-to-r from-ocean-600 to-ocean-500 disabled:from-gray-400 disabled:to-gray-400 text-white rounded-xl font-semibold transition-all shadow-glow text-sm sm:text-base"
                   >
                     Easy
                     <div className="text-[10px] sm:text-xs opacity-75">{formatInterval(calculateNextInterval(5, currentWord.id))}</div>
-                  </button>
+                  </motion.button>
                 </div>
               </>
             )}

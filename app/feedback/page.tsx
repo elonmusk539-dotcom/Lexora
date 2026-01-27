@@ -74,7 +74,7 @@ export default function FeedbackPage() {
   async function checkUser() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         router.push('/login');
         return;
@@ -93,7 +93,7 @@ export default function FeedbackPage() {
     if (!files) return;
 
     const newFiles = Array.from(files);
-    
+
     // Check total count
     if (feedbackScreenshots.length + newFiles.length > 3) {
       setFeedbackError('Maximum 3 screenshots allowed');
@@ -136,7 +136,7 @@ export default function FeedbackPage() {
 
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) {
       setFeedbackError('You must be logged in');
       return;
@@ -159,7 +159,7 @@ export default function FeedbackPage() {
       for (const file of feedbackScreenshots) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        
+
         const { data, error: uploadError } = await supabase.storage
           .from('feedback-screenshots')
           .upload(fileName, file);
@@ -191,7 +191,7 @@ export default function FeedbackPage() {
       setFeedbackMessage('');
       setFeedbackScreenshots([]);
       setFeedbackCategory('bug');
-      
+
       setTimeout(() => setFeedbackSuccess(''), 5000);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to submit feedback';
@@ -203,14 +203,14 @@ export default function FeedbackPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="text-gray-900 dark:text-gray-300">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-mesh">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-mesh">
       <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -218,20 +218,22 @@ export default function FeedbackPage() {
           transition={{ duration: 0.5 }}
           className="max-w-2xl mx-auto"
         >
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
+          <div className="card-elevated p-4 sm:p-6 md:p-8">
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-2">
-                <MessageSquare className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 dark:text-purple-400" />
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Feedback</h1>
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-ocean-500 to-ocean-600 shadow-glow">
+                  <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)]">Feedback</h1>
               </div>
-              <p className="text-gray-700 dark:text-gray-300">Help us improve Lexora by sharing your thoughts</p>
+              <p className="text-[var(--color-text-muted)]">Help us improve Lexora by sharing your thoughts</p>
             </div>
 
             {feedbackSuccess && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-600 dark:text-green-400 text-sm text-center"
+                className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-xl text-green-500 text-sm text-center"
               >
                 {feedbackSuccess}
               </motion.div>
@@ -241,7 +243,7 @@ export default function FeedbackPage() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm"
+                className="mb-6 p-4 bg-coral-500/10 border border-coral-500/30 rounded-xl text-coral-500 text-sm"
               >
                 {feedbackError}
               </motion.div>
@@ -250,7 +252,7 @@ export default function FeedbackPage() {
             <form onSubmit={handleFeedbackSubmit} className="space-y-6">
               {/* Category Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
                   Category
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -264,11 +266,10 @@ export default function FeedbackPage() {
                       key={cat.id}
                       type="button"
                       onClick={() => setFeedbackCategory(cat.id as any)}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        feedbackCategory === cat.id
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                      }`}
+                      className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${feedbackCategory === cat.id
+                        ? 'bg-gradient-to-r from-ocean-600 to-ocean-500 text-white'
+                        : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] border border-[var(--color-border)]'
+                        }`}
                     >
                       {cat.label}
                     </button>
@@ -278,7 +279,7 @@ export default function FeedbackPage() {
 
               {/* Message Input */}
               <div>
-                <label htmlFor="feedbackMessage" className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                <label htmlFor="feedbackMessage" className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
                   Message
                 </label>
                 <textarea
@@ -287,13 +288,13 @@ export default function FeedbackPage() {
                   onChange={(e) => setFeedbackMessage(e.target.value)}
                   placeholder="Tell us what's on your mind..."
                   rows={5}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                  className="input w-full resize-none"
                 />
               </div>
 
               {/* Screenshot Upload */}
               <div>
-                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+                <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">
                   Screenshots (Optional)
                 </label>
                 <div className="grid grid-cols-3 gap-4">
@@ -305,11 +306,11 @@ export default function FeedbackPage() {
                       onRemove={() => removeScreenshot(index)}
                     />
                   ))}
-                  
+
                   {feedbackScreenshots.length < 3 && (
-                    <label className="h-24 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-purple-500 dark:hover:border-purple-400 transition-colors">
-                      <Upload className="w-6 h-6 text-gray-400 dark:text-gray-500 mb-1" />
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Upload</span>
+                    <label className="h-24 border-2 border-dashed border-[var(--color-border)] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[var(--color-accent-primary)] transition-colors">
+                      <Upload className="w-6 h-6 text-[var(--color-text-muted)] mb-1" />
+                      <span className="text-xs text-[var(--color-text-muted)]">Upload</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -320,7 +321,7 @@ export default function FeedbackPage() {
                     </label>
                   )}
                 </div>
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                   Max 3 images, up to 2MB each.
                 </p>
               </div>
@@ -331,7 +332,7 @@ export default function FeedbackPage() {
                 disabled={feedbackSubmitting}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {feedbackSubmitting ? (
                   'Sending...'

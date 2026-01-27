@@ -55,11 +55,11 @@ function ReviewComplete() {
 
       if (profile) {
         setCurrentStreak(profile.streak_count || 0);
-        
+
         // Check if this is the first quiz of the day
         const today = new Date().toISOString().split('T')[0];
         const lastActivity = profile.last_activity_date;
-        
+
         if (lastActivity !== today && profile.streak_count > 0) {
           // Show streak popup after a short delay
           setTimeout(() => setShowStreakPopup(true), 500);
@@ -67,7 +67,7 @@ function ReviewComplete() {
           // Check for streak milestones
           const streakMilestones = [7, 14, 21, 30, 60, 90];
           const lastShownStreak = profile.last_shown_streak_milestone || 0;
-          
+
           for (const milestone of streakMilestones) {
             if (profile.streak_count >= milestone && lastShownStreak < milestone) {
               // Update database
@@ -97,7 +97,7 @@ function ReviewComplete() {
         if (count !== null && count > 0) {
           const wordsMilestones = [50, 100, 250, 500, 1000];
           const lastShownWords = profile.last_shown_words_milestone || 0;
-          
+
           for (const milestone of wordsMilestones) {
             if (count >= milestone && lastShownWords < milestone) {
               // Update database
@@ -173,21 +173,21 @@ function ReviewComplete() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-mesh">
       <div className="max-w-2xl mx-auto px-4 py-16">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-12"
+          className="card-elevated p-4 sm:p-6 md:p-8"
         >
           {/* Trophy Icon */}
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring' }}
-            className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900/30 dark:to-blue-900/30 rounded-full flex items-center justify-center"
+            className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-green-500/20 to-ocean-500/20 rounded-2xl flex items-center justify-center"
           >
-            <Trophy className="w-12 h-12 text-green-600 dark:text-green-400" />
+            <Trophy className="w-12 h-12 text-green-500" />
           </motion.div>
 
           {/* Title */}
@@ -214,13 +214,13 @@ function ReviewComplete() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5 }}
-            className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8"
+            className="glass rounded-xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8 bg-gradient-to-r from-green-500/10 to-ocean-500/10"
           >
             <div className="text-center">
-              <div className="text-7xl font-bold text-green-600 dark:text-green-400 mb-2">
+              <div className="text-7xl font-bold text-green-500 mb-2">
                 {total}
               </div>
-              <div className="text-xl text-gray-700 dark:text-gray-300">
+              <div className="text-xl text-[var(--color-text-secondary)]">
                 words reviewed today
               </div>
             </div>
@@ -253,7 +253,7 @@ function ReviewComplete() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mt-4 space-y-3 max-h-96 overflow-y-auto scrollbar-hide"
+                  className="mt-4 space-y-3 max-h-96 overflow-y-auto scrollbar-hide pb-3"
                 >
                   {reviewWords.map((word, index) => {
                     const progress = wordProgress[word.id];
@@ -290,14 +290,14 @@ function ReviewComplete() {
           >
             <Link
               href="/"
-              className="flex items-center justify-center gap-2 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="flex items-center justify-center gap-2 py-3 btn-ghost font-semibold"
             >
               <Home className="w-5 h-5" />
               Home
             </Link>
             <button
               onClick={() => router.push('/review')}
-              className="flex items-center justify-center gap-2 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+              className="flex items-center justify-center gap-2 py-3 btn-primary"
             >
               <RotateCcw className="w-5 h-5" />
               Review More

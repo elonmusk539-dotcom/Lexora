@@ -1,76 +1,80 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import React from 'react';
 
 interface CircularProgressProps {
   progress: number;
   isMastered: boolean;
   size?: number;
-  strokeWidth?: number;
 }
 
-export function CircularProgress({
-  progress,
-  isMastered,
-  size = 60,
-  strokeWidth = 4,
-}: CircularProgressProps) {
+export function CircularProgress({ progress, isMastered, size = 48 }: CircularProgressProps) {
+  const strokeWidth = 4;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (progress / 100) * circumference;
 
-  if (isMastered) {
-    return (
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="flex items-center justify-center"
-        style={{ width: size, height: size }}
-      >
-        <div className="text-center">
-          <div className="text-xs font-semibold text-yellow-600 dark:text-yellow-500">Mastered</div>
-        </div>
-      </motion.div>
-    );
-  }
-
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg className="transform -rotate-90" width={size} height={size}>
+    <div
+      className={`relative inline-flex items-center justify-center ${isMastered ? 'animate-pulse-glow rounded-full' : ''}`}
+      style={{ width: size, height: size }}
+    >
+      <svg
+        className="transform -rotate-90"
+        width={size}
+        height={size}
+      >
         {/* Background circle */}
         <circle
+          className="text-[var(--color-border)]"
+          strokeWidth={strokeWidth}
+          stroke="currentColor"
+          fill="transparent"
+          r={radius}
           cx={size / 2}
           cy={size / 2}
-          r={radius}
-          className="dark:stroke-gray-700"
-          stroke="#e5e7eb"
-          strokeWidth={strokeWidth}
-          fill="none"
         />
-        {/* Progress circle */}
-        <motion.circle
+        {/* Progress circle with gradient */}
+        <defs>
+          <linearGradient id={`progress-gradient-${isMastered ? 'mastered' : 'normal'}`} x1="0%" y1="0%" x2="100%" y2="100%">
+            {isMastered ? (
+              <>
+                <stop offset="0%" stopColor="#fbbf24" />
+                <stop offset="100%" stopColor="#f97316" />
+              </>
+            ) : (
+              <>
+                <stop offset="0%" stopColor="#0891b2" />
+                <stop offset="100%" stopColor="#06b6d4" />
+              </>
+            )}
+          </linearGradient>
+        </defs>
+        <circle
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          stroke={`url(#progress-gradient-${isMastered ? 'mastered' : 'normal'})`}
+          fill="transparent"
+          r={radius}
           cx={size / 2}
           cy={size / 2}
-          r={radius}
-          className="dark:stroke-blue-400"
-          stroke="#3b82f6"
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeLinecap="round"
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          className="transition-all duration-500 ease-out"
           style={{
-            strokeDasharray: circumference,
+            filter: isMastered ? 'drop-shadow(0 0 6px rgba(251, 191, 36, 0.5))' : 'none',
           }}
         />
       </svg>
-      {/* Percentage text */}
+      {/* Center text */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">
-          {Math.round(progress)}%
-        </span>
+        {isMastered ? (
+          <span className="text-xs font-bold text-coral-500">★</span>
+        ) : (
+          <span className="text-xs font-semibold text-[var(--color-text-muted)]">
+            {Math.round(progress)}%
+          </span>
+        )}
       </div>
     </div>
   );

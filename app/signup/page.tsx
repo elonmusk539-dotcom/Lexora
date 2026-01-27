@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { supabase, getURL } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { isNativeApp, setupDeepLinkListener, closeInAppBrowser } from '@/lib/capacitor';
+import { Waves } from 'lucide-react';
 
 function SignupForm() {
   const searchParams = useSearchParams();
@@ -138,15 +139,19 @@ function SignupForm() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-mesh px-4">
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-ocean-500/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-coral-500/15 rounded-full blur-3xl" />
+        </div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 text-center"
+          className="w-full max-w-md glass-strong rounded-2xl shadow-xl p-6 sm:p-8 text-center relative z-10"
         >
-          <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <svg
-              className="w-8 h-8 text-green-600"
+              className="w-8 h-8 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -159,18 +164,21 @@ function SignupForm() {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
             Check your email!
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-[var(--color-text-muted)] mb-6">
             We&apos;ve sent you a confirmation link. Please check your email to verify
             your account.
           </p>
-          <Link
-            href="/login"
-            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-          >
-            Go to Login
+          <Link href="/login">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="btn-primary px-6 py-3"
+            >
+              Go to Login
+            </motion.button>
           </Link>
         </motion.div>
       </div>
@@ -178,18 +186,34 @@ function SignupForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-mesh px-4">
+      {/* Decorative elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-ocean-500/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-coral-500/15 rounded-full blur-3xl" />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
       >
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
+        <div className="glass-strong rounded-2xl shadow-xl p-6 sm:p-8">
           {/* Logo and title */}
-          <div className="text-center mb-6 sm:mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Lexora</h1>
-            <p className="text-gray-600 dark:text-gray-400">Create your account to get started</p>
+          <div className="text-center mb-8">
+            <motion.div
+              className="inline-flex items-center justify-center gap-3 mb-4"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: 'spring' }}
+            >
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-ocean-500 to-ocean-600 shadow-glow">
+                <Waves className="w-8 h-8 text-white" />
+              </div>
+            </motion.div>
+            <h1 className="text-3xl sm:text-4xl font-bold gradient-text mb-2">Lexora</h1>
+            <p className="text-[var(--color-text-muted)]">Create your account to get started</p>
           </div>
 
           {/* Error message */}
@@ -197,18 +221,18 @@ function SignupForm() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm"
+              className="mb-4 p-4 bg-coral-500/10 border border-coral-500/30 rounded-xl text-coral-500 text-sm"
             >
               {error}
             </motion.div>
           )}
 
           {/* Signup form */}
-          <form onSubmit={handleSignup} className="space-y-6">
+          <form onSubmit={handleSignup} className="space-y-5">
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2"
               >
                 Email
               </label>
@@ -218,7 +242,7 @@ function SignupForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900 dark:text-white dark:bg-gray-700"
+                className="input w-full py-3"
                 placeholder="your@email.com"
               />
             </div>
@@ -226,7 +250,7 @@ function SignupForm() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2"
               >
                 Password
               </label>
@@ -236,7 +260,7 @@ function SignupForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900 dark:text-white dark:bg-gray-700"
+                className="input w-full py-3"
                 placeholder="••••••••"
               />
             </div>
@@ -244,7 +268,7 @@ function SignupForm() {
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2"
               >
                 Confirm Password
               </label>
@@ -254,7 +278,7 @@ function SignupForm() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900 dark:text-white dark:bg-gray-700"
+                className="input w-full py-3"
                 placeholder="••••••••"
               />
             </div>
@@ -264,17 +288,18 @@ function SignupForm() {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-blue-300 dark:disabled:bg-blue-900 disabled:cursor-not-allowed transition-colors"
+              className="w-full btn-primary py-3.5 text-base disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating account...' : 'Sign Up'}
             </motion.button>
 
+            {/* Divider */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+                <div className="w-full border-t border-[var(--color-border)]"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Or continue with</span>
+                <span className="px-3 bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] rounded-full">Or continue with</span>
               </div>
             </div>
 
@@ -283,7 +308,7 @@ function SignupForm() {
               onClick={handleGoogleSignup}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full py-3 px-4 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium shadow-sm hover:shadow-md transition-shadow flex items-center justify-center gap-3"
+              className="w-full flex items-center justify-center gap-3 py-3.5 glass rounded-xl font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] transition-all"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -308,11 +333,11 @@ function SignupForm() {
           </form>
 
           {/* Login link */}
-          <p className="mt-6 text-center text-gray-600 dark:text-gray-400">
+          <p className="mt-6 text-center text-[var(--color-text-muted)]">
             Already have an account?{' '}
             <Link
               href="/login"
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+              className="text-[var(--color-accent-primary)] hover:text-[var(--color-accent-secondary)] font-semibold transition-colors"
             >
               Sign in
             </Link>
@@ -326,8 +351,8 @@ function SignupForm() {
 export default function SignupPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+      <div className="min-h-screen flex items-center justify-center bg-mesh">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
       </div>
     }>
       <SignupForm />

@@ -47,18 +47,18 @@ function MCQQuiz() {
       return;
     }
     setUserId(session.user.id);
-    
+
     // Fetch user settings
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('settings')
       .eq('user_id', session.user.id)
       .single();
-    
+
     if (profile && profile.settings) {
       setSettings(profile.settings as UserSettings);
     }
-    
+
     await fetchWords();
   };
 
@@ -68,7 +68,7 @@ function MCQQuiz() {
 
       if (listIdsParam) {
         const listIds = listIdsParam.split(',');
-        
+
         // Fetch from default vocabulary lists
         const { data: defaultWords } = await supabase
           .from('vocabulary_words')
@@ -108,17 +108,17 @@ function MCQQuiz() {
             [key: string]: unknown;
           };
         }
-        
-  const customWordItems = (userCustomWords ?? []) as unknown as CustomWordItem[];
-  const processedCustomWords = customWordItems.map((item) => {
+
+        const customWordItems = (userCustomWords ?? []) as unknown as CustomWordItem[];
+        const processedCustomWords = customWordItems.map((item) => {
           const word = item.user_custom_words;
           return {
             ...word,
             word: word.kanji,
             reading: word.romaji,
             // Convert JSONB examples to string array format
-            examples: word.examples ? 
-              word.examples.map((ex) => 
+            examples: word.examples ?
+              word.examples.map((ex) =>
                 `${ex.kanji}|${ex.furigana}|${ex.romaji}|${ex.translation}`
               ) : []
           } as Word;
@@ -154,7 +154,7 @@ function MCQQuiz() {
       // Exclude mastered words
       const { data: { user } } = await supabase.auth.getUser();
       let availableWords = allWords;
-      
+
       if (user) {
         const { data: masteredProgress } = await supabase
           .from('user_progress')
@@ -238,20 +238,20 @@ function MCQQuiz() {
       if (user) {
         // Update user streak and get the new streak value
         const { data: streakValue, error: streakError } = await supabase.rpc('update_user_streak', { p_user_id: user.id });
-        
+
         if (streakError) {
           console.error('Error updating streak:', streakError);
         } else {
           updatedStreak = streakValue || 0;
         }
-        
+
         // Log quiz activity
         const today = new Date().toISOString().split('T')[0];
         await supabase.from('user_activity_log').insert({
           user_id: user.id,
           activity_date: today,
           activity_type: 'quiz_completed',
-          details: { 
+          details: {
             quiz_type: 'mcq',
             score: score.correct,
             total: words.length
@@ -275,7 +275,7 @@ function MCQQuiz() {
 
     // Navigate to results page
     router.push(`/quiz/results?correct=${score.correct}&total=${words.length}&streak=${updatedStreak}`);
-    
+
     // Update progress in background
     for (const answer of answers) {
       updateWordProgress(answer.wordId, answer.correct).catch(console.error);
@@ -288,7 +288,7 @@ function MCQQuiz() {
       // Map correct/incorrect to quality ratings
       // Correct: quality=3 (Good), Incorrect: quality=0 (Again)
       const quality = correct ? 3 : 0;
-      
+
       await supabase.rpc('update_srs_progress', {
         p_user_id: userId,
         p_word_id: wordId,
@@ -307,8 +307,8 @@ function MCQQuiz() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+      <div className="min-h-screen flex items-center justify-center bg-mesh">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
       </div>
     );
   }
@@ -321,22 +321,22 @@ function MCQQuiz() {
   const progress = ((currentIndex + 1) / words.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-3 sm:p-4 md:p-6">
+    <div className="min-h-screen bg-mesh p-3 sm:p-4 md:p-6">
       <div className="max-w-3xl mx-auto py-4 sm:py-6 md:py-8">
         {/* Progress bar */}
         <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row justify-between text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2 gap-1 sm:gap-0">
+          <div className="flex flex-col sm:flex-row justify-between text-xs sm:text-sm text-[var(--color-text-muted)] mb-2 gap-1 sm:gap-0">
             <span>Question {currentIndex + 1} of {words.length}</span>
             <div className="flex gap-3 sm:gap-4">
-              <span className="text-green-600 dark:text-green-400">{score.correct} correct</span>
-              <span className="text-red-600 dark:text-red-400">{score.incorrect} incorrect</span>
+              <span className="text-green-500">{score.correct} correct</span>
+              <span className="text-coral-500">{score.incorrect} incorrect</span>
             </div>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-[var(--color-border)] rounded-full h-2">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
-              className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full"
+              className="bg-gradient-to-r from-ocean-600 to-ocean-500 h-2 rounded-full"
               transition={{ duration: 0.3 }}
             />
           </div>
@@ -349,15 +349,15 @@ function MCQQuiz() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8"
+            className="card-elevated p-4 sm:p-6 md:p-8"
           >
             {/* Word */}
             <div className="text-center mb-6 sm:mb-8">
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">{currentWord.kanji || currentWord.word}</h2>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--color-text-primary)]">{currentWord.kanji || currentWord.word}</h2>
                 <button
                   onClick={playPronunciation}
-                  className="p-2 sm:p-3 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 transition-colors"
+                  className="p-2 sm:p-3 rounded-full glass hover:bg-ocean-500/10 text-[var(--color-accent-primary)] transition-colors"
                   aria-label="Play pronunciation"
                 >
                   <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -365,16 +365,16 @@ function MCQQuiz() {
               </div>
               {/* Conditionally show furigana based on settings */}
               {settings?.mcq?.showFurigana && currentWord.furigana && (
-                <p className="text-lg sm:text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-1">{currentWord.furigana}</p>
+                <p className="text-lg sm:text-xl md:text-2xl text-[var(--color-text-secondary)] mb-1">{currentWord.furigana}</p>
               )}
               {/* Conditionally show romaji based on settings */}
               {settings?.mcq?.showRomaji && (currentWord.romaji || currentWord.reading) && (
-                <p className="text-base sm:text-lg md:text-xl text-gray-500 dark:text-gray-500">{currentWord.romaji || currentWord.reading}</p>
+                <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-muted)]">{currentWord.romaji || currentWord.reading}</p>
               )}
             </div>
 
             {/* Question */}
-            <p className="text-center text-base sm:text-lg text-gray-700 dark:text-gray-300 mb-4 sm:mb-6">
+            <p className="text-center text-base sm:text-lg text-[var(--color-text-secondary)] mb-4 sm:mb-6">
               What does this word mean?
             </p>
 
@@ -393,35 +393,32 @@ function MCQQuiz() {
                     whileTap={!showResult ? { scale: 0.98 } : {}}
                     onClick={() => handleAnswer(option)}
                     disabled={showResult}
-                    className={`p-3 sm:p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${
-                      showCorrect
-                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                        : showIncorrect
-                        ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                    className={`p-3 sm:p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${showCorrect
+                      ? 'border-green-500 bg-green-50 dark:bg-green-900/30'
+                      : showIncorrect
+                        ? 'border-coral-500 bg-coral-50 dark:bg-coral-900/30'
                         : isSelected
-                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500'
-                    }`}
+                          ? 'border-ocean-500 bg-ocean-50 dark:bg-ocean-900/30'
+                          : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-border-focus)] hover:bg-[var(--color-surface-overlay)]'
+                      }`}
                   >
-                    <span className={`text-sm sm:text-base font-medium ${
-                      showCorrect ? 'text-green-700 dark:text-green-400' : showIncorrect ? 'text-red-700 dark:text-red-400' : 'text-gray-900 dark:text-white'
-                    }`}>
+                    <span className={`text-sm sm:text-base font-medium ${showCorrect ? 'text-green-700 dark:text-green-400' : showIncorrect ? 'text-coral-700 dark:text-coral-400' : 'text-[var(--color-text-primary)]'
+                      }`}>
                       {option}
                     </span>
                     {showCorrect && <Check className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400 flex-shrink-0" />}
-                    {showIncorrect && <X className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400 flex-shrink-0" />}
+                    {showIncorrect && <X className="w-5 h-5 sm:w-6 sm:h-6 text-coral-600 dark:text-coral-400 flex-shrink-0" />}
                   </motion.button>
                 );
               })}
             </div>
 
-            {/* Next button */}
             {showResult && (
               <motion.button
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 onClick={handleNext}
-                className="w-full mt-4 sm:mt-6 py-3 bg-blue-600 text-white rounded-xl text-sm sm:text-base font-semibold hover:bg-blue-700 transition-colors"
+                className="w-full mt-4 sm:mt-6 py-3 btn-primary text-sm sm:text-base"
               >
                 {currentIndex < words.length - 1 ? 'Next Question' : 'Finish Quiz'}
               </motion.button>

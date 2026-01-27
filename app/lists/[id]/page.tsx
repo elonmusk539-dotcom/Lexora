@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Filter, ArrowLeft, Search } from 'lucide-react';
+import { Filter, ArrowLeft, Search, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter, useParams } from 'next/navigation';
@@ -164,18 +164,18 @@ export default function ListDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+      <div className="min-h-screen flex items-center justify-center bg-mesh">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
       </div>
     );
   }
 
   if (!list) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-mesh">
         <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-400 mb-4">List not found</p>
-          <Link href="/lists" className="text-blue-600 dark:text-blue-400 hover:underline">
+          <p className="text-[var(--color-text-muted)] mb-4">List not found</p>
+          <Link href="/lists" className="text-[var(--color-accent-primary)] hover:underline">
             Back to Lists
           </Link>
         </div>
@@ -184,7 +184,7 @@ export default function ListDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-mesh">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back button and list title */}
         <motion.div
@@ -194,14 +194,14 @@ export default function ListDetailPage() {
         >
           <Link
             href="/lists"
-            className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-4"
+            className="inline-flex items-center gap-2 text-[var(--color-accent-primary)] hover:opacity-80 mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Lists
           </Link>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{list.name}</h2>
+          <h2 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">{list.name}</h2>
           {list.description && (
-            <p className="text-gray-600 dark:text-gray-400">{list.description}</p>
+            <p className="text-[var(--color-text-muted)]">{list.description}</p>
           )}
         </motion.div>
 
@@ -214,30 +214,38 @@ export default function ListDetailPage() {
           {/* Top Row - Filter Toggle, Word Count, and Search */}
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className={`flex items-center gap-2 px-4 py-2.5 glass rounded-xl transition-all ${showFilters ? 'ring-2 ring-[var(--color-accent-primary)]' : ''}`}
               >
-                <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-gray-300" />
-                <span className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">
-                  {showFilters ? 'Hide Filters' : 'Show Filters'}
+                <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent-primary)]" />
+                <span className="text-sm sm:text-base font-medium text-[var(--color-text-secondary)]">
+                  {showFilters ? 'Hide Filters' : 'Filters'}
                 </span>
-              </button>
+              </motion.button>
 
-              <div className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
-                {filteredWords.length} word{filteredWords.length !== 1 ? 's' : ''}
+              <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg">
+                <Sparkles className="w-4 h-4 text-coral-500" />
+                <span className="text-sm font-semibold text-[var(--color-text-secondary)]">
+                  {filteredWords.length}
+                </span>
+                <span className="text-sm text-[var(--color-text-muted)]">
+                  word{filteredWords.length !== 1 ? 's' : ''}
+                </span>
               </div>
             </div>
 
             {/* Search input - Always visible */}
             <div className="relative flex-1 min-w-[200px] sm:min-w-[250px] max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search words..."
-                className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-full"
+                className="input input-search w-full py-2 text-sm"
               />
             </div>
           </div>
@@ -255,19 +263,21 @@ export default function ListDetailPage() {
                 {/* Filter Buttons */}
                 <div className="flex gap-2 flex-wrap">
                   {(['all', 'started', 'not-started', 'mastered'] as FilterType[]).map((f) => (
-                    <button
+                    <motion.button
                       key={f}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => setFilter(f)}
-                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all ${filter === f
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${filter === f
+                        ? 'bg-gradient-to-r from-ocean-600 to-ocean-500 text-white'
+                        : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)]'
                         }`}
                     >
                       {f === 'all' && 'All'}
                       {f === 'started' && 'In Progress'}
                       {f === 'not-started' && 'Not Started'}
                       {f === 'mastered' && 'Mastered'}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </motion.div>

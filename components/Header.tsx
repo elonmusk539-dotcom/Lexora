@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { LogOut, User, Menu, X, Crown } from 'lucide-react';
+import { LogOut, User, Menu, X, Crown, Waves } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { StreakDisplay } from './StreakDisplay';
 import { useSubscription } from '@/lib/subscription/useSubscription';
+import { motion } from 'framer-motion';
 
 interface UserProfile {
   username: string | null;
@@ -54,76 +55,90 @@ export function Header({ onMenuToggle, menuOpen }: HeaderProps = {}) {
   }
 
   return (
-    <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-[70]">
+    <header className="glass-strong border-b border-[var(--color-border)] sticky top-0 z-[70]">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Mobile Menu Button */}
             {onMenuToggle && (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={onMenuToggle}
-                className="md:hidden p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg flex items-center justify-center"
+                className="md:hidden p-2 glass rounded-xl flex items-center justify-center"
                 aria-label="Toggle menu"
                 style={{ width: '40px', height: '40px' }}
               >
                 {menuOpen ? (
-                  <X className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                  <X className="w-5 h-5 text-[var(--color-text-secondary)]" />
                 ) : (
-                  <Menu className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+                  <Menu className="w-5 h-5 text-[var(--color-text-secondary)]" />
                 )}
-              </button>
+              </motion.button>
             )}
-            
+
             <Link href="/" className="md:pl-0">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity">
+              <motion.div
+                className="flex items-center gap-2 sm:gap-3"
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 400 }}
+              >
+                <div className="p-1.5 sm:p-2 rounded-xl bg-gradient-to-br from-ocean-500 to-ocean-600 shadow-glow flex items-center justify-center">
+                  <Waves className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold gradient-text cursor-pointer leading-none">
                   Lexora
                 </h1>
                 {isPro && (
-                  <div className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full shadow-sm">
-                    <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
-                    <span className="text-[9px] sm:text-[10px] md:text-xs font-bold text-white uppercase tracking-wide">
-                      Pro
-                    </span>
+                  <div className="badge badge-pro flex items-center gap-1">
+                    <Crown className="w-3 h-3" />
+                    <span className="text-[10px] sm:text-xs">PRO</span>
                   </div>
                 )}
-              </div>
+              </motion.div>
             </Link>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
+          <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
             {/* Streak Display */}
             <StreakDisplay compact />
-            
+
             {/* Profile Avatar and Username */}
-            <Link href="/profile" className="relative group flex items-center gap-1 sm:gap-2">
+            <Link href="/profile" className="relative group flex items-center gap-2 sm:gap-3">
               {profile?.username && (
-                <span className="hidden sm:block text-sm md:text-base text-gray-700 dark:text-gray-300 font-medium group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <span className="hidden sm:block text-sm md:text-base text-[var(--color-text-secondary)] font-medium group-hover:text-[var(--color-accent-primary)] transition-colors">
                   {profile.username}
                 </span>
               )}
-              {profile?.avatar_url ? (
-                <Image
-                  src={profile.avatar_url}
-                  alt={profile.username || 'Profile'}
-                  width={44}
-                  height={44}
-                  className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600 group-hover:border-blue-500 dark:group-hover:border-blue-400 transition-all cursor-pointer"
-                  sizes="(max-width: 768px) 40px, 44px"
-                />
-              ) : (
-                <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center border-2 border-gray-300 dark:border-gray-600 group-hover:border-blue-500 dark:group-hover:border-blue-400 transition-all cursor-pointer">
-                  <User className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" />
-                </div>
-              )}
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="relative"
+              >
+                {profile?.avatar_url ? (
+                  <Image
+                    src={profile.avatar_url}
+                    alt={profile.username || 'Profile'}
+                    width={44}
+                    height={44}
+                    className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl object-cover ring-2 ring-[var(--color-border)] group-hover:ring-[var(--color-accent-primary)] transition-all"
+                    sizes="(max-width: 768px) 40px, 44px"
+                  />
+                ) : (
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-ocean-400 to-ocean-600 flex items-center justify-center ring-2 ring-[var(--color-border)] group-hover:ring-[var(--color-accent-primary)] transition-all">
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                )}
+              </motion.div>
             </Link>
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={handleLogout}
-              className="p-1.5 sm:p-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+              className="p-2 sm:p-2.5 rounded-xl glass text-[var(--color-text-muted)] hover:text-coral-500 hover:bg-coral-500/10 transition-all"
               aria-label="Logout"
             >
               <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>

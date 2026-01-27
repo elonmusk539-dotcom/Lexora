@@ -69,14 +69,12 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       setError('Image must be less than 1MB');
       setTimeout(() => setError(''), 3000);
       return;
     }
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       setError('Please select an image file');
       setTimeout(() => setError(''), 3000);
@@ -84,8 +82,6 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
     }
 
     setImage(file);
-    
-    // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result as string);
@@ -102,14 +98,12 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size
     if (file.size > MAX_AUDIO_SIZE) {
       setError('Audio must be less than 1MB');
       setTimeout(() => setError(''), 3000);
       return;
     }
 
-    // Validate file type
     if (!file.type.startsWith('audio/')) {
       setError('Please select an audio file');
       setTimeout(() => setError(''), 3000);
@@ -117,8 +111,6 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
     }
 
     setAudio(file);
-    
-    // Create preview URL
     const url = URL.createObjectURL(file);
     setAudioPreview(url);
   };
@@ -154,7 +146,7 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
     formData.append('folder', 'lexora/custom-words');
 
     const xhr = new XMLHttpRequest();
-    
+
     return new Promise((resolve, reject) => {
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable) {
@@ -173,7 +165,7 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
       });
 
       xhr.addEventListener('error', () => reject(new Error('Upload failed')));
-      
+
       xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`);
       xhr.send(formData);
     });
@@ -184,10 +176,10 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     formData.append('folder', 'lexora/pronunciations');
-    formData.append('resource_type', 'video'); // Cloudinary uses 'video' for audio files
+    formData.append('resource_type', 'video');
 
     const xhr = new XMLHttpRequest();
-    
+
     return new Promise((resolve, reject) => {
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable) {
@@ -206,7 +198,7 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
       });
 
       xhr.addEventListener('error', () => reject(new Error('Audio upload failed')));
-      
+
       xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`);
       xhr.send(formData);
     });
@@ -214,14 +206,13 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!kanji.trim() || !meaning.trim()) {
       setError('Please fill in the main reading and meaning');
       setTimeout(() => setError(''), 3000);
       return;
     }
 
-    // Check subscription limit
     if (!canAddCustomWord(subscription.tier, totalCustomWords)) {
       setError('Free users can only add 10 custom words. Upgrade to Pro for unlimited!');
       setTimeout(() => setError(''), 5000);
@@ -236,19 +227,16 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Upload image to Cloudinary if provided
       let imageUrl = null;
       if (image) {
         imageUrl = await uploadImageToCloudinary(image);
       }
 
-      // Upload audio to Cloudinary if provided
       let pronunciationUrl = null;
       if (audio) {
         pronunciationUrl = await uploadAudioToCloudinary(audio);
       }
 
-      // Filter out empty examples
       const validExamples = examples.filter(
         ex => ex.kanji.trim() || ex.translation.trim()
       ).map(ex => ({
@@ -258,7 +246,6 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
         translation: ex.translation.trim()
       }));
 
-      // Create custom word
       const { data: customWord, error: wordError } = await supabase
         .from('user_custom_words')
         .insert({
@@ -276,7 +263,6 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
 
       if (wordError) throw wordError;
 
-      // Add word to the list
       const { error: linkError } = await supabase
         .from('user_custom_list_custom_words')
         .insert({
@@ -299,7 +285,7 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
       }
       setAudioPreview(null);
       setExamples([{ kanji: '', furigana: '', romaji: '', translation: '' }]);
-      
+
       onWordAdded();
       onClose();
     } catch (err) {
@@ -321,7 +307,7 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 z-[60] backdrop-blur-sm"
+            className="fixed inset-0 bg-night-400/70 z-[60] backdrop-blur-md"
           />
 
           {/* Modal */}
@@ -329,48 +315,54 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl max-h-[90vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[70] overflow-hidden"
+            className="fixed left-1/2 -translate-x-1/2 top-4 bottom-4 sm:top-1/2 sm:bottom-auto sm:-translate-y-1/2 w-[calc(100%-2rem)] max-w-3xl sm:max-h-[90vh] glass-strong rounded-2xl shadow-xl z-[70] overflow-hidden flex flex-col"
           >
             {/* Header */}
-            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 z-10">
+            <div className="sticky top-0 glass-strong border-b border-[var(--color-border)] px-6 py-4 z-10">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <h3 className="text-2xl font-bold text-[var(--color-text-primary)]">
                     Add Custom Word
                   </h3>
                   {!isPro && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      {totalCustomWords}/10 custom words used. 
-                      <Link href="/premium" className="text-purple-600 dark:text-purple-400 hover:underline ml-1">
+                    <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                      {totalCustomWords}/10 custom words used.
+                      <Link href="/premium" className="text-[var(--color-accent-primary)] hover:underline ml-1">
                         Upgrade to Pro
                       </Link> for unlimited!
                     </p>
                   )}
                 </div>
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={onClose}
-                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="p-2 rounded-xl glass hover:bg-[var(--color-surface-overlay)] transition-all"
                 >
-                  <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                </button>
+                  <X className="w-5 h-5 text-[var(--color-text-muted)]" />
+                </motion.button>
               </div>
             </div>
 
             {/* Content */}
-            <form onSubmit={handleSubmit} className="p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-5rem)]">
+            <form onSubmit={handleSubmit} className="p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-5rem)] scrollbar-hide">
               {error && (
-                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="mb-4 p-4 bg-coral-500/10 border border-coral-500/30 rounded-xl text-coral-500 text-sm"
+                >
                   {error}
-                </div>
+                </motion.div>
               )}
 
               {/* Image Upload */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                   Image (Optional, Max 1MB)
                 </label>
                 {imagePreview ? (
-                  <div className="relative w-full h-48 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+                  <div className="relative w-full h-48 glass rounded-xl overflow-hidden">
                     <Image
                       src={imagePreview}
                       alt="Preview"
@@ -378,23 +370,25 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
                       unoptimized
                       className="object-contain"
                     />
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
                       type="button"
                       onClick={removeImage}
-                      className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-lg"
+                      className="absolute top-2 right-2 p-2 bg-coral-500 text-white rounded-xl shadow-lg"
                     >
                       <Trash2 className="w-4 h-4" />
-                    </button>
+                    </motion.button>
                   </div>
                 ) : (
-                  <label className="block w-full h-48 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer">
+                  <label className="block w-full h-48 border-2 border-dashed border-[var(--color-border)] rounded-xl hover:border-[var(--color-accent-primary)] transition-colors cursor-pointer">
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleImageChange}
                       className="hidden"
                     />
-                    <div className="h-full flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                    <div className="h-full flex flex-col items-center justify-center text-[var(--color-text-muted)]">
                       <ImageIcon className="w-12 h-12 mb-2" />
                       <span className="text-sm">Click to upload image</span>
                       <span className="text-xs mt-1">PNG, JPG up to 1MB</span>
@@ -403,13 +397,13 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
                 )}
                 {uploadProgress > 0 && uploadProgress < 100 && (
                   <div className="mt-2">
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div className="w-full bg-[var(--color-border)] rounded-full h-2">
                       <div
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        className="bg-gradient-to-r from-ocean-600 to-ocean-500 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                       />
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 text-center">
+                    <p className="text-sm text-[var(--color-text-muted)] mt-1 text-center">
                       Uploading... {uploadProgress}%
                     </p>
                   </div>
@@ -418,13 +412,13 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
 
               {/* Audio Upload */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                   Pronunciation (Optional, Max 1MB)
                 </label>
                 {audioPreview ? (
-                  <div className="relative w-full p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                  <div className="relative w-full p-4 glass rounded-xl">
                     <div className="flex items-center gap-3">
-                      <Mic className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                      <Mic className="w-8 h-8 text-[var(--color-accent-primary)]" />
                       <div className="flex-1">
                         <audio
                           controls
@@ -434,24 +428,26 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
                           Your browser does not support the audio element.
                         </audio>
                       </div>
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                         type="button"
                         onClick={removeAudio}
-                        className="p-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-lg"
+                        className="p-2 bg-coral-500 text-white rounded-xl shadow-lg"
                       >
                         <Trash2 className="w-4 h-4" />
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
                 ) : (
-                  <label className="block w-full p-4 sm:p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer">
+                  <label className="block w-full p-4 sm:p-6 border-2 border-dashed border-[var(--color-border)] rounded-xl hover:border-[var(--color-accent-primary)] transition-colors cursor-pointer">
                     <input
                       type="file"
                       accept="audio/*"
                       onChange={handleAudioChange}
                       className="hidden"
                     />
-                    <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                    <div className="flex flex-col items-center justify-center text-[var(--color-text-muted)]">
                       <Mic className="w-12 h-12 mb-2" />
                       <span className="text-sm">Click to upload pronunciation</span>
                       <span className="text-xs mt-1">MP3, WAV, OGG up to 1MB</span>
@@ -463,7 +459,7 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
               {/* Main Word Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                     Main Reading (Kanji) *
                   </label>
                   <input
@@ -472,12 +468,12 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
                     onChange={(e) => setKanji(e.target.value)}
                     placeholder="食べる"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input w-full py-3"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                     Furigana
                   </label>
                   <input
@@ -485,12 +481,12 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
                     value={furigana}
                     onChange={(e) => setFurigana(e.target.value)}
                     placeholder="たべる"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input w-full py-3"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                     Romaji
                   </label>
                   <input
@@ -498,12 +494,12 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
                     value={romaji}
                     onChange={(e) => setRomaji(e.target.value)}
                     placeholder="taberu"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input w-full py-3"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                     Meaning *
                   </label>
                   <input
@@ -512,7 +508,7 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
                     onChange={(e) => setMeaning(e.target.value)}
                     placeholder="to eat"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input w-full py-3"
                   />
                 </div>
               </div>
@@ -520,18 +516,20 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
               {/* Examples Section */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="block text-sm font-medium text-[var(--color-text-secondary)]">
                     Examples (Optional, Max 5)
                   </label>
                   {examples.length < 5 && (
-                    <button
+                    <motion.button
                       type="button"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={addExample}
-                      className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 btn-primary text-sm flex items-center gap-1"
                     >
                       <Plus className="w-4 h-4" />
                       Add Example
-                    </button>
+                    </motion.button>
                   )}
                 </div>
 
@@ -539,20 +537,22 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
                   {examples.map((example, index) => (
                     <div
                       key={index}
-                      className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50"
+                      className="p-4 glass rounded-xl"
                     >
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <span className="text-sm font-medium text-[var(--color-text-secondary)]">
                           Example {index + 1}
                         </span>
                         {examples.length > 1 && (
-                          <button
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
                             type="button"
                             onClick={() => removeExample(index)}
-                            className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                            className="p-1 text-coral-500 hover:bg-coral-500/10 rounded-lg transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
-                          </button>
+                          </motion.button>
                         )}
                       </div>
 
@@ -562,28 +562,28 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
                           value={example.kanji}
                           onChange={(e) => updateExample(index, 'kanji', e.target.value)}
                           placeholder="Main reading (kanji)"
-                          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="input py-2 text-sm"
                         />
                         <input
                           type="text"
                           value={example.furigana}
                           onChange={(e) => updateExample(index, 'furigana', e.target.value)}
                           placeholder="Furigana"
-                          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="input py-2 text-sm"
                         />
                         <input
                           type="text"
                           value={example.romaji}
                           onChange={(e) => updateExample(index, 'romaji', e.target.value)}
                           placeholder="Romaji"
-                          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="input py-2 text-sm"
                         />
                         <input
                           type="text"
                           value={example.translation}
                           onChange={(e) => updateExample(index, 'translation', e.target.value)}
                           placeholder="Translation"
-                          className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="input py-2 text-sm"
                         />
                       </div>
                     </div>
@@ -593,17 +593,21 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
 
               {/* Action Buttons */}
               <div className="flex gap-3">
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={onClose}
-                  className="flex-1 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  className="flex-1 py-3 btn-ghost"
                 >
                   Cancel
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 py-3 btn-accent disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>
@@ -616,7 +620,7 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
                       Add Word
                     </>
                   )}
-                </button>
+                </motion.button>
               </div>
             </form>
           </motion.div>

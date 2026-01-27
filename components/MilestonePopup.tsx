@@ -22,25 +22,25 @@ const MILESTONE_CONFIGS: {
   words_mastered: Record<number, MilestoneConfig>;
 } = {
   streak: {
-    7: { title: '7 Day Streak!', color: 'from-orange-400 to-red-500', icon: '🔥', message: 'You\'re on fire! Keep it up!' },
-    14: { title: '2 Week Streak!', color: 'from-pink-400 to-purple-500', icon: '⚡', message: 'Incredible consistency!' },
-    21: { title: '3 Week Streak!', color: 'from-blue-400 to-indigo-500', icon: '💎', message: 'Diamond dedication!' },
-    30: { title: '30 Day Streak!', color: 'from-yellow-400 to-amber-500', icon: '👑', message: 'A full month! Legendary!' },
-    60: { title: '60 Day Streak!', color: 'from-green-400 to-emerald-500', icon: '🌟', message: 'Absolutely unstoppable!' },
-    90: { title: '90 Day Streak!', color: 'from-purple-500 to-pink-600', icon: '🏆', message: 'Master of consistency!' },
+    7: { title: '7 Day Streak!', color: 'from-coral-500 to-orange-500', icon: '🔥', message: 'You\'re on fire! Keep it up!' },
+    14: { title: '2 Week Streak!', color: 'from-pink-500 to-rose-500', icon: '⚡', message: 'Incredible consistency!' },
+    21: { title: '3 Week Streak!', color: 'from-ocean-500 to-cyan-500', icon: '💎', message: 'Diamond dedication!' },
+    30: { title: '30 Day Streak!', color: 'from-yellow-500 to-amber-500', icon: '👑', message: 'A full month! Legendary!' },
+    60: { title: '60 Day Streak!', color: 'from-green-500 to-emerald-500', icon: '🌟', message: 'Absolutely unstoppable!' },
+    90: { title: '90 Day Streak!', color: 'from-purple-500 to-pink-500', icon: '🏆', message: 'Master of consistency!' },
   },
   words_mastered: {
-    50: { title: '50 Words Mastered!', color: 'from-blue-400 to-cyan-500', icon: '🎯', message: 'Great progress!' },
-    100: { title: '100 Words Mastered!', color: 'from-green-400 to-teal-500', icon: '✨', message: 'Century club member!' },
-    250: { title: '250 Words Mastered!', color: 'from-purple-400 to-indigo-500', icon: '🌠', message: 'Vocabulary champion!' },
-    500: { title: '500 Words Mastered!', color: 'from-yellow-400 to-orange-500', icon: '🎊', message: 'Half a thousand! Amazing!' },
-    1000: { title: '1000 Words Mastered!', color: 'from-pink-500 to-rose-600', icon: '👑', message: 'Language royalty!' },
+    50: { title: '50 Words Mastered!', color: 'from-ocean-500 to-cyan-500', icon: '🎯', message: 'Great progress!' },
+    100: { title: '100 Words Mastered!', color: 'from-green-500 to-teal-500', icon: '✨', message: 'Century club member!' },
+    250: { title: '250 Words Mastered!', color: 'from-purple-500 to-indigo-500', icon: '🌠', message: 'Vocabulary champion!' },
+    500: { title: '500 Words Mastered!', color: 'from-coral-500 to-orange-500', icon: '🎊', message: 'Half a thousand! Amazing!' },
+    1000: { title: '1000 Words Mastered!', color: 'from-pink-500 to-rose-500', icon: '👑', message: 'Language royalty!' },
   },
 };
 
 export function MilestonePopup({ isOpen, type, milestone, onClose }: MilestonePopupProps) {
   const config = MILESTONE_CONFIGS[type][milestone];
-  
+
   if (!config) return null;
 
   return (
@@ -53,15 +53,15 @@ export function MilestonePopup({ isOpen, type, milestone, onClose }: MilestonePo
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/70 z-[100] backdrop-blur-md"
+            className="fixed inset-0 bg-night-400/80 z-[100] backdrop-blur-md"
           />
-          
+
           {/* Popup */}
           <motion.div
             initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
-            animate={{ 
-              opacity: 1, 
-              scale: 1, 
+            animate={{
+              opacity: 1,
+              scale: 1,
               rotate: 0,
               transition: {
                 type: 'spring',
@@ -74,20 +74,22 @@ export function MilestonePopup({ isOpen, type, milestone, onClose }: MilestonePo
           >
             <div className={`bg-gradient-to-br ${config.color} rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 relative overflow-hidden`}>
               {/* Close button */}
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={onClose}
-                className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 sm:p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors z-10"
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 sm:p-2 rounded-xl bg-white/20 hover:bg-white/30 transition-colors z-10"
               >
                 <X className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </button>
+              </motion.button>
 
               {/* Animated background elements */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 {[...Array(20)].map((_, i) => (
                   <motion.div
                     key={i}
-                    initial={{ 
-                      x: Math.random() * 100 + '%', 
+                    initial={{
+                      x: Math.random() * 100 + '%',
                       y: Math.random() * 100 + '%',
                       scale: 0,
                       rotate: 0,
@@ -142,7 +144,7 @@ export function MilestonePopup({ isOpen, type, milestone, onClose }: MilestonePo
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 drop-shadow-md"
+                  className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 drop-shadow-md text-white/90"
                 >
                   {config.message}
                 </motion.p>
@@ -152,7 +154,7 @@ export function MilestonePopup({ isOpen, type, milestone, onClose }: MilestonePo
                   initial={{ scale: 0 }}
                   animate={{ scale: [0, 1.2, 1] }}
                   transition={{ delay: 0.5, duration: 0.5 }}
-                  className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-full backdrop-blur-sm"
+                  className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-2xl backdrop-blur-sm"
                 >
                   <Trophy className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                 </motion.div>
@@ -162,8 +164,10 @@ export function MilestonePopup({ isOpen, type, milestone, onClose }: MilestonePo
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={onClose}
-                  className="mt-6 sm:mt-8 px-6 sm:px-8 py-2.5 sm:py-3 bg-white/90 hover:bg-white text-gray-900 rounded-full font-semibold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all"
+                  className="mt-6 sm:mt-8 px-6 sm:px-8 py-2.5 sm:py-3 bg-white text-gray-900 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl transition-all"
                 >
                   Continue
                 </motion.button>

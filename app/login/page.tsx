@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { supabase, getURL } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { isNativeApp, setupDeepLinkListener, closeInAppBrowser } from '@/lib/capacitor';
+import { Waves } from 'lucide-react';
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -126,18 +127,34 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-mesh px-4">
+      {/* Decorative elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-ocean-500/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-coral-500/15 rounded-full blur-3xl" />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
       >
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
+        <div className="glass-strong rounded-2xl shadow-xl p-6 sm:p-8">
           {/* Logo and title */}
-          <div className="text-center mb-6 sm:mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Lexora</h1>
-            <p className="text-gray-600 dark:text-gray-400">Welcome back! Please login to continue.</p>
+          <div className="text-center mb-8">
+            <motion.div
+              className="inline-flex items-center justify-center gap-3 mb-4"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: 'spring' }}
+            >
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-ocean-500 to-ocean-600 shadow-glow">
+                <Waves className="w-8 h-8 text-white" />
+              </div>
+            </motion.div>
+            <h1 className="text-3xl sm:text-4xl font-bold gradient-text mb-2">Lexora</h1>
+            <p className="text-[var(--color-text-muted)]">Welcome back! Sign in to continue.</p>
           </div>
 
           {/* Error message */}
@@ -145,18 +162,18 @@ function LoginForm() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm"
+              className="mb-4 p-4 bg-coral-500/10 border border-coral-500/30 rounded-xl text-coral-500 text-sm"
             >
               {error}
             </motion.div>
           )}
 
           {/* Login form */}
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2"
               >
                 Email
               </label>
@@ -166,7 +183,7 @@ function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900 dark:text-white"
+                className="input w-full py-3"
                 placeholder="your@email.com"
               />
             </div>
@@ -174,7 +191,7 @@ function LoginForm() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2"
               >
                 Password
               </label>
@@ -184,7 +201,7 @@ function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900 dark:text-white"
+                className="input w-full py-3"
                 placeholder="••••••••"
               />
             </div>
@@ -194,7 +211,7 @@ function LoginForm() {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+              className="w-full btn-primary py-3.5 text-base disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </motion.button>
@@ -203,10 +220,10 @@ function LoginForm() {
           {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+              <div className="w-full border-t border-[var(--color-border)]"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Or continue with</span>
+              <span className="px-3 bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] rounded-full">Or continue with</span>
             </div>
           </div>
 
@@ -216,7 +233,7 @@ function LoginForm() {
             whileTap={{ scale: 0.98 }}
             onClick={handleGoogleLogin}
             type="button"
-            className="w-full flex items-center justify-center gap-3 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center justify-center gap-3 py-3.5 glass rounded-xl font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] transition-all"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -240,11 +257,11 @@ function LoginForm() {
           </motion.button>
 
           {/* Sign up link */}
-          <p className="mt-6 text-center text-gray-600 dark:text-gray-400">
+          <p className="mt-6 text-center text-[var(--color-text-muted)]">
             Don&apos;t have an account?{' '}
             <Link
               href="/signup"
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+              className="text-[var(--color-accent-primary)] hover:text-[var(--color-accent-secondary)] font-semibold transition-colors"
             >
               Sign up
             </Link>
@@ -258,8 +275,8 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+      <div className="min-h-screen flex items-center justify-center bg-mesh">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
       </div>
     }>
       <LoginForm />

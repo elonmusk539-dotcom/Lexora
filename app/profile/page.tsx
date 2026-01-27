@@ -35,7 +35,7 @@ export default function ProfilePage() {
   async function checkUser() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         router.push('/login');
         return;
@@ -222,7 +222,7 @@ export default function ProfilePage() {
         .getPublicUrl(filePath);
 
       setAvatarUrl(publicUrl);
-      setSuccess('Avatar uploaded successfully! Don\'t forget to save your changes.');
+      setSuccess('Avatar uploaded! Don\'t forget to save.');
       setTimeout(() => setSuccess(''), 3000);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Error uploading avatar';
@@ -234,14 +234,14 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="text-gray-600 dark:text-gray-400">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-mesh">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-mesh">
       {/* Main Content */}
       <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
         <motion.div
@@ -250,15 +250,15 @@ export default function ProfilePage() {
           transition={{ duration: 0.5 }}
           className="max-w-2xl mx-auto"
         >
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
+          <div className="card-elevated p-6 sm:p-8">
             {/* Page Title */}
-            <div className="text-center mb-6 sm:mb-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">My Profile</h2>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Manage your account settings</p>
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] mb-2">My Profile</h2>
+              <p className="text-[var(--color-text-muted)]">Manage your account settings</p>
             </div>
 
             {/* Avatar Preview */}
-            <div className="flex justify-center mb-6 sm:mb-8">
+            <div className="flex justify-center mb-8">
               <div className="relative">
                 {avatarUrl ? (
                   <Image
@@ -266,27 +266,29 @@ export default function ProfilePage() {
                     alt="Profile avatar"
                     width={128}
                     height={128}
-                    className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-4 border-purple-200"
-                    sizes="(max-width: 640px) 96px, (max-width: 768px) 112px, 128px"
+                    className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl object-cover ring-4 ring-[var(--color-accent-primary)]/30"
+                    sizes="(max-width: 640px) 112px, 128px"
                   />
                 ) : (
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center border-4 border-purple-200">
-                    <User className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 text-white" />
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl bg-gradient-to-br from-ocean-400 to-ocean-600 flex items-center justify-center ring-4 ring-[var(--color-accent-primary)]/30 shadow-glow">
+                    <User className="w-14 h-14 sm:w-16 sm:h-16 text-white" />
                   </div>
                 )}
                 {/* Upload button overlay */}
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="absolute bottom-0 right-0 p-1.5 sm:p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                  className="absolute -bottom-2 -right-2 p-2.5 bg-gradient-to-br from-coral-500 to-coral-400 text-white rounded-xl shadow-glow-coral disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {uploading ? (
-                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
-                    <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <Upload className="w-5 h-5" />
                   )}
-                </button>
+                </motion.button>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -302,7 +304,7 @@ export default function ProfilePage() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-600 dark:text-green-400 text-sm"
+                className="mb-4 p-4 bg-green-500/10 border border-green-500/30 rounded-xl text-green-500 text-sm"
               >
                 {success}
               </motion.div>
@@ -313,33 +315,33 @@ export default function ProfilePage() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm"
+                className="mb-4 p-4 bg-coral-500/10 border border-coral-500/30 rounded-xl text-coral-500 text-sm"
               >
                 {error}
               </motion.div>
             )}
 
             {/* Profile Form */}
-            <form onSubmit={handleSave} className="space-y-6">
+            <form onSubmit={handleSave} className="space-y-5">
               {/* Email (read-only) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <Mail className="inline w-4 h-4 mr-2" />
+                <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)] mb-2">
+                  <Mail className="w-4 h-4" />
                   Email
                 </label>
                 <input
                   type="email"
                   value={user?.email || ''}
                   disabled
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-500 cursor-not-allowed"
+                  className="input w-full py-3 opacity-60 cursor-not-allowed"
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Email cannot be changed</p>
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">Email cannot be changed</p>
               </div>
 
               {/* Username */}
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <User className="inline w-4 h-4 mr-2" />
+                <label htmlFor="username" className="flex items-center gap-2 text-sm font-medium text-[var(--color-text-secondary)] mb-2">
+                  <User className="w-4 h-4" />
                   Username
                 </label>
                 <input
@@ -348,34 +350,36 @@ export default function ProfilePage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter your username"
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none text-gray-900 dark:text-white dark:bg-gray-700"
+                  className="input w-full py-3"
                 />
               </div>
 
               {/* Avatar Upload Info */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <div className="flex items-start gap-2">
-                  <ImageIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-1">Avatar Upload</p>
-                    <p className="text-xs text-blue-700 dark:text-blue-400">
-                      Click the upload button on your avatar to change it. Maximum file size: 1MB. Images will be automatically compressed to 100-200KB for optimal performance.
+              <div className="p-4 glass rounded-xl">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-[var(--color-accent-primary)]/10">
+                    <ImageIcon className="w-5 h-5 text-[var(--color-accent-primary)]" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--color-text-primary)] mb-1">Avatar Upload</p>
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      Click the upload button on your avatar to change it. Max 1MB, auto-compressed.
                     </p>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-4 pt-4">
+              <div className="flex gap-3 pt-2">
                 <motion.button
                   type="submit"
                   disabled={saving}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex-1 py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 btn-primary py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <Save className="w-5 h-5" />
-                  {saving ? 'Saving...' : <><span className="md:hidden">Save</span><span className="hidden md:inline">Save Changes</span></>}
+                  {saving ? 'Saving...' : 'Save Changes'}
                 </motion.button>
 
                 <motion.button
@@ -383,10 +387,10 @@ export default function ProfilePage() {
                   onClick={handleSignOut}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="py-3 px-6 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+                  className="btn-ghost py-3 px-5 flex items-center gap-2 hover:text-coral-500 hover:border-coral-500/30"
                 >
                   <LogOut className="w-5 h-5" />
-                  Sign Out
+                  <span className="hidden sm:inline">Sign Out</span>
                 </motion.button>
               </div>
             </form>
@@ -397,55 +401,55 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-6 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 md:p-8"
+            className="mt-6 card-elevated p-6 sm:p-8"
           >
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 text-center">
+            <h3 className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)] mb-6 text-center">
               Learning Statistics
             </h3>
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+            <div className="grid grid-cols-2 gap-4">
               {/* Words Mastered */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 sm:p-6 border border-green-200 dark:border-green-800">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-green-500 dark:bg-green-600 rounded-lg">
-                    <Trophy className="w-6 h-6 text-white" />
+              <div className="p-4 sm:p-5 glass rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl shadow-lg">
+                    <Trophy className="w-5 h-5 text-white" />
                   </div>
-                  <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Words Mastered</h4>
+                  <span className="text-sm font-medium text-[var(--color-text-muted)]">Mastered</span>
                 </div>
-                <p className="text-3xl font-bold text-green-700 dark:text-green-400 text-center md:text-left">{stats.wordsMastered}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-green-500">{stats.wordsMastered}</p>
               </div>
 
               {/* Longest Streak */}
-              <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl p-4 sm:p-6 border border-orange-200 dark:border-orange-800">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-orange-500 dark:bg-orange-600 rounded-lg">
-                    <Flame className="w-6 h-6 text-white" />
+              <div className="p-4 sm:p-5 glass rounded-xl bg-gradient-to-br from-orange-500/10 to-coral-500/10 border border-orange-500/20">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 bg-gradient-to-br from-orange-500 to-coral-500 rounded-xl shadow-lg">
+                    <Flame className="w-5 h-5 text-white" />
                   </div>
-                  <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Longest Streak</h4>
+                  <span className="text-sm font-medium text-[var(--color-text-muted)]">Best Streak</span>
                 </div>
-                <p className="text-3xl font-bold text-orange-700 dark:text-orange-400 text-center md:text-left">{stats.longestStreak}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-orange-500">{stats.longestStreak}</p>
               </div>
 
               {/* User Added Words */}
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 sm:p-6 border border-purple-200 dark:border-purple-800">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-purple-500 dark:bg-purple-600 rounded-lg">
-                    <BookPlus className="w-6 h-6 text-white" />
+              <div className="p-4 sm:p-5 glass rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg">
+                    <BookPlus className="w-5 h-5 text-white" />
                   </div>
-                  <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Custom Words</h4>
+                  <span className="text-sm font-medium text-[var(--color-text-muted)]">Custom Words</span>
                 </div>
-                <p className="text-3xl font-bold text-purple-700 dark:text-purple-400 text-center md:text-left">{stats.userAddedWords}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-purple-500">{stats.userAddedWords}</p>
               </div>
 
               {/* Words Started Learning */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 sm:p-6 border border-blue-200 dark:border-blue-800">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-blue-500 dark:bg-blue-600 rounded-lg">
-                    <GraduationCap className="w-6 h-6 text-white" />
+              <div className="p-4 sm:p-5 glass rounded-xl bg-gradient-to-br from-ocean-500/10 to-cyan-500/10 border border-ocean-500/20">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 bg-gradient-to-br from-ocean-500 to-cyan-500 rounded-xl shadow-lg">
+                    <GraduationCap className="w-5 h-5 text-white" />
                   </div>
-                  <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">Words Learning</h4>
+                  <span className="text-sm font-medium text-[var(--color-text-muted)]">Learning</span>
                 </div>
-                <p className="text-3xl font-bold text-blue-700 dark:text-blue-400 text-center md:text-left">{stats.wordsStartedLearning}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-ocean-500">{stats.wordsStartedLearning}</p>
               </div>
             </div>
           </motion.div>

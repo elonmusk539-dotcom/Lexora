@@ -39,7 +39,6 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      // Also prevent scrolling on the parent elements
       const wordDetailsCard = document.querySelector('[class*="max-h-\\[85vh\\]"]');
       if (wordDetailsCard) {
         (wordDetailsCard as HTMLElement).style.overflow = 'hidden';
@@ -63,7 +62,7 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
     try {
       const canvas = await html2canvas(cardRef.current, {
         scale: 2,
-        backgroundColor: '#6366f1',
+        backgroundColor: '#0891b2',
         logging: false,
         useCORS: true,
       });
@@ -96,7 +95,7 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
     const wordDisplay = word.kanji || word.word;
     const readingDisplay = word.romaji || word.reading || '';
     const shareText = `Check out this word: ${wordDisplay} (${readingDisplay}) - ${word.meaning || word.translation || 'Learn more on Lexora!'}`;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -105,14 +104,12 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
           url: url
         });
       } catch (error) {
-        // User cancelled or share failed
         if ((error as Error).name !== 'AbortError') {
           console.error('Error sharing:', error);
-          copyLink(); // Fallback to copy
+          copyLink();
         }
       }
     } else {
-      // Fallback for browsers that don't support Web Share API
       copyLink();
     }
   };
@@ -121,13 +118,15 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
 
   return (
     <>
-      <button
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
-        className="p-2 rounded-full bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-colors"
+        className="p-2.5 rounded-xl glass text-[var(--color-accent-primary)] hover:bg-[var(--color-accent-primary)]/10 transition-all"
         title="Share"
       >
         <Share2 className="w-5 h-5" />
-      </button>
+      </motion.button>
 
       <AnimatePresence>
         {isOpen && (
@@ -137,35 +136,37 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-black/60 z-50 backdrop-blur-md"
+              className="fixed inset-0 bg-night-400/70 z-50 backdrop-blur-md"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-3 sm:p-6 max-h-[80vh] sm:max-h-[90vh] overflow-y-auto"
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-md glass-strong rounded-2xl shadow-xl z-[60] p-3 sm:p-6 max-h-[80vh] sm:max-h-[90vh] overflow-y-auto scrollbar-hide"
             >
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setIsOpen(false)}
-                className="absolute top-2 right-2 sm:top-4 sm:right-4 p-1.5 sm:p-2 rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors z-10"
+                className="absolute top-2 right-2 sm:top-4 sm:right-4 p-1.5 sm:p-2 rounded-xl glass hover:bg-[var(--color-surface-overlay)] transition-all z-10"
               >
-                <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" />
-              </button>
+                <X className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-text-muted)]" />
+              </motion.button>
 
-              <h3 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 pr-8">Share Word</h3>
+              <h3 className="text-lg sm:text-2xl font-bold text-[var(--color-text-primary)] mb-4 sm:mb-6 pr-8">Share Word</h3>
 
-              {/* Preview card - scaled for mobile */}
+              {/* Preview card */}
               <div className="mb-4 sm:mb-6">
-                <div className="bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800 p-2 sm:p-4 rounded-xl">
+                <div className="glass p-2 sm:p-4 rounded-xl">
                   <div
                     ref={cardRef}
                     className="rounded-xl sm:rounded-2xl p-4 sm:p-6 flex flex-col justify-between mx-auto"
-                    style={{ 
-                      width: '100%', 
+                    style={{
+                      width: '100%',
                       maxWidth: '320px',
                       aspectRatio: '9/16',
-                      background: 'linear-gradient(135deg, #8B5CF6 0%, #3B82F6 50%, #6366F1 100%)'
+                      background: 'linear-gradient(135deg, #0891b2 0%, #06b6d4 50%, #22d3ee 100%)'
                     }}
                   >
                     {/* Top Section - Word Info */}
@@ -183,24 +184,24 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
                           />
                         </div>
                       )}
-                      
+
                       <div className="text-3xl sm:text-4xl font-bold text-white">{word.kanji || word.word}</div>
-                      
+
                       {word.furigana && (
                         <div className="text-base sm:text-lg text-white" style={{ opacity: 0.9 }}>{word.furigana}</div>
                       )}
-                      
+
                       {word.romaji && (
                         <div className="text-sm sm:text-base text-white" style={{ opacity: 0.8 }}>{word.romaji}</div>
                       )}
-                      
+
                       <div className="text-lg sm:text-xl font-semibold text-white">
                         {word.meaning}
                       </div>
 
                       {/* Example */}
                       {firstExample && (
-                        <div className="rounded-lg p-2 max-w-[90%] mt-1" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)' }}>
+                        <div className="rounded-lg p-2 max-w-[90%] mt-1" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(10px)' }}>
                           <div className="text-white text-sm sm:text-base mb-0.5">{firstExample.kanji}</div>
                           {firstExample.furigana && (
                             <div className="text-white text-xs" style={{ opacity: 0.8 }}>{firstExample.furigana}</div>
@@ -231,7 +232,7 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
                   whileTap={{ scale: 0.98 }}
                   onClick={generateImage}
                   disabled={generating}
-                  className="w-full py-2.5 sm:py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg sm:rounded-xl font-medium shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center gap-2 disabled:opacity-50 text-sm sm:text-base"
+                  className="w-full py-2.5 sm:py-3 px-4 btn-primary flex items-center justify-center gap-2 disabled:opacity-50 text-sm sm:text-base"
                 >
                   <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                   {generating ? 'Generating...' : 'Download Card'}
@@ -241,7 +242,7 @@ export function ShareWordCard({ word, examples }: ShareWordCardProps) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleShare}
-                  className="w-full py-2.5 sm:py-3 px-4 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg sm:rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+                  className="w-full py-2.5 sm:py-3 px-4 btn-ghost flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
                   <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
                   Share

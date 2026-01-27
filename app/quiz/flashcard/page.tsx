@@ -44,18 +44,18 @@ function FlashcardQuiz() {
       return;
     }
     setUserId(session.user.id);
-    
+
     // Fetch user settings
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('settings')
       .eq('user_id', session.user.id)
       .single();
-    
+
     if (profile && profile.settings) {
       setSettings(profile.settings as UserSettings);
     }
-    
+
     await fetchWords();
   };
 
@@ -65,7 +65,7 @@ function FlashcardQuiz() {
 
       if (listIdsParam) {
         const listIds = listIdsParam.split(',');
-        
+
         // Fetch from default vocabulary lists
         const { data: defaultWords } = await supabase
           .from('vocabulary_words')
@@ -105,17 +105,17 @@ function FlashcardQuiz() {
             [key: string]: unknown;
           };
         }
-        
-  const customWordItems = (userCustomWords ?? []) as unknown as CustomWordItem[];
-  const processedCustomWords = customWordItems.map((item) => {
+
+        const customWordItems = (userCustomWords ?? []) as unknown as CustomWordItem[];
+        const processedCustomWords = customWordItems.map((item) => {
           const word = item.user_custom_words;
           return {
             ...word,
             word: word.kanji,
             reading: word.romaji,
             // Convert JSONB examples to string array format
-            examples: word.examples ? 
-              word.examples.map((ex) => 
+            examples: word.examples ?
+              word.examples.map((ex) =>
                 `${ex.kanji}|${ex.furigana}|${ex.romaji}|${ex.translation}`
               ) : []
           } as Word;
@@ -151,7 +151,7 @@ function FlashcardQuiz() {
       // Exclude mastered words
       const { data: { user } } = await supabase.auth.getUser();
       let availableWords = allWords;
-      
+
       if (user) {
         const { data: masteredProgress } = await supabase
           .from('user_progress')
@@ -227,20 +227,20 @@ function FlashcardQuiz() {
       if (user) {
         // Update user streak and get the new streak value
         const { data: streakValue, error: streakError } = await supabase.rpc('update_user_streak', { p_user_id: user.id });
-        
+
         if (streakError) {
           console.error('Error updating streak:', streakError);
         } else {
           updatedStreak = streakValue || 0;
         }
-        
+
         // Log quiz activity
         const today = new Date().toISOString().split('T')[0];
         await supabase.from('user_activity_log').insert({
           user_id: user.id,
           activity_date: today,
           activity_type: 'quiz_completed',
-          details: { 
+          details: {
             quiz_type: 'flashcard',
             score: finalScore.correct,
             total: words.length
@@ -271,7 +271,7 @@ function FlashcardQuiz() {
       // Map correct/incorrect to quality ratings
       // Correct: quality=3 (Good), Incorrect: quality=0 (Again)
       const quality = correct ? 3 : 0;
-      
+
       await supabase.rpc('update_srs_progress', {
         p_user_id: userId,
         p_word_id: wordId,
@@ -290,8 +290,8 @@ function FlashcardQuiz() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+      <div className="min-h-screen flex items-center justify-center bg-mesh">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
       </div>
     );
   }
@@ -304,22 +304,22 @@ function FlashcardQuiz() {
   const progress = ((currentIndex + 1) / words.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
+    <div className="min-h-screen bg-mesh p-4">
       <div className="max-w-3xl mx-auto py-8">
         {/* Progress bar */}
         <div className="mb-8">
-          <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+          <div className="flex justify-between text-sm text-[var(--color-text-muted)] mb-2">
             <span>Card {currentIndex + 1} of {words.length}</span>
             <div className="flex gap-4">
-              <span className="text-green-600 dark:text-green-400">{score.correct} correct</span>
-              <span className="text-red-600 dark:text-red-400">{score.incorrect} incorrect</span>
+              <span className="text-green-500">{score.correct} correct</span>
+              <span className="text-coral-500">{score.incorrect} incorrect</span>
             </div>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-[var(--color-border)] rounded-full h-2">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
-              className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full"
+              className="bg-gradient-to-r from-ocean-600 to-ocean-500 h-2 rounded-full"
               transition={{ duration: 0.3 }}
             />
           </div>
@@ -342,11 +342,11 @@ function FlashcardQuiz() {
             >
               {/* Front of card */}
               <div className="absolute inset-0 backface-hidden">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 h-full flex flex-col items-center justify-center">
+                <div className="card-elevated rounded-2xl p-4 sm:p-6 md:p-8 h-full flex flex-col items-center justify-center">
                   <div className="flex flex-col items-center gap-4">
                     {/* Main reading - always show kanji if available, fallback to word */}
                     <div className="flex items-center gap-3">
-                      <h2 className="text-6xl font-bold text-gray-900 dark:text-white">
+                      <h2 className="text-6xl font-bold text-[var(--color-text-primary)]">
                         {currentWord.kanji || currentWord.word}
                       </h2>
                       <button
@@ -354,25 +354,25 @@ function FlashcardQuiz() {
                           e.stopPropagation();
                           playPronunciation();
                         }}
-                        className="p-3 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 transition-colors"
+                        className="p-3 rounded-full glass hover:bg-ocean-500/10 text-[var(--color-accent-primary)] transition-colors"
                         aria-label="Play pronunciation"
                       >
                         <Volume2 className="w-7 h-7" />
                       </button>
                     </div>
-                    
+
                     {/* Conditionally show furigana based on settings */}
                     {settings?.flashcard?.showFuriganaOnFront && currentWord.furigana && (
-                      <p className="text-2xl text-gray-600 dark:text-gray-400">{currentWord.furigana}</p>
+                      <p className="text-2xl text-[var(--color-text-secondary)]">{currentWord.furigana}</p>
                     )}
-                    
+
                     {/* Conditionally show romaji based on settings */}
                     {settings?.flashcard?.showRomajiOnFront && (currentWord.romaji || currentWord.reading) && (
-                      <p className="text-xl text-gray-500 dark:text-gray-500">{currentWord.romaji || currentWord.reading}</p>
+                      <p className="text-xl text-[var(--color-text-muted)]">{currentWord.romaji || currentWord.reading}</p>
                     )}
                   </div>
-                  
-                  <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mt-8">
+
+                  <div className="flex items-center gap-2 text-[var(--color-text-muted)] mt-8">
                     <RotateCw className="w-5 h-5" />
                     <p>Click to reveal answer</p>
                   </div>
@@ -381,14 +381,14 @@ function FlashcardQuiz() {
 
               {/* Back of card - show reading, furigana, romaji, meaning, pronunciation */}
               <div className="absolute inset-0 backface-hidden rotate-y-180">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 h-full flex flex-col items-center justify-center relative">
+                <div className="card-elevated rounded-2xl p-4 sm:p-6 md:p-8 h-full flex flex-col items-center justify-center relative">
                   {/* Show Details Button */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedWord(currentWord);
                     }}
-                    className="absolute top-4 right-4 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="absolute top-4 right-4 px-4 py-2 text-sm bg-gradient-to-r from-ocean-600 to-ocean-500 text-white rounded-lg hover:from-ocean-700 hover:to-ocean-600 transition-all shadow-glow"
                   >
                     Show Details
                   </button>
@@ -396,7 +396,7 @@ function FlashcardQuiz() {
                   <div className="flex flex-col items-center gap-4">
                     {/* Main Reading - Kanji */}
                     <div className="flex items-center gap-3">
-                      <h2 className="text-6xl font-bold text-gray-900 dark:text-white">
+                      <h2 className="text-6xl font-bold text-[var(--color-text-primary)]">
                         {currentWord.kanji || currentWord.word}
                       </h2>
                       <button
@@ -404,23 +404,23 @@ function FlashcardQuiz() {
                           e.stopPropagation();
                           playPronunciation();
                         }}
-                        className="p-3 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 transition-colors"
+                        className="p-3 rounded-full glass hover:bg-ocean-500/10 text-[var(--color-accent-primary)] transition-colors"
                         aria-label="Play pronunciation"
                       >
                         <Volume2 className="w-7 h-7" />
                       </button>
                     </div>
-                    
+
                     {/* Furigana - same size as front */}
                     {currentWord.furigana && (
-                      <p className="text-2xl text-gray-600 dark:text-gray-400">{currentWord.furigana}</p>
+                      <p className="text-2xl text-[var(--color-text-secondary)]">{currentWord.furigana}</p>
                     )}
-                    
+
                     {/* Romaji - same size as front */}
                     {(currentWord.romaji || currentWord.reading) && (
-                      <p className="text-xl text-gray-500 dark:text-gray-500">{currentWord.romaji || currentWord.reading}</p>
+                      <p className="text-xl text-[var(--color-text-muted)]">{currentWord.romaji || currentWord.reading}</p>
                     )}
-                    
+
                     {/* Meaning - slightly smaller than main reading */}
                     <p className="text-4xl text-gray-900 dark:text-white font-bold text-center px-8 mt-2">
                       {currentWord.meaning}
@@ -437,20 +437,24 @@ function FlashcardQuiz() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-6 grid grid-cols-2 gap-4"
               >
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => handleAnswer(false)}
-                  className="flex items-center justify-center gap-2 py-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
+                  className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-coral-600 to-coral-500 text-white rounded-xl font-semibold shadow-glow-coral transition-all"
                 >
                   <X className="w-5 h-5" />
                   Incorrect
-                </button>
-                <button
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => handleAnswer(true)}
-                  className="flex items-center justify-center gap-2 py-4 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors"
+                  className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl font-semibold shadow-lg transition-all"
                 >
                   <Check className="w-5 h-5" />
                   Correct
-                </button>
+                </motion.button>
               </motion.div>
             )}
           </motion.div>

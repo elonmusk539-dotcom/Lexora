@@ -5,37 +5,37 @@ import { Brain, Target, Calendar, Zap, Award, HelpCircle } from 'lucide-react';
 
 export default function FAQPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-mesh">
       <div className="max-w-4xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-ocean-500 to-ocean-600 rounded-2xl mb-4 shadow-glow">
             <HelpCircle className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="text-4xl font-bold text-[var(--color-text-primary)] mb-4">
             Frequently Asked Questions
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
+          <p className="text-lg text-[var(--color-text-muted)]">
             Everything you need to know about Lexora&apos;s quiz modes
           </p>
         </div>
 
         <div className="space-y-8">
           {/* What is Spaced Repetition */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
+          <div className="card p-4 sm:p-6 md:p-8">
             <div className="flex items-start gap-4 mb-4">
-              <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                <Brain className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400" />
+              <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                <Brain className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-3">
                   What is Spaced Repetition?
                 </h2>
-                <p className="text-gray-700 dark:text-gray-300 mb-3">
-                  Spaced repetition is a scientifically-proven learning technique that optimizes when you review information. 
+                <p className="text-[var(--color-text-secondary)] mb-3">
+                  Spaced repetition is a scientifically-proven learning technique that optimizes when you review information.
                   Instead of cramming all at once, you review material at increasing intervals just before you&apos;re likely to forget it.
                 </p>
                 <p className="text-gray-700 dark:text-gray-300">
-                  Lexora uses the <strong>SuperMemo 2 (SM-2) algorithm</strong>, which automatically adjusts review intervals 
+                  Lexora uses the <strong>SuperMemo 2 (SM-2) algorithm</strong>, which automatically adjusts review intervals
                   based on how well you remember each word. The better you know a word, the less frequently you&apos;ll see it.
                 </p>
               </div>
@@ -43,22 +43,22 @@ export default function FAQPage() {
           </div>
 
           {/* Normal Quiz vs Smart Quiz */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
+          <div className="card p-4 sm:p-6 md:p-8">
             <div className="flex items-start gap-4 mb-4">
-              <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                <Zap className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" />
+              <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-ocean-500 to-teal-500 rounded-xl flex items-center justify-center">
+                <Zap className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-4">
                   Normal Quiz vs Smart Quiz
                 </h2>
-                
+
                 <div className="space-y-4">
-                  <div className="border-l-4 border-blue-500 pl-4">
-                    <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">
+                  <div className="border-l-4 border-[var(--color-accent-primary)] pl-4">
+                    <h3 className="font-semibold text-lg text-[var(--color-text-primary)] mb-2">
                       Normal Quiz
                     </h3>
-                    <ul className="space-y-2 text-gray-700 dark:text-gray-300">
+                    <ul className="space-y-2 text-[var(--color-text-secondary)]">
                       <li>• Choose between MCQ or Flashcard format</li>
                       <li>• Random selection from your chosen lists</li>
                       <li>• Simple right/wrong scoring</li>
@@ -68,11 +68,11 @@ export default function FAQPage() {
                     </ul>
                   </div>
 
-                  <div className="border-l-4 border-purple-500 pl-4">
-                    <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">
+                  <div className="border-l-4 border-coral-500 pl-4">
+                    <h3 className="font-semibold text-lg text-[var(--color-text-primary)] mb-2">
                       Smart Quiz (Spaced Repetition)
                     </h3>
-                    <ul className="space-y-2 text-gray-700 dark:text-gray-300">
+                    <ul className="space-y-2 text-[var(--color-text-secondary)]">
                       <li>• Always uses flashcard format for better recall</li>
                       <li>• Prioritizes words that are due for review</li>
                       <li>• 4-level rating system (Again, Hard, Good, Easy)</li>
@@ -87,17 +87,17 @@ export default function FAQPage() {
           </div>
 
           {/* How does the rating system work */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
+          <div className="card p-4 sm:p-6 md:p-8">
             <div className="flex items-start gap-4 mb-4">
-              <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                <Target className="w-4 h-4 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />
+              <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                <Target className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-4">
                   How does the rating system work?
                 </h2>
-                
-                <p className="text-gray-700 dark:text-gray-300 mb-4">
+
+                <p className="text-[var(--color-text-secondary)] mb-4">
                   In Smart Quiz, you rate how well you remembered each word using one of four buttons:
                 </p>
 
@@ -139,16 +139,16 @@ export default function FAQPage() {
           </div>
 
           {/* When is a word mastered */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
+          <div className="card p-4 sm:p-6 md:p-8">
             <div className="flex items-start gap-4 mb-4">
-              <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
-                <Award className="w-4 h-4 sm:w-6 sm:h-6 text-yellow-600 dark:text-yellow-400" />
+              <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-coral-500 to-orange-500 rounded-xl flex items-center justify-center">
+                <Award className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-4">
                   When is a word considered mastered?
                 </h2>
-                
+
                 <div className="space-y-4">
                   <div>
                     <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">
@@ -188,16 +188,16 @@ export default function FAQPage() {
           </div>
 
           {/* How are review dates calculated */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
+          <div className="card p-4 sm:p-6 md:p-8">
             <div className="flex items-start gap-4 mb-4">
-              <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
-                <Calendar className="w-4 h-4 sm:w-6 sm:h-6 text-indigo-600 dark:text-indigo-400" />
+              <div className="flex-shrink-0 w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
+                <Calendar className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-4">
                   How are review dates calculated?
                 </h2>
-                
+
                 <p className="text-gray-700 dark:text-gray-300 mb-4">
                   Smart Quiz uses the <strong>SuperMemo 2 (SM-2) algorithm</strong> to determine when you should review each word:
                 </p>
@@ -235,12 +235,12 @@ export default function FAQPage() {
           </div>
 
           {/* Additional Tips */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl shadow-lg p-4 sm:p-6 md:p-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="card p-4 sm:p-6 md:p-8 bg-gradient-to-r from-ocean-500/10 to-teal-500/10">
+            <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-4">
               💡 Tips for Effective Learning
             </h2>
-            
-            <ul className="space-y-3 text-gray-700 dark:text-gray-300">
+
+            <ul className="space-y-3 text-[var(--color-text-secondary)]">
               <li className="flex items-start gap-3">
                 <span className="text-2xl">🎯</span>
                 <span><strong>Use both modes:</strong> Start with Normal Quiz to familiarize yourself with new words, then switch to Smart Quiz for long-term retention.</span>
@@ -269,7 +269,7 @@ export default function FAQPage() {
         <div className="mt-12 text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+            className="inline-flex items-center gap-2 px-6 py-3 btn-primary font-semibold"
           >
             Back to Home
           </Link>

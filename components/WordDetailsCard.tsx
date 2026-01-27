@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Flag, Volume2, X } from 'lucide-react';
+import { Flag, Volume2, X, BookOpen } from 'lucide-react';
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
@@ -156,7 +156,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+            className="fixed inset-0 bg-night-400/70 dark:bg-night-500/80 z-40 backdrop-blur-md"
           />
 
           {/* Card */}
@@ -165,19 +165,21 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl max-h-[80vh] sm:max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-4 sm:p-6 scrollbar-hide mb-8 sm:mb-0"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl max-h-[80vh] sm:max-h-[85vh] overflow-y-auto glass-strong rounded-2xl shadow-xl z-[60] p-4 sm:p-6 scrollbar-hide mb-8 sm:mb-0"
           >
             {/* Action buttons row - All in one line */}
             <div className="flex gap-2 mb-4 pt-1 justify-between items-center">
               <div className="flex gap-2">
                 {/* Flag button */}
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setShowReportModal(true)}
-                  className="p-2 rounded-full bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors"
+                  className="p-2.5 rounded-xl glass text-coral-500 hover:bg-coral-500/10 transition-all"
                   aria-label="Report an issue"
                 >
                   <Flag className="w-5 h-5" />
-                </button>
+                </motion.button>
 
                 {/* Share button (only for non-custom words) */}
                 {word.word_type !== 'custom' && (
@@ -186,17 +188,19 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
               </div>
 
               {/* Close button - aligned right */}
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={onClose}
-                className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors"
+                className="p-2.5 rounded-xl glass text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-overlay)] transition-all"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </motion.button>
             </div>
 
             {/* Image - Square container */}
-            <div className="relative w-full aspect-square max-w-md mx-auto rounded-xl overflow-hidden mb-4 sm:mb-6 bg-gray-100 dark:bg-gray-700">
+            <div className="relative w-full aspect-square max-w-md mx-auto rounded-xl overflow-hidden mb-5 sm:mb-6 ring-1 ring-[var(--color-border)]">
               <Image
                 src={word.image_url}
                 alt={word.word}
@@ -204,35 +208,46 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                 className="object-cover"
                 priority
               />
+              {/* Subtle gradient overlay at bottom */}
+              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--color-bg-primary)]/40 to-transparent" />
             </div>
 
             {/* Word and pronunciation */}
-            <div className="mb-4 sm:mb-6">
-              <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">{word.kanji || word.word}</h2>
-                <button
+            <div className="mb-5 sm:mb-6 text-center">
+              <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[var(--color-text-primary)]">
+                  {word.kanji || word.word}
+                </h2>
+                <motion.button
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={playPronunciation}
-                  className="p-1.5 sm:p-2 rounded-full hover:bg-blue-50 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 transition-colors"
+                  className="p-2 rounded-xl glass text-[var(--color-accent-primary)] hover:bg-[var(--color-accent-primary)]/10 transition-all"
                   aria-label="Play pronunciation"
                 >
                   <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
-                </button>
+                </motion.button>
               </div>
               {(word.furigana || word.romaji || word.reading) && (
-                <p className="text-base sm:text-lg md:text-xl text-gray-900 dark:text-white mb-2">
+                <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-muted)] mb-2">
                   {word.furigana}
                   {word.furigana && (word.romaji || word.reading) && ' '}
                   {(word.romaji || word.reading) && `(${word.romaji || word.reading})`}
                 </p>
               )}
-              <p className="text-base sm:text-lg text-blue-600 dark:text-blue-400 font-medium">{word.meaning}</p>
+              <p className="text-base sm:text-lg text-[var(--color-accent-primary)] font-semibold">{word.meaning}</p>
             </div>
 
             {/* Examples */}
             <div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">Examples</h3>
+              <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                <BookOpen className="w-5 h-5 text-[var(--color-accent-primary)]" />
+                <h3 className="text-lg sm:text-xl font-semibold text-[var(--color-text-primary)]">Examples</h3>
+              </div>
               {loadingExamples ? (
-                <div className="text-center py-4 text-sm sm:text-base text-gray-500 dark:text-gray-400">Loading examples...</div>
+                <div className="text-center py-4 text-sm sm:text-base text-[var(--color-text-muted)]">
+                  <div className="animate-shimmer h-20 rounded-xl"></div>
+                </div>
               ) : detailedExamples.length > 0 ? (
                 <div className="space-y-2 sm:space-y-3">
                   {detailedExamples.map((example, index) => (
@@ -241,25 +256,25 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
+                      className="p-3 sm:p-4 glass rounded-xl"
                     >
                       {/* Vertically stacked: Kanji → Furigana → Romaji → Translation */}
                       <div className="space-y-1">
                         {/* Kanji reading */}
                         {example.kanji && (
-                          <p className="text-gray-900 dark:text-white font-medium text-sm sm:text-base">{example.kanji}</p>
+                          <p className="text-[var(--color-text-primary)] font-medium text-sm sm:text-base">{example.kanji}</p>
                         )}
                         {/* Furigana */}
                         {example.furigana && (
-                          <p className="text-xs sm:text-sm text-gray-900 dark:text-white">{example.furigana}</p>
+                          <p className="text-xs sm:text-sm text-[var(--color-text-muted)]">{example.furigana}</p>
                         )}
                         {/* Romaji */}
                         {example.romaji && (
-                          <p className="text-xs sm:text-sm text-gray-900 dark:text-white italic">{example.romaji}</p>
+                          <p className="text-xs sm:text-sm text-[var(--color-text-muted)] italic">{example.romaji}</p>
                         )}
                         {/* Translation */}
                         {example.translation && (
-                          <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 font-medium">{example.translation}</p>
+                          <p className="text-xs sm:text-sm text-[var(--color-accent-primary)] font-medium pt-1">{example.translation}</p>
                         )}
                       </div>
                     </motion.div>
@@ -278,20 +293,20 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
+                        className="p-3 sm:p-4 glass rounded-xl"
                       >
                         <div className="space-y-1">
-                          {kanji && <p className="text-gray-900 dark:text-white font-medium text-sm sm:text-base">{kanji}</p>}
-                          {furigana && <p className="text-xs sm:text-sm text-gray-900 dark:text-white">{furigana}</p>}
-                          {romaji && <p className="text-xs sm:text-sm text-gray-900 dark:text-white italic">{romaji}</p>}
-                          {translation && <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 font-medium">{translation}</p>}
+                          {kanji && <p className="text-[var(--color-text-primary)] font-medium text-sm sm:text-base">{kanji}</p>}
+                          {furigana && <p className="text-xs sm:text-sm text-[var(--color-text-muted)]">{furigana}</p>}
+                          {romaji && <p className="text-xs sm:text-sm text-[var(--color-text-muted)] italic">{romaji}</p>}
+                          {translation && <p className="text-xs sm:text-sm text-[var(--color-accent-primary)] font-medium pt-1">{translation}</p>}
                         </div>
                       </motion.div>
                     );
                   })}
                 </div>
               ) : (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-4 text-sm sm:text-base">No examples available</p>
+                <p className="text-[var(--color-text-muted)] text-center py-4 text-sm sm:text-base">No examples available</p>
               )}
             </div>
           </motion.div>
@@ -306,7 +321,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={() => setShowReportModal(false)}
-                  className="fixed inset-0 bg-black/60 z-[65] backdrop-blur-sm"
+                  className="fixed inset-0 bg-night-400/80 z-[65] backdrop-blur-md"
                 />
 
                 {/* Report Modal Card */}
@@ -315,10 +330,10 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: 20 }}
                   transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                  className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[70] p-4 sm:p-6"
+                  className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-md glass-strong rounded-2xl shadow-xl z-[70] p-4 sm:p-6"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">Report an Issue</h3>
+                  <h3 className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)] mb-4">Report an Issue</h3>
 
                   {reportSuccess ? (
                     <motion.div
@@ -326,36 +341,38 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                       animate={{ opacity: 1, y: 0 }}
                       className="text-center py-4"
                     >
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                        <svg className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                        <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      <p className="text-base sm:text-lg text-gray-900 dark:text-white font-medium mb-2">Thank you!</p>
-                      <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">Your report has been submitted successfully.</p>
-                      <button
+                      <p className="text-base sm:text-lg text-[var(--color-text-primary)] font-semibold mb-2">Thank you!</p>
+                      <p className="text-sm sm:text-base text-[var(--color-text-muted)] mb-4">Your report has been submitted.</p>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => {
                           setShowReportModal(false);
                           setReportSuccess(false);
                           setReportIssueType('');
                           setReportDescription('');
                         }}
-                        className="px-5 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
+                        className="btn-primary px-6"
                       >
                         Close
-                      </button>
+                      </motion.button>
                     </motion.div>
                   ) : (
-                    <form onSubmit={handleReportSubmit} className="space-y-3 sm:space-y-4">
+                    <form onSubmit={handleReportSubmit} className="space-y-4">
                       <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label className="block text-xs sm:text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                           Issue Type
                         </label>
                         <select
                           value={reportIssueType}
                           onChange={(e) => setReportIssueType(e.target.value)}
                           required
-                          className="w-full px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base text-gray-900 dark:text-white dark:bg-gray-700"
+                          className="input w-full text-sm sm:text-base"
                         >
                           <option value="">Select an issue...</option>
                           <option value="incorrect_meaning">Incorrect Meaning</option>
@@ -367,7 +384,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                       </div>
 
                       <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label className="block text-xs sm:text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                           Description
                         </label>
                         <textarea
@@ -376,25 +393,29 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                           required
                           rows={4}
                           placeholder="Please describe the issue..."
-                          className="w-full px-3 sm:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base text-gray-900 dark:text-white dark:bg-gray-700 resize-none"
+                          className="input w-full text-sm sm:text-base resize-none"
                         />
                       </div>
 
-                      <div className="flex gap-2 sm:gap-3">
-                        <button
+                      <div className="flex gap-3 pt-2">
+                        <motion.button
                           type="button"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                           onClick={() => setShowReportModal(false)}
-                          className="flex-1 px-3 sm:px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm sm:text-base"
+                          className="flex-1 btn-ghost text-sm sm:text-base"
                         >
                           Cancel
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
                           type="submit"
                           disabled={reportSubmitting}
-                          className="flex-1 px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="flex-1 bg-gradient-to-r from-coral-500 to-coral-400 text-white font-semibold rounded-xl py-3 shadow-glow-coral disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                         >
-                          {reportSubmitting ? 'Submitting...' : 'Submit Report'}
-                        </button>
+                          {reportSubmitting ? 'Submitting...' : 'Submit'}
+                        </motion.button>
                       </div>
                     </form>
                   )}

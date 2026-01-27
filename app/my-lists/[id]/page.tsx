@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Filter, ArrowLeft, Search, Plus, Trash2, X } from 'lucide-react';
+import { Filter, ArrowLeft, Search, Plus, Trash2, X, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter, useParams } from 'next/navigation';
@@ -353,18 +353,18 @@ export default function CustomListDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+      <div className="min-h-screen flex items-center justify-center bg-mesh">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
       </div>
     );
   }
 
   if (!list) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-mesh">
         <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-400 mb-4">Custom list not found</p>
-          <Link href="/my-lists" className="text-blue-600 dark:text-blue-400 hover:underline">
+          <p className="text-[var(--color-text-muted)] mb-4">Custom list not found</p>
+          <Link href="/my-lists" className="text-[var(--color-accent-primary)] hover:underline">
             Back to My Lists
           </Link>
         </div>
@@ -373,7 +373,7 @@ export default function CustomListDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-mesh">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back button and list title */}
         <motion.div
@@ -383,7 +383,7 @@ export default function CustomListDetailPage() {
         >
           <Link
             href="/my-lists"
-            className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-4"
+            className="inline-flex items-center gap-2 text-[var(--color-accent-primary)] hover:opacity-80 mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to My Lists
@@ -391,18 +391,18 @@ export default function CustomListDetailPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{list.name}</h2>
-                <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-sm font-medium rounded-full">
+                <h2 className="text-3xl font-bold text-[var(--color-text-primary)]">{list.name}</h2>
+                <span className="px-3 py-1 bg-ocean-500/10 text-[var(--color-accent-primary)] text-sm font-medium rounded-full">
                   Custom
                 </span>
               </div>
               {list.description && (
-                <p className="text-gray-600 dark:text-gray-400 mt-2">{list.description}</p>
+                <p className="text-[var(--color-text-muted)] mt-2">{list.description}</p>
               )}
             </div>
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="flex items-center gap-2 px-4 py-2 btn-primary"
             >
               <Plus className="w-5 h-5" />
               Add Words
@@ -419,30 +419,38 @@ export default function CustomListDetailPage() {
           {/* Top Row - Filter Toggle, Word Count, and Search */}
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className={`flex items-center gap-2 px-4 py-2.5 glass rounded-xl transition-all ${showFilters ? 'ring-2 ring-[var(--color-accent-primary)]' : ''}`}
               >
-                <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 dark:text-gray-300" />
-                <span className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">
-                  {showFilters ? 'Hide Filters' : 'Show Filters'}
+                <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent-primary)]" />
+                <span className="text-sm sm:text-base font-medium text-[var(--color-text-secondary)]">
+                  {showFilters ? 'Hide Filters' : 'Filters'}
                 </span>
-              </button>
+              </motion.button>
 
-              <div className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
-                {filteredWords.length} word{filteredWords.length !== 1 ? 's' : ''}
+              <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg">
+                <Sparkles className="w-4 h-4 text-coral-500" />
+                <span className="text-sm font-semibold text-[var(--color-text-secondary)]">
+                  {filteredWords.length}
+                </span>
+                <span className="text-sm text-[var(--color-text-muted)]">
+                  word{filteredWords.length !== 1 ? 's' : ''}
+                </span>
               </div>
             </div>
 
             {/* Search input - Always visible */}
             <div className="relative flex-1 min-w-[200px] sm:min-w-[250px] max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search words..."
-                className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm w-full"
+                className="input input-search w-full py-2 text-sm"
               />
             </div>
           </div>
@@ -460,19 +468,21 @@ export default function CustomListDetailPage() {
                 {/* Filter Buttons */}
                 <div className="flex gap-2 flex-wrap">
                   {(['all', 'started', 'not-started', 'mastered'] as FilterType[]).map((f) => (
-                    <button
+                    <motion.button
                       key={f}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => setFilter(f)}
-                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all ${filter === f
-                        ? 'bg-purple-600 text-white shadow-md'
-                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${filter === f
+                        ? 'bg-gradient-to-r from-ocean-600 to-ocean-500 text-white'
+                        : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)]'
                         }`}
                     >
                       {f === 'all' && 'All'}
                       {f === 'started' && 'In Progress'}
                       {f === 'not-started' && 'Not Started'}
                       {f === 'mastered' && 'Mastered'}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </motion.div>
@@ -548,20 +558,20 @@ export default function CustomListDetailPage() {
 
       {/* Add Words Choice Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-60" onClick={() => setShowAddModal(false)}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-60" onClick={() => setShowAddModal(false)}>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6 max-w-md w-full"
+            className="card-elevated p-4 sm:p-6 max-w-md w-full"
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Add Words</h2>
+              <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Add Words</h2>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 hover:bg-[var(--color-surface-overlay)] rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                <X className="w-5 h-5 text-[var(--color-text-muted)]" />
               </button>
             </div>
             <div className="space-y-3">
@@ -571,12 +581,12 @@ export default function CustomListDetailPage() {
                   fetchAvailableVocabWords();
                   setShowAddVocabWords(true);
                 }}
-                className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-left flex items-center gap-3"
+                className="w-full px-4 py-3 btn-primary text-left flex items-center gap-3"
               >
                 <Plus className="w-5 h-5" />
                 <div>
                   <div className="font-semibold">Add from Vocabulary</div>
-                  <div className="text-sm text-blue-100">Choose from existing words</div>
+                  <div className="text-sm opacity-80">Choose from existing words</div>
                 </div>
               </button>
               <button
@@ -584,12 +594,12 @@ export default function CustomListDetailPage() {
                   setShowAddModal(false);
                   setShowAddCustomWord(true);
                 }}
-                className="w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium text-left flex items-center gap-3"
+                className="w-full px-4 py-3 btn-accent text-left flex items-center gap-3"
               >
                 <Plus className="w-5 h-5" />
                 <div>
                   <div className="font-semibold">Create Custom Word</div>
-                  <div className="text-sm text-purple-100">Add your own word</div>
+                  <div className="text-sm opacity-80">Add your own word</div>
                 </div>
               </button>
             </div>
@@ -599,32 +609,32 @@ export default function CustomListDetailPage() {
 
       {/* Add Vocab Words Modal */}
       {showAddVocabWords && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-60" onClick={() => setShowAddVocabWords(false)}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-60" onClick={() => setShowAddVocabWords(false)}>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6 max-w-4xl w-full max-h-[80vh] flex flex-col"
+            className="card-elevated p-4 sm:p-6 max-w-4xl w-full max-h-[80vh] flex flex-col"
           >
             <div className="flex items-center justify-between mb-4 sm:mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Add from Vocabulary</h2>
+              <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Add from Vocabulary</h2>
               <button
                 onClick={() => setShowAddVocabWords(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 hover:bg-[var(--color-surface-overlay)] rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                <X className="w-5 h-5 text-[var(--color-text-muted)]" />
               </button>
             </div>
 
             <div className="mb-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
                 <input
                   type="text"
                   value={vocabSearchQuery}
                   onChange={(e) => setVocabSearchQuery(e.target.value)}
                   placeholder="Search vocabulary words..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="input input-search w-full py-2"
                 />
               </div>
             </div>
@@ -645,7 +655,7 @@ export default function CustomListDetailPage() {
                 .map((word) => (
                   <label
                     key={word.id}
-                    className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    className="flex items-center gap-3 p-3 glass rounded-lg cursor-pointer hover:bg-[var(--color-surface-overlay)] transition-colors"
                   >
                     <input
                       type="checkbox"
@@ -657,34 +667,34 @@ export default function CustomListDetailPage() {
                           setSelectedWordsToAdd(selectedWordsToAdd.filter(id => id !== word.id));
                         }
                       }}
-                      className="w-5 h-5 text-blue-600 rounded focus:ring-0 focus:ring-offset-0"
+                      className="w-5 h-5 text-[var(--color-accent-primary)] rounded focus:ring-0 focus:ring-offset-0"
                     />
                     <div className="flex-1">
-                      <div className="font-medium text-gray-900 dark:text-white">
+                      <div className="font-medium text-[var(--color-text-primary)]">
                         {word.kanji || word.word}
-                        {word.furigana && <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">({word.furigana})</span>}
+                        {word.furigana && <span className="ml-2 text-sm text-[var(--color-text-muted)]">({word.furigana})</span>}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300">{word.meaning}</div>
+                      <div className="text-sm text-[var(--color-text-secondary)]">{word.meaning}</div>
                     </div>
                   </label>
                 ))}
             </div>
 
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-[var(--color-text-muted)]">
                 {selectedWordsToAdd.length} word{selectedWordsToAdd.length !== 1 ? 's' : ''} selected
               </span>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowAddVocabWords(false)}
-                  className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  className="btn-ghost"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={addVocabWordsToList}
                   disabled={selectedWordsToAdd.length === 0}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Add Selected
                 </button>

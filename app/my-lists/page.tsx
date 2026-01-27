@@ -454,7 +454,7 @@ export default function MyListsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-mesh">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -464,10 +464,12 @@ export default function MyListsPage() {
           {/* Top Row - Title with count and Search */}
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3">
-              <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 dark:text-purple-400" />
+              <div className="p-2 rounded-xl bg-gradient-to-br from-ocean-500 to-ocean-600 shadow-glow">
+                <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">My Word Lists</h1>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--color-text-primary)]">My Word Lists</h1>
+                <p className="text-xs sm:text-sm text-[var(--color-text-muted)]">
                   {filteredLists.length} list{filteredLists.length !== 1 ? 's' : ''}
                 </p>
               </div>
@@ -475,20 +477,20 @@ export default function MyListsPage() {
 
             {/* Search input */}
             <div className="relative flex-1 min-w-[200px] sm:min-w-[250px] max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
               <input
                 type="text"
                 value={listSearchQuery}
                 onChange={(e) => setListSearchQuery(e.target.value)}
                 placeholder="Search your lists..."
-                className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm w-full"
+                className="input input-search w-full py-2 text-sm"
               />
             </div>
           </div>
 
           {/* Info and Create button row */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-[var(--color-text-muted)]">
               {isPro
                 ? 'Create and manage unlimited custom vocabulary collections'
                 : `${lists.length}/2 custom lists used. Upgrade to Pro for unlimited!`
@@ -507,7 +509,7 @@ export default function MyListsPage() {
                 setShowCreateModal(true);
               }}
               disabled={!canCreateCustomList(subscription?.tier || 'free', lists.length) && !isPro}
-              className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base whitespace-nowrap"
+              className="px-4 sm:px-6 py-2 sm:py-3 btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base whitespace-nowrap"
             >
               <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
               Create New List
@@ -517,21 +519,21 @@ export default function MyListsPage() {
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)] mx-auto"></div>
           </div>
         ) : filteredLists.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-            <BookOpen className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <div className="text-center py-12 card rounded-xl">
+            <BookOpen className="w-16 h-16 text-[var(--color-text-muted)] mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
               {listSearchQuery.trim() ? 'No lists match your search' : 'No custom lists yet'}
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-[var(--color-text-muted)] mb-6">
               {listSearchQuery.trim() ? 'Try a different search term' : 'Create your first custom word list to get started!'}
             </p>
             {!listSearchQuery.trim() && (
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow"
+                className="btn-primary px-6 py-3"
               >
                 Create Your First List
               </button>
@@ -545,13 +547,13 @@ export default function MyListsPage() {
                   key={list.id}
                   whileHover={{ scale: 1.02 }}
                   onClick={() => router.push(`/my-lists/${list.id}`)}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-blue-500 transition-all"
+                  className="card cursor-pointer hover:border-[var(--color-accent-primary)] transition-all p-4 sm:p-6"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">{list.name}</h3>
+                      <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">{list.name}</h3>
                       {list.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{list.description}</p>
+                        <p className="text-sm text-[var(--color-text-muted)]">{list.description}</p>
                       )}
                     </div>
                     <div className="flex gap-2">
@@ -562,7 +564,7 @@ export default function MyListsPage() {
                           setNewListName(list.name);
                           setNewListDescription(list.description || '');
                         }}
-                        className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                        className="p-2 text-[var(--color-accent-primary)] hover:bg-ocean-500/10 rounded-lg transition-colors"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -571,18 +573,18 @@ export default function MyListsPage() {
                           e.stopPropagation();
                           deleteList(list.id);
                         }}
-                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        className="p-2 text-coral-500 hover:bg-coral-500/10 rounded-lg transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center justify-between pt-4 border-t border-[var(--color-border)]">
+                    <span className="text-sm text-[var(--color-text-muted)]">
                       {list.word_count} {list.word_count === 1 ? 'word' : 'words'}
                     </span>
-                    <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                    <span className="text-sm text-[var(--color-accent-primary)] font-medium">
                       Click to view →
                     </span>
                   </div>
@@ -612,10 +614,10 @@ export default function MyListsPage() {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-4 sm:p-6"
+                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-md card-elevated z-[60] p-4 sm:p-6"
               >
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <h3 className="text-2xl font-bold text-[var(--color-text-primary)]">
                     {editingList ? 'Edit List' : 'Create New List'}
                   </h3>
                   <button
@@ -625,15 +627,15 @@ export default function MyListsPage() {
                       setNewListName('');
                       setNewListDescription('');
                     }}
-                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    className="p-2 rounded-full hover:bg-[var(--color-surface-overlay)] transition-colors"
                   >
-                    <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    <X className="w-5 h-5 text-[var(--color-text-muted)]" />
                   </button>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                       List Name*
                     </label>
                     <input
@@ -641,12 +643,12 @@ export default function MyListsPage() {
                       value={newListName}
                       onChange={(e) => setNewListName(e.target.value)}
                       placeholder="e.g., JLPT N5 Vocabulary"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="input w-full"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                       Description (Optional)
                     </label>
                     <textarea
@@ -654,7 +656,7 @@ export default function MyListsPage() {
                       onChange={(e) => setNewListDescription(e.target.value)}
                       placeholder="Brief description of your list..."
                       rows={3}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      className="input w-full resize-none"
                     />
                   </div>
 
@@ -663,7 +665,7 @@ export default function MyListsPage() {
                     whileTap={{ scale: 0.98 }}
                     onClick={editingList ? updateList : createList}
                     disabled={!newListName.trim()}
-                    className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-3 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {editingList ? 'Update List' : 'Create List'}
                   </motion.button>

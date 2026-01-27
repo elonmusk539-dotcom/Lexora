@@ -34,15 +34,15 @@ export default function AuthConfirmPage() {
           const decodedString = atob(hash);
           console.log('[Auth Confirm] Decoded string:', decodedString);
           tokens = JSON.parse(decodedString);
-          console.log('[Auth Confirm] Parsed tokens:', { 
+          console.log('[Auth Confirm] Parsed tokens:', {
             hasAccessToken: !!tokens.access_token,
-            hasRefreshToken: !!tokens.refresh_token 
+            hasRefreshToken: !!tokens.refresh_token
           });
         } catch (decodeError) {
           console.error('[Auth Confirm] Failed to decode/parse hash:', decodeError);
           throw new Error('Invalid authentication data format');
         }
-        
+
         if (!tokens.access_token || !tokens.refresh_token) {
           console.error('[Auth Confirm] Missing tokens in data');
           throw new Error('Invalid token data');
@@ -63,10 +63,10 @@ export default function AuthConfirmPage() {
         console.log('[Auth Confirm] Session set successfully!');
         // Session set successfully
         setStatus('success');
-        
+
         // Wait a bit longer on mobile to ensure localStorage is written
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         console.log('[Auth Confirm] Redirecting to home...');
         // Use window.location for reliable redirect on mobile
         window.location.href = '/';
@@ -74,7 +74,7 @@ export default function AuthConfirmPage() {
         console.error('[Auth Confirm] Auth confirmation error:', error);
         setStatus('error');
         setErrorMessage(error instanceof Error ? error.message : 'Authentication failed');
-        
+
         // Redirect to login after showing error
         setTimeout(() => {
           window.location.href = '/login';
@@ -86,50 +86,50 @@ export default function AuthConfirmPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-mesh px-4">
       <div className="text-center">
         {status === 'loading' && (
           <>
-            <Loader2 className="w-12 h-12 animate-spin text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <Loader2 className="w-12 h-12 animate-spin text-[var(--color-accent-primary)] mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
               Completing sign in...
             </h2>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-[var(--color-text-muted)]">
               Please wait while we set up your account
             </p>
           </>
         )}
-        
+
         {status === 'success' && (
           <>
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
               Sign in successful!
             </h2>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-[var(--color-text-muted)]">
               Redirecting you to the app...
             </p>
           </>
         )}
-        
+
         {status === 'error' && (
           <>
-            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-coral-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-coral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
               Authentication Error
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-2">
+            <p className="text-[var(--color-text-muted)] mb-2">
               {errorMessage}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
+            <p className="text-sm text-[var(--color-text-muted)]">
               Redirecting to login...
             </p>
           </>

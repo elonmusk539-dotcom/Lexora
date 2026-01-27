@@ -2,7 +2,7 @@
 export const SUBSCRIPTION_CONFIG = {
   FREE: {
     tier: 'free',
-    allowedLists: ['family', 'numbers', 'body-parts', 'food-drinks', 'time'], // List IDs or names
+    allowedLists: ['family', 'numbers', 'body-parts', 'food-drinks', 'time', 'school-work'], // List IDs or names
     maxCustomLists: 2,
     maxCustomWords: 10,
   },
@@ -32,7 +32,8 @@ export const FREE_TIER_LISTS = [
   'Numbers',
   'Body Parts',
   'Food & Drinks',
-  'Time'
+  'Time',
+  'School & Work'
 ];
 
 export type SubscriptionTier = 'free' | 'pro';
