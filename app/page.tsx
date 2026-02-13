@@ -237,25 +237,19 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-mesh">
       <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 sm:mb-8 space-y-4"
-        >
+        <div className="mb-6 sm:mb-8 space-y-4">
           {/* Top Row - Filter Toggle and Search */}
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-4 py-2.5 glass rounded-xl transition-all ${showFilters ? 'ring-2 ring-[var(--color-accent-primary)]' : ''}`}
+                className={`flex items-center gap-2 px-4 py-2.5 glass rounded-xl transition-all active:scale-[0.98] ${showFilters ? 'ring-2 ring-[var(--color-accent-primary)]' : ''}`}
               >
                 <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent-primary)]" />
                 <span className="text-sm sm:text-base font-medium text-[var(--color-text-secondary)]">
                   {showFilters ? 'Hide Filters' : 'Filters'}
                 </span>
-              </motion.button>
+              </button>
 
               <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg">
                 <Sparkles className="w-4 h-4 text-coral-500" />
@@ -280,23 +274,17 @@ export default function Home() {
           {/* Collapsible Filter Section */}
           <AnimatePresence>
             {showFilters && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-4 overflow-hidden"
+              <div
+                className="space-y-4 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
               >
                 {/* Filter Buttons */}
                 <div className="flex items-start sm:items-center gap-2 sm:gap-3 flex-col sm:flex-row">
                   <div className="flex gap-2 flex-wrap w-full sm:w-auto">
                     {(['all', 'started', 'not-started', 'mastered'] as FilterType[]).map((f) => (
-                      <motion.button
+                      <button
                         key={f}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
                         onClick={() => setFilter(f)}
-                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-200 ${filter === f
+                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 active:scale-[0.98] ${filter === f
                           ? 'bg-gradient-to-r from-ocean-600 to-ocean-500 text-white'
                           : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)]'
                           }`}
@@ -305,7 +293,7 @@ export default function Home() {
                         {f === 'started' && 'In Progress'}
                         {f === 'not-started' && 'Not Started'}
                         {f === 'mastered' && 'Mastered'}
-                      </motion.button>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -328,15 +316,13 @@ export default function Home() {
                     </span>
                   </label>
                 </div>
-              </motion.div>
+              </div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </div>
 
         {filteredWords.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          <div
             className="text-center py-16"
           >
             <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-ocean-500/20 to-ocean-600/20 flex items-center justify-center">
@@ -348,18 +334,16 @@ export default function Home() {
             <p className="text-[var(--color-text-muted)] text-sm mt-1">
               Try adjusting your filters or search query
             </p>
-          </motion.div>
+          </div>
         ) : (
           <div className="space-y-6">
             <div className="grid gap-3 sm:gap-4">
               {paginatedWords.map((word, index) => {
                 const { progress: wordProgress, isMastered } = getProgress(word.id);
                 return (
-                  <motion.div
+                  <div
                     key={word.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.03 }}
+                    className="transition-opacity duration-150"
                   >
                     <WordListItem
                       word={word}
@@ -367,7 +351,7 @@ export default function Home() {
                       isMastered={isMastered}
                       onClick={() => setSelectedWord(word)}
                     />
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>

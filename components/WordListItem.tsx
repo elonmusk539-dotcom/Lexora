@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Volume2 } from 'lucide-react';
 import React from 'react';
 import { CircularProgress } from './CircularProgress';
@@ -26,12 +25,9 @@ export function WordListItem({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -3, transition: { duration: 0.2 } }}
+    <div
       onClick={onClick}
-      className="group flex items-center gap-3 sm:gap-4 p-4 sm:p-5 card cursor-pointer"
+      className="group flex items-center gap-3 sm:gap-4 p-4 sm:p-5 card cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 active:scale-[0.99]"
     >
       {/* Word info */}
       <div className="flex-1 min-w-0">
@@ -39,15 +35,13 @@ export function WordListItem({
           <h3 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] truncate">
             {word.kanji || word.word}
           </h3>
-          <motion.button
-            whileHover={{ scale: 1.15 }}
-            whileTap={{ scale: 0.9 }}
+          <button
             onClick={playPronunciation}
-            className="p-1.5 rounded-lg glass text-[var(--color-accent-primary)] hover:bg-[var(--color-accent-primary)]/10 transition-all flex-shrink-0"
+            className="p-1.5 rounded-lg glass text-[var(--color-accent-primary)] hover:bg-[var(--color-accent-primary)]/10 hover:scale-110 active:scale-95 transition-all flex-shrink-0"
             aria-label="Play pronunciation"
           >
             <Volume2 className="w-4 h-4" />
-          </motion.button>
+          </button>
         </div>
         {(word.furigana || word.romaji || word.reading) && (
           <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mb-1 truncate">
@@ -65,6 +59,6 @@ export function WordListItem({
       <div className="flex-shrink-0">
         <CircularProgress progress={progress} isMastered={isMastered} />
       </div>
-    </motion.div>
+    </div>
   );
 }

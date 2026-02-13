@@ -8,7 +8,6 @@ import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { StreakDisplay } from './StreakDisplay';
 import { useSubscription } from '@/lib/subscription/useSubscription';
-import { motion } from 'framer-motion';
 
 interface UserProfile {
   username: string | null;
@@ -61,11 +60,9 @@ export function Header({ onMenuToggle, menuOpen }: HeaderProps = {}) {
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Mobile Menu Button */}
             {onMenuToggle && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <button
                 onClick={onMenuToggle}
-                className="md:hidden p-2 glass rounded-xl flex items-center justify-center"
+                className="md:hidden p-2 glass rounded-xl flex items-center justify-center active:scale-95 transition-transform"
                 aria-label="Toggle menu"
                 style={{ width: '40px', height: '40px' }}
               >
@@ -74,15 +71,11 @@ export function Header({ onMenuToggle, menuOpen }: HeaderProps = {}) {
                 ) : (
                   <Menu className="w-5 h-5 text-[var(--color-text-secondary)]" />
                 )}
-              </motion.button>
+              </button>
             )}
 
             <Link href="/" className="md:pl-0">
-              <motion.div
-                className="flex items-center gap-2 sm:gap-3"
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: 'spring', stiffness: 400 }}
-              >
+              <div className="flex items-center gap-2 sm:gap-3">
                 <div className="p-1.5 sm:p-2 rounded-xl bg-gradient-to-br from-ocean-500 to-ocean-600 shadow-glow flex items-center justify-center">
                   <Waves className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
@@ -95,7 +88,7 @@ export function Header({ onMenuToggle, menuOpen }: HeaderProps = {}) {
                     <span className="text-[10px] sm:text-xs">PRO</span>
                   </div>
                 )}
-              </motion.div>
+              </div>
             </Link>
           </div>
           <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
@@ -105,40 +98,35 @@ export function Header({ onMenuToggle, menuOpen }: HeaderProps = {}) {
             {/* Profile Avatar and Username */}
             <Link href="/profile" className="relative group flex items-center gap-2 sm:gap-3">
               {profile?.username && (
-                <span className="hidden sm:block text-sm md:text-base text-[var(--color-text-secondary)] font-medium group-hover:text-[var(--color-accent-primary)] transition-colors">
+                <span className="hidden sm:block text-sm md:text-base text-[var(--color-text-secondary)] font-medium transition-colors">
                   {profile.username}
                 </span>
               )}
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="relative"
-              >
+              <div className="relative">
                 {profile?.avatar_url ? (
                   <Image
                     src={profile.avatar_url}
                     alt={profile.username || 'Profile'}
                     width={44}
                     height={44}
-                    className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl object-cover ring-2 ring-[var(--color-border)] group-hover:ring-[var(--color-accent-primary)] transition-all"
+                    className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl object-cover ring-2 ring-[var(--color-border)] transition-all"
                     sizes="(max-width: 768px) 40px, 44px"
                   />
                 ) : (
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-ocean-400 to-ocean-600 flex items-center justify-center ring-2 ring-[var(--color-border)] group-hover:ring-[var(--color-accent-primary)] transition-all">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br from-ocean-400 to-ocean-600 flex items-center justify-center ring-2 ring-[var(--color-border)] transition-all">
                     <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
                 )}
-              </motion.div>
+              </div>
             </Link>
 
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+            <button
               onClick={handleLogout}
-              className="p-2 sm:p-2.5 rounded-xl glass text-[var(--color-text-muted)] hover:text-coral-500 hover:bg-coral-500/10 transition-all"
+              className="p-2 sm:p-2.5 rounded-xl glass text-[var(--color-text-muted)] active:scale-95 transition-all"
               aria-label="Logout"
             >
               <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
-            </motion.button>
+            </button>
           </div>
         </div>
       </div>

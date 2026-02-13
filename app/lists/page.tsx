@@ -92,11 +92,7 @@ export default function ListsPage() {
   return (
     <div className="min-h-screen bg-mesh">
       <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 sm:mb-8 space-y-4"
-        >
+        <div className="mb-6 sm:mb-8 space-y-4">
           {/* Top Row - Title with count and Search */}
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3">
@@ -134,12 +130,10 @@ export default function ListsPage() {
               }
             </p>
           </div>
-        </motion.div>
+        </div>
 
         {filteredLists.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          <div
             className="text-center py-16"
           >
             <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-ocean-500/20 to-ocean-600/20 flex items-center justify-center">
@@ -148,7 +142,7 @@ export default function ListsPage() {
             <p className="text-[var(--color-text-muted)] text-lg font-medium">
               {searchQuery.trim() ? 'No lists match your search' : 'No vocabulary lists available'}
             </p>
-          </motion.div>
+          </div>
         ) : (
           <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -156,11 +150,8 @@ export default function ListsPage() {
                 const isLocked = !canAccessList(subscription?.tier || 'free', list.name);
 
                 return (
-                  <motion.div
+                  <div
                     key={list.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
                   >
                     {isLocked ? (
                       <div className="relative p-5 sm:p-6 card opacity-75 cursor-not-allowed">
@@ -185,11 +176,10 @@ export default function ListsPage() {
                       </div>
                     ) : (
                       <Link href={`/lists/${list.id}`}>
-                        <motion.div
-                          whileHover={{ y: -3 }}
-                          className="p-5 sm:p-6 card cursor-pointer group"
+                        <div
+                          className="p-5 sm:p-6 card cursor-pointer group active:scale-[0.99]"
                         >
-                          <h3 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] mb-2 group-hover:text-[var(--color-accent-primary)] transition-colors">
+                          <h3 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] mb-2 transition-colors">
                             {list.name}
                           </h3>
                           {list.description && (
@@ -199,14 +189,14 @@ export default function ListsPage() {
                             <span className="text-sm text-[var(--color-text-muted)]">
                               {list.word_count} word{list.word_count !== 1 ? 's' : ''}
                             </span>
-                            <span className="text-sm font-semibold text-[var(--color-accent-primary)] group-hover:translate-x-1 transition-transform">
+                            <span className="text-sm font-semibold text-[var(--color-accent-primary)] transition-transform">
                               View →
                             </span>
                           </div>
-                        </motion.div>
+                        </div>
                       </Link>
                     )}
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>

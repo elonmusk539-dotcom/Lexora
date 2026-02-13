@@ -196,14 +196,12 @@ export function Sidebar({ children }: SidebarProps) {
           {(!collapsed || isMobile) ? (
             <div className="flex items-center gap-2">
               <Link href="/premium" onClick={() => setMobileOpen(false)} className="flex-1">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full h-12 px-4 bg-gradient-to-r from-coral-500 to-coral-400 text-white font-semibold rounded-xl shadow-glow-coral hover:shadow-lg transition-all text-base whitespace-nowrap flex items-center justify-center gap-2"
+                <button
+                  className="w-full h-12 px-4 bg-gradient-to-r from-coral-500 to-coral-400 text-white font-semibold rounded-xl shadow-glow-coral transition-all text-base whitespace-nowrap flex items-center justify-center gap-2 active:scale-[0.98]"
                 >
                   <Sparkles className="w-4 h-4" />
                   Upgrade
-                </motion.button>
+                </button>
               </Link>
 
               {/* Desktop collapse toggle */}

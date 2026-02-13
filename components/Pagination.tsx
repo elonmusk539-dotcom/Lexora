@@ -1,7 +1,6 @@
 'use client';
 
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 interface PaginationProps {
   currentPage: number;
@@ -83,28 +82,24 @@ export function Pagination({
       {/* Page navigation */}
       <div className="flex items-center gap-1">
         {/* First page */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
-          className="p-2 rounded-lg glass text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-overlay)] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          className="p-2 rounded-lg glass text-[var(--color-text-muted)] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
           aria-label="First page"
         >
           <ChevronsLeft className="w-4 h-4" />
-        </motion.button>
+        </button>
 
         {/* Previous page */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-2 rounded-lg glass text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-overlay)] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          className="p-2 rounded-lg glass text-[var(--color-text-muted)] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
           aria-label="Previous page"
         >
           <ChevronLeft className="w-4 h-4" />
-        </motion.button>
+        </button>
 
         {/* Page numbers */}
         <div className="flex items-center gap-1 mx-1">
@@ -113,45 +108,39 @@ export function Pagination({
               {page === '...' ? (
                 <span className="px-2 text-[var(--color-text-muted)]">...</span>
               ) : (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
                   onClick={() => onPageChange(page as number)}
-                  className={`w-9 h-9 rounded-lg font-medium transition-all ${currentPage === page
-                      ? 'bg-gradient-to-r from-ocean-600 to-ocean-500 text-white shadow-glow'
-                      : 'glass text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] hover:text-[var(--color-text-primary)]'
+                  className={`w-9 h-9 rounded-lg font-medium transition-all active:scale-95 ${currentPage === page
+                    ? 'bg-gradient-to-r from-ocean-600 to-ocean-500 text-white shadow-glow'
+                    : 'glass text-[var(--color-text-secondary)]'
                     }`}
                 >
                   {page}
-                </motion.button>
+                </button>
               )}
             </span>
           ))}
         </div>
 
         {/* Next page */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-2 rounded-lg glass text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-overlay)] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          className="p-2 rounded-lg glass text-[var(--color-text-muted)] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
           aria-label="Next page"
         >
           <ChevronRight className="w-4 h-4" />
-        </motion.button>
+        </button>
 
         {/* Last page */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
-          className="p-2 rounded-lg glass text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-overlay)] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          className="p-2 rounded-lg glass text-[var(--color-text-muted)] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
           aria-label="Last page"
         >
           <ChevronsRight className="w-4 h-4" />
-        </motion.button>
+        </button>
       </div>
     </div>
   );
