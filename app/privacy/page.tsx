@@ -36,7 +36,7 @@ export default function PrivacyPolicy() {
             </h2>
             <p>
               Lexora (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is a Japanese vocabulary learning application
-              available on the web and as a mobile application on Android. We are committed to
+              available as a mobile application on Android. We are committed to
               protecting your privacy and handling your personal data responsibly. This Privacy
               Policy explains what information we collect, how we use it, who we share it with,
               and your rights regarding your data.
@@ -304,13 +304,7 @@ export default function PrivacyPolicy() {
               <p className="mt-1">
                 Email:{' '}
                 <a href="mailto:lexoraapp@gmail.com" className="text-[var(--color-accent-primary)]">
-                  lexoraapp@gmail.com
-                </a>
-              </p>
-              <p className="mt-1">
-                Website:{' '}
-                <a href="https://lexora-nu.vercel.app" className="text-[var(--color-accent-primary)]">
-                  lexora-nu.vercel.app
+                  lexoraapps@gmail.com
                 </a>
               </p>
             </div>

@@ -13,14 +13,11 @@ function CallbackContent() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        console.log('[Auth Callback Client] Current URL:', window.location.href);
-
         // Check for errors in URL
         const errorParam = searchParams?.get('error');
         const errorDescription = searchParams?.get('error_description');
 
         if (errorParam) {
-          console.error('[Auth Callback Client] OAuth error:', errorParam, errorDescription);
           setError(errorDescription || errorParam);
           setIsProcessing(false);
           setTimeout(() => router.push('/login?error=' + encodeURIComponent(errorDescription || errorParam)), 2000);
@@ -29,12 +26,9 @@ function CallbackContent() {
 
         // Let Supabase handle the session automatically
         // It will detect the code in the URL and exchange it using the stored PKCE verifier
-        console.log('[Auth Callback Client] Waiting for session...');
-
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError) {
-          console.error('[Auth Callback Client] Session error:', sessionError);
           setError(sessionError.message);
           setIsProcessing(false);
           setTimeout(() => router.push('/login?error=' + encodeURIComponent(sessionError.message)), 2000);
@@ -42,7 +36,6 @@ function CallbackContent() {
         }
 
         if (session) {
-          console.log('[Auth Callback Client] Session found:', session.user.id);
 
           // Create user profile if needed
           const { data: existingProfile } = await supabase
@@ -52,7 +45,6 @@ function CallbackContent() {
             .maybeSingle();
 
           if (!existingProfile) {
-            console.log('[Auth Callback Client] Creating user profile...');
             await supabase
               .from('user_profiles')
               .insert({
@@ -64,23 +56,20 @@ function CallbackContent() {
           }
 
           // Get the 'next' parameter or default to home
-          const next = searchParams?.get('next') || '/';
-          console.log('[Auth Callback Client] Redirecting to:', next);
+          const nextParam = searchParams?.get('next') || '/';
+          // Prevent open redirect: only allow relative paths
+          const next = (nextParam.startsWith('/') && !nextParam.startsWith('//')) ? nextParam : '/';
 
           // Small delay to ensure session is fully set
           await new Promise(resolve => setTimeout(resolve, 100));
           window.location.href = next;
         } else {
-          console.log('[Auth Callback Client] No session found, checking for code...');
-
           // If no session yet, check if there's a code to exchange
           const code = searchParams?.get('code');
           if (code) {
-            console.log('[Auth Callback Client] Code found, exchanging...');
             const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
             if (exchangeError) {
-              console.error('[Auth Callback Client] Exchange error:', exchangeError);
               setError(exchangeError.message);
               setIsProcessing(false);
               setTimeout(() => router.push('/login?error=' + encodeURIComponent(exchangeError.message)), 2000);
@@ -90,19 +79,18 @@ function CallbackContent() {
             // Retry getting session after exchange
             const { data: { session: newSession } } = await supabase.auth.getSession();
             if (newSession) {
-              const next = searchParams?.get('next') || '/';
+              const nextParam2 = searchParams?.get('next') || '/';
+              const next2 = (nextParam2.startsWith('/') && !nextParam2.startsWith('//')) ? nextParam2 : '/';
               await new Promise(resolve => setTimeout(resolve, 100));
-              window.location.href = next;
+              window.location.href = next2;
             }
           } else {
-            console.log('[Auth Callback Client] No code found, redirecting to login');
             setError('No authentication code found');
             setIsProcessing(false);
             setTimeout(() => router.push('/login?error=no_code'), 2000);
           }
         }
       } catch (error) {
-        console.error('[Auth Callback Client] Unexpected error:', error);
         setError(error instanceof Error ? error.message : 'An unexpected error occurred');
         setIsProcessing(false);
         setTimeout(() => router.push('/login?error=callback_failed'), 2000);

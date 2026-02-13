@@ -18,7 +18,6 @@ function LoginForm() {
   // Handle deep link callbacks for OAuth in native app
   useEffect(() => {
     const cleanup = setupDeepLinkListener(async (url) => {
-      console.log('[Login] Deep link received:', url);
 
       // Close the in-app browser
       await closeInAppBrowser();
@@ -28,13 +27,10 @@ function LoginForm() {
       const code = urlObj.searchParams.get('code');
 
       if (code) {
-        console.log('[Login] Exchanging code for session...');
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) {
-          console.error('[Login] Session exchange error:', error);
           setError(error.message);
         } else {
-          console.log('[Login] Session established, redirecting...');
           window.location.href = '/';
         }
       }
@@ -59,8 +55,6 @@ function LoginForm() {
     const redirectPath = nextParam.startsWith('/') ? nextParam : `/${nextParam}`;
     const fullRedirect = `${baseUrl}/auth/callback?next=${encodeURIComponent(redirectPath)}`;
 
-    console.log('[Login] OAuth redirect URL will be:', fullRedirect);
-    console.log('[Login] Origin:', origin);
     return fullRedirect;
   }, [searchParams]);
 
@@ -92,9 +86,6 @@ function LoginForm() {
 
   const handleGoogleLogin = async () => {
     try {
-      console.log('[Login] Starting Google OAuth with redirect:', oauthRedirect);
-      console.log('[Login] Is native app:', isNativeApp());
-
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -108,11 +99,8 @@ function LoginForm() {
       });
 
       if (error) {
-        console.error('[Login] OAuth error:', error);
         throw error;
       }
-
-      console.log('[Login] OAuth initiated:', data);
 
       // For native app, open the auth URL in the in-app browser
       if (isNativeApp() && data.url) {
@@ -121,7 +109,6 @@ function LoginForm() {
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred with Google login';
-      console.error('[Login] Google login error:', errorMessage);
       setError(errorMessage);
     }
   };

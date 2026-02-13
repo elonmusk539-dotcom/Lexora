@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-// Create a Supabase client with the service role key for admin operations
+// Admin client for privileged database operations
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -9,10 +11,32 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: Request) {
   try {
-    const { userId, code } = await req.json();
+    // Authenticate the user from their session cookie — never trust client-provided userId
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+        },
+      }
+    );
 
-    if (!userId || !code) {
-      return NextResponse.json({ error: 'Missing userId or code' }, { status: 400 });
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const userId = user.id;
+
+    const { code } = await req.json();
+
+    if (!code) {
+      return NextResponse.json({ error: 'Missing code' }, { status: 400 });
     }
 
     // 1. Validate the code
@@ -60,13 +84,12 @@ export async function POST(req: Request) {
         .upsert({
           user_id: userId,
           status: 'active',
-          provider: 'internal', // Mark as internal/discount
+          provider: 'internal',
           discount_code: code,
           current_period_start: startDate.toISOString(),
           current_period_end: endDate.toISOString(),
           interval: 'month',
-          cancel_at_period_end: true, // Auto-cancel after free period? Or let them renew? 
-          // Usually free codes expire, so cancel_at_period_end=true is safer to avoid "charging" them unexpectedly if we had their card (which we don't for this flow)
+          cancel_at_period_end: true,
         }, { onConflict: 'user_id' });
 
       if (subError) {
@@ -82,7 +105,6 @@ export async function POST(req: Request) {
 
       return NextResponse.json({ success: true, message: 'Discount code redeemed successfully!' });
     } else {
-      // Future implementation for partial discounts (e.g. create stripe/dodo coupon)
       return NextResponse.json({ error: 'Partial discounts not yet implemented' }, { status: 501 });
     }
 

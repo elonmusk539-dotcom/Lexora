@@ -4,7 +4,6 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 const getURL = () => {
   // Check if we're on client side and have access to window
   if (typeof window !== 'undefined' && window.location.origin) {
-    console.log('[getURL] Using window.location.origin:', window.location.origin);
     return window.location.origin;
   }
 
@@ -15,7 +14,6 @@ const getURL = () => {
 
   // For local development, always use localhost
   if (isLocalhost || process.env.NODE_ENV === 'development') {
-    console.log('[getURL] Using localhost for development');
     return 'http://localhost:3000';
   }
 
@@ -34,7 +32,6 @@ const getURL = () => {
     url = `${url}/`;
   }
 
-  console.log('[getURL] Resolved URL:', url);
   return url;
 };
 
