@@ -20,7 +20,6 @@ function SignupForm() {
   // Handle deep link callbacks for OAuth in native app
   useEffect(() => {
     const cleanup = setupDeepLinkListener(async (url) => {
-      console.log('[Signup] Deep link received:', url);
       await closeInAppBrowser();
       const urlObj = new URL(url);
       const code = urlObj.searchParams.get('code');
@@ -56,7 +55,6 @@ function SignupForm() {
 
     const redirectPath = nextParam.startsWith('/') ? nextParam : `/${nextParam}`;
     const fullRedirect = `${baseUrl}auth/callback?next=${encodeURIComponent(redirectPath)}`;
-    console.log('[Signup] OAuth redirect URL will be:', fullRedirect);
     return fullRedirect;
   }, [searchParams]);
 
@@ -104,8 +102,6 @@ function SignupForm() {
 
   const handleGoogleSignup = async () => {
     try {
-      console.log('[Signup] Starting Google OAuth with redirect:', oauthRedirect);
-
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -119,11 +115,8 @@ function SignupForm() {
       });
 
       if (error) {
-        console.error('[Signup] OAuth error:', error);
         throw error;
       }
-
-      console.log('[Signup] OAuth initiated:', data);
 
       // For native app, open the auth URL in the in-app browser
       if (isNativeApp() && data.url) {
@@ -132,7 +125,6 @@ function SignupForm() {
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred with Google signup';
-      console.error('[Signup] Google signup error:', errorMessage);
       setError(errorMessage);
     }
   };

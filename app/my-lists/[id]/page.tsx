@@ -175,12 +175,7 @@ export default function CustomListDetailPage() {
       });
       setProgress(progressMap);
     } catch (error) {
-      console.error('Error fetching data:', error);
-      console.error('Full error details:', JSON.stringify(error, null, 2));
-      if (error instanceof Error) {
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-      }
+      console.error('Error fetching data:', error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
@@ -299,26 +294,19 @@ export default function CustomListDetailPage() {
 
   const addVocabWordsToList = async () => {
     try {
-      console.log('Adding words to list:', { listId, selectedWordsToAdd });
-
       const inserts = selectedWordsToAdd.map(wordId => ({
         list_id: listId,
         word_id: wordId
       }));
 
-      console.log('Inserting:', inserts);
-
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('user_custom_list_words')
         .insert(inserts)
         .select();
 
       if (error) {
-        console.error('Insert error:', error);
         throw error;
       }
-
-      console.log('Insert successful:', data);
 
       setShowAddVocabWords(false);
       setSelectedWordsToAdd([]);

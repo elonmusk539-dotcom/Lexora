@@ -12,11 +12,9 @@ function SuccessContent() {
   const [loading, setLoading] = useState(true);
   const [subscriptionValid, setSubscriptionValid] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string>('');
 
   useEffect(() => {
     const validateSubscription = async () => {
-      let debug = '';
       try {
         // Get current user session
         const { data: { session } } = await supabase.auth.getSession();
@@ -27,7 +25,7 @@ function SuccessContent() {
           return;
         }
 
-        debug += `User ID: ${session.user.id}\n`;
+
 
         // Wait a bit for webhook to process
         await new Promise(resolve => setTimeout(resolve, 3000));
@@ -41,16 +39,12 @@ function SuccessContent() {
           .single();
 
         if (activeSub && !activeError) {
-          debug += 'Found active subscription!\n';
-          console.log('Active subscription confirmed:', activeSub);
           setSubscriptionValid(true);
           setError(null);
-          setDebugInfo(debug);
           setLoading(false);
           return;
         }
 
-        debug += activeError ? `Active check error: ${activeError.message}\n` : 'No active subscription found\n';
 
         // Check for ANY subscription for this user (pending_payment or otherwise)
         const { data: anySub, error: anyError } = await supabase
@@ -60,13 +54,10 @@ function SuccessContent() {
           .single();
 
         if (anyError) {
-          debug += `Any sub error: ${anyError.message}\n`;
+          // No subscription found
         } else if (anySub) {
-          debug += `Found subscription with status: ${anySub.status}\n`;
-
-          // If there's a subscription with pending_payment status, try to verify with Dodo
+          // If there's a subscription with pending_payment status, try to verify
           if (anySub.status === 'pending_payment') {
-            debug += 'Attempting server-side verification...\n';
 
             // Call the verify endpoint with user ID - let the server handle it
             try {
@@ -77,33 +68,24 @@ function SuccessContent() {
               });
               const verifyData = await verifyRes.json();
 
-              debug += `Verify response: ${JSON.stringify(verifyData)}\n`;
-
               if (verifyRes.ok && verifyData.verified) {
-                console.log('Server verification successful!');
                 setSubscriptionValid(true);
                 setError(null);
-                setDebugInfo(debug);
                 setLoading(false);
                 return;
-              } else {
-                debug += `Verification failed: ${verifyData.message || verifyData.error || 'Unknown'}\n`;
               }
             } catch (verifyErr) {
-              debug += `Verify fetch error: ${verifyErr}\n`;
+              // Verification request failed
             }
           }
         } else {
-          debug += 'No subscription record found at all\n';
+          // No subscription record
         }
 
         setError('Payment verification failed. If you were charged, please contact support.');
-        setDebugInfo(debug);
         setSubscriptionValid(false);
       } catch (err) {
-        console.error('Error validating subscription:', err);
-        setError('Error validating subscription: ' + (err instanceof Error ? err.message : 'Unknown'));
-        setDebugInfo(debug + `Exception: ${err}\n`);
+        setError('Error validating subscription. Please contact support.');
         setSubscriptionValid(false);
       } finally {
         setLoading(false);
@@ -144,13 +126,6 @@ function SuccessContent() {
               {error || 'Your payment could not be verified.'}
             </p>
 
-            {/* Debug info for troubleshooting */}
-            <details className="text-left mb-6">
-              <summary className="cursor-pointer text-sm text-[var(--color-text-muted)]">Technical Details</summary>
-              <pre className="mt-2 p-3 glass rounded-lg text-xs overflow-auto whitespace-pre-wrap text-[var(--color-text-secondary)]">
-                {debugInfo}
-              </pre>
-            </details>
 
             <div className="space-y-4 text-left glass rounded-lg p-4 sm:p-6 mb-6 sm:mb-8 border border-amber-500/20">
               <h3 className="font-semibold text-[var(--color-text-primary)] mb-3">

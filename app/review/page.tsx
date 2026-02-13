@@ -83,7 +83,6 @@ function SRSReview() {
           showExamples: profile.settings.smartQuiz.showExamples ?? true,
           numberOfExamples: profile.settings.smartQuiz.numberOfExamples ?? 3,
         };
-        console.log('Smart Quiz Settings Loaded:', smartQuizSettings);
         setSettings(smartQuizSettings);
       }
 
