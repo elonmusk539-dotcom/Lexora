@@ -36,21 +36,29 @@ function CallbackContent() {
         }
 
         if (session) {
+          // Validate user identity server-side
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            setError('Could not verify user identity');
+            setIsProcessing(false);
+            setTimeout(() => router.push('/login?error=identity_verification_failed'), 2000);
+            return;
+          }
 
           // Create user profile if needed
           const { data: existingProfile } = await supabase
             .from('user_profiles')
             .select('id')
-            .eq('id', session.user.id)
+            .eq('id', user.id)
             .maybeSingle();
 
           if (!existingProfile) {
             await supabase
               .from('user_profiles')
               .insert({
-                id: session.user.id,
-                email: session.user.email || '',
-                username: session.user.email?.split('@')[0] || 'user',
+                id: user.id,
+                email: user.email || '',
+                username: user.email?.split('@')[0] || 'user',
                 created_at: new Date().toISOString(),
               });
           }
@@ -76,9 +84,9 @@ function CallbackContent() {
               return;
             }
 
-            // Retry getting session after exchange
-            const { data: { session: newSession } } = await supabase.auth.getSession();
-            if (newSession) {
+            // Retry getting user after exchange
+            const { data: { user: newUser } } = await supabase.auth.getUser();
+            if (newUser) {
               const nextParam2 = searchParams?.get('next') || '/';
               const next2 = (nextParam2.startsWith('/') && !nextParam2.startsWith('//')) ? nextParam2 : '/';
               await new Promise(resolve => setTimeout(resolve, 100));

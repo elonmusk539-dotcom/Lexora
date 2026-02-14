@@ -7,11 +7,32 @@ export const runtime = 'edge';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     const word = searchParams.get('word') || 'こんにちは';
     const reading = searchParams.get('reading') || 'konnichiwa';
     const meaning = searchParams.get('meaning') || 'Hello';
-    const imageUrl = searchParams.get('image') || '';
+    const rawImageUrl = searchParams.get('image') || '';
+
+    // SSRF prevention: only allow images from trusted domains
+    const ALLOWED_IMAGE_HOSTS = [
+      'res.cloudinary.com',
+      /.*\.supabase\.co$/,
+    ];
+
+    let imageUrl = '';
+    if (rawImageUrl) {
+      try {
+        const parsed = new URL(rawImageUrl);
+        const isAllowed = parsed.protocol === 'https:' && ALLOWED_IMAGE_HOSTS.some(host =>
+          typeof host === 'string' ? parsed.hostname === host : host.test(parsed.hostname)
+        );
+        if (isAllowed) {
+          imageUrl = rawImageUrl;
+        }
+      } catch {
+        // Invalid URL, ignore
+      }
+    }
 
     return new ImageResponse(
       (

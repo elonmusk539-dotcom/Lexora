@@ -120,6 +120,12 @@ export default function ProfilePage() {
       return;
     }
 
+    if (username.trim().length > 50) {
+      setError('Username must be 50 characters or less');
+      setSaving(false);
+      return;
+    }
+
     try {
       // Check if profile exists
       const { data: existingProfile } = await supabase

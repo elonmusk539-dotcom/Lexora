@@ -92,6 +92,16 @@ export default function MyListsPage() {
   const createList = async () => {
     if (!newListName.trim()) return;
 
+    // Input length validation
+    if (newListName.trim().length > 100) {
+      alert('List name must be 100 characters or less.');
+      return;
+    }
+    if (newListDescription.trim().length > 500) {
+      alert('Description must be 500 characters or less.');
+      return;
+    }
+
     // Check if user can create more lists
     if (!canCreateCustomList(subscription?.tier || 'free', lists.length)) {
       alert(`Free users can only create 2 custom lists. Upgrade to Pro for unlimited custom lists!`);
@@ -107,8 +117,8 @@ export default function MyListsPage() {
         .from('user_custom_lists')
         .insert({
           user_id: user.id,
-          name: newListName,
-          description: newListDescription || null,
+          name: newListName.trim(),
+          description: newListDescription.trim() || null,
         });
 
       if (error) throw error;
@@ -128,14 +138,28 @@ export default function MyListsPage() {
   const updateList = async () => {
     if (!editingList || !newListName.trim()) return;
 
+    // Input length validation
+    if (newListName.trim().length > 100) {
+      alert('List name must be 100 characters or less.');
+      return;
+    }
+    if (newListDescription.trim().length > 500) {
+      alert('Description must be 500 characters or less.');
+      return;
+    }
+
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { error } = await supabase
         .from('user_custom_lists')
         .update({
-          name: newListName,
-          description: newListDescription || null,
+          name: newListName.trim(),
+          description: newListDescription.trim() || null,
         })
-        .eq('id', editingList.id);
+        .eq('id', editingList.id)
+        .eq('user_id', user.id); // Ownership verification
 
       if (error) throw error;
 
@@ -152,10 +176,14 @@ export default function MyListsPage() {
     if (!confirm('Are you sure you want to delete this list?')) return;
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { error } = await supabase
         .from('user_custom_lists')
         .delete()
-        .eq('id', listId);
+        .eq('id', listId)
+        .eq('user_id', user.id); // Ownership verification
 
       if (error) throw error;
 

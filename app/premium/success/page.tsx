@@ -17,9 +17,9 @@ function SuccessContent() {
     const validateSubscription = async () => {
       try {
         // Get current user session
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { user } } = await supabase.auth.getUser();
 
-        if (!session?.user?.id) {
+        if (!user?.id) {
           setError('Not authenticated. Please log in and try again.');
           setLoading(false);
           return;
@@ -34,7 +34,7 @@ function SuccessContent() {
         const { data: activeSub, error: activeError } = await supabase
           .from('subscriptions')
           .select('*')
-          .eq('user_id', session.user.id)
+          .eq('user_id', user.id)
           .eq('status', 'active')
           .single();
 
@@ -50,7 +50,7 @@ function SuccessContent() {
         const { data: anySub, error: anyError } = await supabase
           .from('subscriptions')
           .select('*')
-          .eq('user_id', session.user.id)
+          .eq('user_id', user.id)
           .single();
 
         if (anyError) {
@@ -64,7 +64,7 @@ function SuccessContent() {
               const verifyRes = await fetch('/api/dodo/verify-user', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: session.user.id })
+                body: JSON.stringify({ userId: user.id })
               });
               const verifyData = await verifyRes.json();
 

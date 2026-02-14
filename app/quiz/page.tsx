@@ -43,18 +43,18 @@ export default function QuizPage() {
   }, []);
 
   const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       router.push('/login');
       return;
     }
-    setUserId(session.user.id);
+    setUserId(user.id);
 
     // Load saved preferences
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('settings')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .single();
 
     let savedListIds: string[] = [];

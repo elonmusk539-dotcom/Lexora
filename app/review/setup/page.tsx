@@ -56,14 +56,14 @@ export default function SmartQuizSetupPage() {
 
   const checkUserAndLoadData = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { user } } = await supabase.auth.getUser();
 
-      if (!session) {
+      if (!user) {
         router.push('/login');
         return;
       }
 
-      const uid = session.user.id;
+      const uid = user.id;
       setUserId(uid);
 
       // Load vocabulary lists

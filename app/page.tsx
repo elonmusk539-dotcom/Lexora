@@ -43,22 +43,22 @@ export default function Home() {
   }, []);
 
   const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       router.push('/login');
     }
   };
 
   const fetchWordsAndProgress = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
       // Fetch user's subscription status
       const { data: subscription } = await supabase
         .from('subscriptions')
         .select('status, current_period_end')
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .single();
 
       const isPro = subscription?.status === 'active' &&
@@ -80,7 +80,7 @@ export default function Home() {
       const { data: customWords, error: customError } = await supabase
         .from('user_custom_words')
         .select('*')
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: true });
 
       if (customError) throw customError;
@@ -134,7 +134,7 @@ export default function Home() {
       const { data: progressData, error: progressError } = await supabase
         .from('user_progress')
         .select('*')
-        .eq('user_id', session.user.id);
+        .eq('user_id', user.id);
 
       if (progressError) throw progressError;
 

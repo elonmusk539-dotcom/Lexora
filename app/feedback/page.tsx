@@ -148,6 +148,12 @@ export default function FeedbackPage() {
       return;
     }
 
+    if (feedbackMessage.trim().length > 2000) {
+      setFeedbackError('Feedback must be 2000 characters or less');
+      setTimeout(() => setFeedbackError(''), 3000);
+      return;
+    }
+
     setFeedbackSubmitting(true);
     setFeedbackError('');
     setFeedbackSuccess('');

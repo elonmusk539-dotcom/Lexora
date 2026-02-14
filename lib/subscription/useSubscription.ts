@@ -17,8 +17,8 @@ export function useSubscription() {
 
   const checkSubscription = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         setLoading(false);
         return;
       }
@@ -27,7 +27,7 @@ export function useSubscription() {
       const { data: subData, error } = await supabase
         .from('subscriptions')
         .select('*')
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .single();
 
       if (error || !subData) {
@@ -43,7 +43,7 @@ export function useSubscription() {
       // Check if subscription is active
       const data = subData as unknown as Record<string, unknown>;
       const isActive = data.status === 'active' || data.status === 'trialing';
-      
+
       setSubscription({
         tier: isActive ? 'pro' : 'free',
         status: (data.status as 'active' | 'canceled' | 'past_due') || 'none',

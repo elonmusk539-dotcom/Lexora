@@ -19,8 +19,8 @@ export default function PremiumPage() {
       setProcessingSubscription(true);
 
       // Get current user
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         alert('Please log in to subscribe');
         setProcessingSubscription(false);
         return;
@@ -45,7 +45,7 @@ export default function PremiumPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: session.user.id,
+            userId: user.id,
             platform: 'google_play',
             productId: result.customerInfo.entitlements.active.pro?.productIdentifier,
           }),

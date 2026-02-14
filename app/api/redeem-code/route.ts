@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // Admin client for privileged database operations
 const supabaseAdmin = createClient(
@@ -11,6 +12,28 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting: 5 attempts per 15 minutes per IP
+    const headersList = await headers();
+    const ip = headersList.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || headersList.get('x-real-ip')
+      || 'unknown';
+
+    const rateLimitResult = checkRateLimit(`redeem-code:${ip}`, {
+      maxRequests: 5,
+      windowSeconds: 15 * 60,
+    });
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: 'Too many attempts. Please try again later.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfterSeconds),
+          },
+        }
+      );
+    }
     // Authenticate the user from their session cookie — never trust client-provided userId
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -93,7 +116,7 @@ export async function POST(req: Request) {
         }, { onConflict: 'user_id' });
 
       if (subError) {
-        console.error('Subscription creation error:', subError);
+        console.error('Subscription creation error:', subError.message);
         return NextResponse.json({ error: 'Failed to apply subscription' }, { status: 500 });
       }
 
@@ -109,7 +132,7 @@ export async function POST(req: Request) {
     }
 
   } catch (error) {
-    console.error('Redeem error:', error);
+    console.error('Redeem error:', error instanceof Error ? error.message : 'Unknown error');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

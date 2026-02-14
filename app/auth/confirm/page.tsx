@@ -13,9 +13,23 @@ export default function AuthConfirmPage() {
       try {
         // Get tokens from URL hash
         const hash = window.location.hash.substring(1);
+
+        // Clear the hash immediately to prevent tokens from persisting in browser history
+        window.history.replaceState(null, '', window.location.pathname);
+
         if (!hash) {
           setStatus('error');
           setErrorMessage('No authentication data found');
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 2000);
+          return;
+        }
+
+        // Basic sanity check: reject excessively large payloads
+        if (hash.length > 10000) {
+          setStatus('error');
+          setErrorMessage('Invalid authentication data');
           setTimeout(() => {
             window.location.href = '/login';
           }, 2000);

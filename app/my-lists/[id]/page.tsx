@@ -63,23 +63,23 @@ export default function CustomListDetailPage() {
   }, [listId]);
 
   const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       router.push('/login');
     }
   };
 
   const fetchListAndWords = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
       // Fetch custom list details
       const { data: listData, error: listError } = await supabase
         .from('user_custom_lists')
         .select('*')
         .eq('id', listId)
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .single();
 
       if (listError) throw listError;
@@ -161,7 +161,7 @@ export default function CustomListDetailPage() {
       const { data: progressData, error: progressError } = await supabase
         .from('user_progress')
         .select('*')
-        .eq('user_id', session.user.id);
+        .eq('user_id', user.id);
 
       if (progressError) throw progressError;
 

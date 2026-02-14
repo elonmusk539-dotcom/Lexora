@@ -61,8 +61,8 @@ function SRSReview() {
 
   const checkUserAndLoadDueWords = async () => {
     try {
-      const { data: { session: userSession } } = await supabase.auth.getSession();
-      if (!userSession) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
         router.push('/login');
         return;
       }
@@ -71,7 +71,7 @@ function SRSReview() {
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('settings')
-        .eq('user_id', userSession.user.id)
+        .eq('user_id', user.id)
         .single();
 
       if (profile?.settings?.smartQuiz) {
@@ -90,7 +90,7 @@ function SRSReview() {
       const duration = parseInt(searchParams.get('duration') || '20');
       const listIds = searchParams.get('lists')?.split(',').filter(Boolean) || [];
 
-      await loadDueWords(userSession.user.id, duration, listIds);
+      await loadDueWords(user.id, duration, listIds);
     } catch (error) {
       console.error('Error loading due words:', error);
     } finally {

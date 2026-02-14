@@ -53,8 +53,8 @@ export default function ListDetailPage() {
   }, [listId]);
 
   const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       router.push('/login');
     }
   };
@@ -82,12 +82,12 @@ export default function ListDetailPage() {
       setWords(wordsData || []);
 
       // Fetch user progress
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
         const { data: progressData, error: progressError } = await supabase
           .from('user_progress')
           .select('*')
-          .eq('user_id', session.user.id);
+          .eq('user_id', currentUser.id);
 
         if (progressError) throw progressError;
 
