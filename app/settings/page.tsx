@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
@@ -567,6 +568,21 @@ export default function SettingsPage() {
                 </p>
               </div>
               <SubscriptionManagement />
+            </div>
+
+            {/* Danger Zone */}
+            <div className="mt-8 pt-8 border-t border-red-500/30">
+              <h3 className="text-xl font-semibold text-red-500 mb-2">
+                Danger Zone
+              </h3>
+              <p className="text-sm text-[var(--color-text-muted)] mb-4">
+                Permanently delete your account and all associated data.
+              </p>
+              <Link href="/delete-account">
+                <button className="py-2.5 px-5 border border-red-500/40 text-red-500 rounded-xl font-medium transition-all active:scale-[0.98]">
+                  Delete Account
+                </button>
+              </Link>
             </div>
           </div>
         </motion.div>
