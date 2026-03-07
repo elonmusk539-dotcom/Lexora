@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { LogOut, User, Menu, X, Crown, Waves } from 'lucide-react';
+import { LogOut, User, Menu, X, Crown } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { StreakDisplay } from './StreakDisplay';
@@ -76,9 +76,13 @@ export function Header({ onMenuToggle, menuOpen }: HeaderProps = {}) {
 
             <Link href="/" className="md:pl-0">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 rounded-xl bg-gradient-to-br from-ocean-500 to-ocean-600 shadow-glow flex items-center justify-center">
-                  <Waves className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
+                <Image
+                  src="/lexora-icon.png"
+                  alt="Lexora"
+                  width={28}
+                  height={28}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg"
+                />
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold gradient-text cursor-pointer leading-none">
                   Lexora
                 </h1>

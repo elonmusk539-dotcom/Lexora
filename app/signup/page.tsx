@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { supabase, getURL } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { isNativeApp, setupDeepLinkListener, closeInAppBrowser } from '@/lib/capacitor';
-import { Waves } from 'lucide-react';
+import Image from 'next/image';
 
 function SignupForm() {
   const searchParams = useSearchParams();
@@ -200,9 +200,13 @@ function SignupForm() {
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: 'spring' }}
             >
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-ocean-500 to-ocean-600 shadow-glow">
-                <Waves className="w-8 h-8 text-white" />
-              </div>
+              <Image
+                src="/lexora-icon.png"
+                alt="Lexora"
+                width={40}
+                height={40}
+                className="w-10 h-10 rounded-xl"
+              />
             </motion.div>
             <h1 className="text-3xl sm:text-4xl font-bold gradient-text mb-2">Lexora</h1>
             <p className="text-[var(--color-text-muted)]">Create your account to get started</p>

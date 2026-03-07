@@ -1,4 +1,4 @@
-import { Waves } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 export const metadata = {
@@ -13,9 +13,13 @@ export default function PrivacyPolicy() {
         {/* Header */}
         <div className="mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="p-1.5 rounded-xl bg-gradient-to-br from-ocean-500 to-ocean-600 shadow-glow">
-              <Waves className="w-5 h-5 text-white" />
-            </div>
+            <Image
+              src="/lexora-icon.png"
+              alt="Lexora"
+              width={28}
+              height={28}
+              className="w-7 h-7 rounded-lg"
+            />
             <span className="text-xl font-bold gradient-text">Lexora</span>
           </Link>
           <h1 className="text-3xl sm:text-4xl font-bold text-[var(--color-text-primary)] mb-2">
