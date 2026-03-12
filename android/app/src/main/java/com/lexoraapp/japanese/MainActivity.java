@@ -1,4 +1,4 @@
-package com.lexora.app;
+package com.lexoraapp.japanese;
 
 import com.getcapacitor.BridgeActivity;
 

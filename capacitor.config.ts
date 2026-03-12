@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.lexora.app',
+  appId: 'com.lexoraapp.japanese',
   appName: 'Lexora',
   webDir: 'public',
   server: {
