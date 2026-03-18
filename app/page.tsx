@@ -1,6 +1,5 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, Sparkles, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
@@ -272,8 +271,7 @@ export default function Home() {
           </div>
 
           {/* Collapsible Filter Section */}
-          <AnimatePresence>
-            {showFilters && (
+          {showFilters && (
               <div
                 className="space-y-4 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
               >
@@ -318,7 +316,6 @@ export default function Home() {
                 </div>
               </div>
             )}
-          </AnimatePresence>
         </div>
 
         {filteredWords.length === 0 ? (
