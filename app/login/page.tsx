@@ -18,6 +18,20 @@ function LoginForm() {
   // Handle deep link callbacks for OAuth in native app
   useEffect(() => {
     const cleanup = setupDeepLinkListener(async (url) => {
+      // Handle browser finished event (Android 15+ fallback)
+      if (url === '__browser_finished__') {
+        // Browser closed — check if OAuth completed successfully
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            window.location.href = '/';
+            return;
+          }
+        } catch {
+          // No session yet, user may have cancelled
+        }
+        return;
+      }
 
       // Close the in-app browser
       await closeInAppBrowser();
@@ -48,7 +62,6 @@ function LoginForm() {
     }
 
     // Always prefer window.location.origin if available (client-side)
-    // This ensures we redirect back to exactly where we came from (localhost, 127.0.0.1, etc.)
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const baseUrl = origin || getURL();
 
@@ -72,9 +85,7 @@ function LoginForm() {
       if (error) throw error;
 
       if (data.session) {
-        // Wait a bit for session to be stored in localStorage on mobile
         await new Promise(resolve => setTimeout(resolve, 100));
-        // Use window.location instead of router for more reliable redirect on mobile
         window.location.href = '/';
       }
     } catch (error: unknown) {
@@ -90,7 +101,7 @@ function LoginForm() {
         provider: 'google',
         options: {
           redirectTo: oauthRedirect,
-          skipBrowserRedirect: isNativeApp(), // Don't auto-redirect in native app
+          skipBrowserRedirect: isNativeApp(),
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

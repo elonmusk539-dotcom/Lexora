@@ -20,6 +20,20 @@ function SignupForm() {
   // Handle deep link callbacks for OAuth in native app
   useEffect(() => {
     const cleanup = setupDeepLinkListener(async (url) => {
+      // Handle browser finished event (Android 15+ fallback)
+      if (url === '__browser_finished__') {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            window.location.href = '/';
+            return;
+          }
+        } catch {
+          // No session yet
+        }
+        return;
+      }
+
       await closeInAppBrowser();
       const urlObj = new URL(url);
       const code = urlObj.searchParams.get('code');

@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
 import { Volume2, ArrowLeft, RotateCcw } from 'lucide-react';
 import { WordDetailsCard } from '@/components/WordDetailsCard';
+import { playPronunciation } from '@/lib/audio';
 
 interface Word {
   id: string;
@@ -406,11 +407,10 @@ function SRSReview() {
     }
   };
 
-  const playPronunciation = () => {
+  const handlePlayPronunciation = () => {
     const word = session.words[session.currentIndex];
     if (word.pronunciation_url) {
-      const audio = new Audio(word.pronunciation_url);
-      audio.play();
+      playPronunciation(word.pronunciation_url);
     }
   };
 
@@ -526,7 +526,7 @@ function SRSReview() {
                   {currentWord.kanji || currentWord.word}
                 </h2>
                 <button
-                  onClick={playPronunciation}
+                  onClick={handlePlayPronunciation}
                   className="p-2 rounded-full glass hover:bg-ocean-500/10 transition-colors"
                 >
                   <Volume2 className="w-6 h-6 text-[var(--color-accent-primary)]" />

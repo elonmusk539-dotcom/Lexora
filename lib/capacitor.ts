@@ -11,18 +11,30 @@ export const isNativeApp = () => {
 export const setupDeepLinkListener = (onUrl: (url: string) => void) => {
   if (!isNativeApp()) return () => { };
 
-  let listenerHandle: { remove: () => void } | null = null;
+  let appUrlHandle: { remove: () => void } | null = null;
+  let browserFinishedHandle: { remove: () => void } | null = null;
 
   // Listen for app URL open events (deep links)
   App.addListener('appUrlOpen', (event) => {
     console.log('[Capacitor] App opened with URL:', event.url);
     onUrl(event.url);
   }).then(handle => {
-    listenerHandle = handle;
+    appUrlHandle = handle;
+  });
+
+  // Listen for browser finished events (when in-app browser closes)
+  // On Android 15+, the OAuth callback may complete in the browser
+  // without triggering a deep link, so we check auth state when browser closes
+  Browser.addListener('browserFinished', () => {
+    console.log('[Capacitor] Browser finished - checking auth state');
+    onUrl('__browser_finished__');
+  }).then(handle => {
+    browserFinishedHandle = handle;
   });
 
   return () => {
-    listenerHandle?.remove();
+    appUrlHandle?.remove();
+    browserFinishedHandle?.remove();
   };
 };
 
@@ -45,6 +57,10 @@ export const openInAppBrowser = async (url: string) => {
 // Close in-app browser
 export const closeInAppBrowser = async () => {
   if (isNativeApp()) {
-    await Browser.close();
+    try {
+      await Browser.close();
+    } catch {
+      // Browser may already be closed
+    }
   }
 };

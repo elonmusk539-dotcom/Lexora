@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Volume2, X, Check } from 'lucide-react';
 import type { Word } from '@/components/WordDetailsCard';
+import { playPronunciation } from '@/lib/audio';
 
 interface QuizWord extends Word {
   options: string[];
@@ -299,10 +300,9 @@ function MCQQuiz() {
     }
   };
 
-  const playPronunciation = () => {
+  const handlePlayPronunciation = () => {
     const currentWord = words[currentIndex];
-    const audio = new Audio(currentWord.pronunciation_url);
-    audio.play();
+    playPronunciation(currentWord.pronunciation_url);
   };
 
   if (loading) {
@@ -356,7 +356,7 @@ function MCQQuiz() {
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
                 <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--color-text-primary)]">{currentWord.kanji || currentWord.word}</h2>
                 <button
-                  onClick={playPronunciation}
+                  onClick={handlePlayPronunciation}
                   className="p-2 sm:p-3 rounded-full glass hover:bg-ocean-500/10 text-[var(--color-accent-primary)] transition-colors"
                   aria-label="Play pronunciation"
                 >

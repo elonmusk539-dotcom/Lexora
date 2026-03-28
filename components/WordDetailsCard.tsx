@@ -6,6 +6,7 @@ import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { ShareWordCard } from './ShareWordCard';
+import { playPronunciation } from '@/lib/audio';
 
 export interface VocabularyExample {
   id: string;
@@ -82,9 +83,8 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
     }
   };
 
-  const playPronunciation = () => {
-    const audio = new Audio(word.pronunciation_url);
-    audio.play();
+  const handlePlayPronunciation = () => {
+    playPronunciation(word.pronunciation_url);
   };
 
   const handleReportSubmit = async (e: React.FormEvent) => {
@@ -221,7 +221,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                 <motion.button
                   whileHover={{ scale: 1.15 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={playPronunciation}
+                  onClick={handlePlayPronunciation}
                   className="p-2 rounded-xl glass text-[var(--color-accent-primary)] hover:bg-[var(--color-accent-primary)]/10 transition-all"
                   aria-label="Play pronunciation"
                 >

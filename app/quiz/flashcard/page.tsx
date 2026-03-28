@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Volume2, RotateCw, Check, X } from 'lucide-react';
 import type { Word } from '@/components/WordDetailsCard';
 import { WordDetailsCard } from '@/components/WordDetailsCard';
+import { playPronunciation } from '@/lib/audio';
 
 interface UserSettings {
   flashcard?: {
@@ -282,10 +283,9 @@ function FlashcardQuiz() {
     }
   };
 
-  const playPronunciation = () => {
+  const handlePlayPronunciation = () => {
     const currentWord = words[currentIndex];
-    const audio = new Audio(currentWord.pronunciation_url);
-    audio.play();
+    playPronunciation(currentWord.pronunciation_url);
   };
 
   if (loading) {
@@ -352,7 +352,7 @@ function FlashcardQuiz() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          playPronunciation();
+                          handlePlayPronunciation();
                         }}
                         className="p-3 rounded-full glass hover:bg-ocean-500/10 text-[var(--color-accent-primary)] transition-colors"
                         aria-label="Play pronunciation"
@@ -402,7 +402,7 @@ function FlashcardQuiz() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          playPronunciation();
+                          handlePlayPronunciation();
                         }}
                         className="p-3 rounded-full glass hover:bg-ocean-500/10 text-[var(--color-accent-primary)] transition-colors"
                         aria-label="Play pronunciation"

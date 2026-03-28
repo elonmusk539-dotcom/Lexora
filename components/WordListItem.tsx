@@ -4,6 +4,7 @@ import { Volume2 } from 'lucide-react';
 import React from 'react';
 import { CircularProgress } from './CircularProgress';
 import type { Word } from './WordDetailsCard';
+import { playPronunciation } from '@/lib/audio';
 
 interface WordListItemProps {
   word: Word;
@@ -18,10 +19,9 @@ export function WordListItem({
   isMastered,
   onClick,
 }: WordListItemProps) {
-  const playPronunciation = (e: React.MouseEvent) => {
+  const handlePlayPronunciation = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const audio = new Audio(word.pronunciation_url);
-    audio.play();
+    playPronunciation(word.pronunciation_url);
   };
 
   return (
@@ -36,7 +36,7 @@ export function WordListItem({
             {word.kanji || word.word}
           </h3>
           <button
-            onClick={playPronunciation}
+            onClick={handlePlayPronunciation}
             className="p-1.5 rounded-lg glass text-[var(--color-accent-primary)] hover:bg-[var(--color-accent-primary)]/10 hover:scale-110 active:scale-95 transition-all flex-shrink-0"
             aria-label="Play pronunciation"
           >
