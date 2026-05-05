@@ -201,7 +201,7 @@ export default function DeleteAccountPage() {
                     value={confirmText}
                     onChange={(e) => setConfirmText(e.target.value)}
                     placeholder="Type DELETE here"
-                    className="input w-full py-3 text-center text-lg font-mono tracking-widest"
+                    className="input w-full py-3 text-center text-lg tracking-widest"
                     autoFocus
                   />
                 </div>

@@ -233,6 +233,14 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
+/* Force Noto Sans JP on all form elements */
+input,
+textarea,
+select,
+button {
+  font-family: var(--font-sans);
+}
+
 /* Animated gradient mesh background */
 .bg-mesh {
   background: var(--color-bg-primary);
