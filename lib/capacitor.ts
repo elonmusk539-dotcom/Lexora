@@ -15,11 +15,15 @@ export const isNativeApp = (): boolean => {
     // Bridge not available
   }
 
-  // Fallback: detect Android WebView via user-agent
+  // Fallback 1: The Android WebView injects window.Capacitor globally
+  // even if it fails to set the platform correctly for remote URLs.
+  if (typeof window !== 'undefined' && typeof (window as any).Capacitor !== 'undefined') {
+    return true;
+  }
+
+  // Fallback 2: detect Android WebView via user-agent
   if (typeof navigator !== 'undefined' && navigator.userAgent) {
     const ua = navigator.userAgent;
-    // Android WebView contains "wv)" — normal Chrome mobile does not.
-    // Also check for the custom app identifier injected by Capacitor.
     if (/\bwv\b/.test(ua) && /Android/.test(ua)) {
       return true;
     }

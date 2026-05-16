@@ -19,7 +19,15 @@ export function isAndroid(): boolean {
   } catch {
     // Bridge not available
   }
-  // Fallback: check user-agent
+  
+  // Fallback 1: The Android WebView injects window.Capacitor globally
+  if (typeof window !== 'undefined' && typeof (window as any).Capacitor !== 'undefined') {
+    // We assume if Capacitor is injected but platform isn't set properly,
+    // it's the Android app wrapper (since iOS usually sets it correctly or doesn't have this issue)
+    return true;
+  }
+
+  // Fallback 2: check user-agent
   if (typeof navigator !== 'undefined' && navigator.userAgent) {
     return /Android/.test(navigator.userAgent) && /\bwv\b/.test(navigator.userAgent);
   }
