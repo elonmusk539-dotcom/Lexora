@@ -49,7 +49,9 @@ function SignupForm() {
     return cleanup;
   }, []);
 
-  const oauthRedirect = useMemo(() => {
+  // We will evaluate the redirect URL exactly when the user clicks the button
+  // to avoid React hydration bugs keeping the server-rendered Vercel URL.
+  const getOAuthRedirect = () => {
     const nextParam = searchParams?.get('next') ?? '/';
 
     // For native app, we MUST use the custom URL scheme so the system browser
@@ -59,19 +61,13 @@ function SignupForm() {
     }
 
     // Check if we're on localhost
-    const isLocalhost = typeof window !== 'undefined'
-      ? window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      : false;
-
-    // Force localhost in development or when on localhost
-    const baseUrl = (isLocalhost || process.env.NODE_ENV === 'development')
-      ? 'http://localhost:3000/'
-      : getURL();
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const baseUrl = origin || getURL();
 
     const redirectPath = nextParam.startsWith('/') ? nextParam : `/${nextParam}`;
     const fullRedirect = `${baseUrl}auth/callback?next=${encodeURIComponent(redirectPath)}`;
     return fullRedirect;
-  }, [searchParams]);
+  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,7 +116,7 @@ function SignupForm() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: oauthRedirect,
+          redirectTo: getOAuthRedirect(),
           skipBrowserRedirect: hasBridge(),
           queryParams: {
             access_type: 'offline',

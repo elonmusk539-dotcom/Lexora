@@ -53,12 +53,13 @@ function LoginForm() {
     return cleanup;
   }, []);
 
-  const oauthRedirect = useMemo(() => {
+  // We will evaluate the redirect URL exactly when the user clicks the button
+  // to avoid React hydration bugs keeping the server-rendered Vercel URL.
+  const getOAuthRedirect = () => {
     const nextParam = searchParams?.get('next') ?? '/';
 
     // For native app, we MUST use the custom URL scheme so the system browser
-    // redirects the user back into the app. If we use the vercel URL, Android
-    // will just leave the user in the Chrome browser, running the website version.
+    // redirects the user back into the app.
     if (isNativeApp()) {
       return `com.lexoraapp.japanese://callback?next=${encodeURIComponent(nextParam)}`;
     }
@@ -68,10 +69,8 @@ function LoginForm() {
     const baseUrl = origin || getURL();
 
     const redirectPath = nextParam.startsWith('/') ? nextParam : `/${nextParam}`;
-    const fullRedirect = `${baseUrl}/auth/callback?next=${encodeURIComponent(redirectPath)}`;
-
-    return fullRedirect;
-  }, [searchParams]);
+    return `${baseUrl}/auth/callback?next=${encodeURIComponent(redirectPath)}`;
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,7 +101,7 @@ function LoginForm() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: oauthRedirect,
+          redirectTo: getOAuthRedirect(),
           skipBrowserRedirect: hasBridge(),
           queryParams: {
             access_type: 'offline',

@@ -6,7 +6,12 @@ const config: CapacitorConfig = {
   webDir: 'public',
   server: {
     url: 'https://lexora-nu.vercel.app', // TODO: Update this to your production URL
-    cleartext: true
+    cleartext: true,
+    allowNavigation: [
+      'lexora-nu.vercel.app',
+      '*.vercel.app',
+      '*.supabase.co'
+    ]
   }
 };
 
