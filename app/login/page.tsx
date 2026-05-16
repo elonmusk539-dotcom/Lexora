@@ -56,11 +56,11 @@ function LoginForm() {
   const oauthRedirect = useMemo(() => {
     const nextParam = searchParams?.get('next') ?? '/';
 
-    // For native app, use the production URL for callback
+    // For native app, we MUST use the custom URL scheme so the system browser
+    // redirects the user back into the app. If we use the vercel URL, Android
+    // will just leave the user in the Chrome browser, running the website version.
     if (isNativeApp()) {
-      // Even without the bridge, the WebView loads from the production URL
-      // so the OAuth callback should point there
-      return `https://lexora-nu.vercel.app/auth/callback?next=${encodeURIComponent(nextParam)}`;
+      return `com.lexoraapp.japanese://callback?next=${encodeURIComponent(nextParam)}`;
     }
 
     // Always prefer window.location.origin if available (client-side)

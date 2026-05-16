@@ -52,9 +52,10 @@ function SignupForm() {
   const oauthRedirect = useMemo(() => {
     const nextParam = searchParams?.get('next') ?? '/';
 
-    // For native app, use the production URL for callback
+    // For native app, we MUST use the custom URL scheme so the system browser
+    // redirects the user back into the app.
     if (isNativeApp()) {
-      return `https://lexora-nu.vercel.app/auth/callback?next=${encodeURIComponent(nextParam)}`;
+      return `com.lexoraapp.japanese://callback?next=${encodeURIComponent(nextParam)}`;
     }
 
     // Check if we're on localhost
