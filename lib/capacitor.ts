@@ -28,8 +28,10 @@ export const isNativeApp = (): boolean => {
   return false;
 };
 
-// Check if the Capacitor bridge is actually available for plugin calls
-const hasBridge = (): boolean => {
+// Check if the Capacitor bridge is actually available for plugin calls.
+// Unlike isNativeApp(), this returns true ONLY when the bridge is injected
+// and Capacitor plugins (Browser, App, etc.) can be called.
+export const hasBridge = (): boolean => {
   try {
     return Capacitor.isNativePlatform();
   } catch {

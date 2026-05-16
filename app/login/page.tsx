@@ -5,7 +5,7 @@ import { useMemo, useState, Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase, getURL } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { isNativeApp, setupDeepLinkListener, closeInAppBrowser } from '@/lib/capacitor';
+import { isNativeApp, hasBridge, setupDeepLinkListener, closeInAppBrowser } from '@/lib/capacitor';
 import Image from 'next/image';
 
 function LoginForm() {
@@ -58,6 +58,8 @@ function LoginForm() {
 
     // For native app, use the production URL for callback
     if (isNativeApp()) {
+      // Even without the bridge, the WebView loads from the production URL
+      // so the OAuth callback should point there
       return `https://lexora-nu.vercel.app/auth/callback?next=${encodeURIComponent(nextParam)}`;
     }
 
@@ -101,7 +103,7 @@ function LoginForm() {
         provider: 'google',
         options: {
           redirectTo: oauthRedirect,
-          skipBrowserRedirect: isNativeApp(),
+          skipBrowserRedirect: hasBridge(),
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -113,8 +115,8 @@ function LoginForm() {
         throw error;
       }
 
-      // For native app, open the auth URL in the in-app browser
-      if (isNativeApp() && data.url) {
+      // For native app with bridge, open the auth URL in the in-app browser
+      if (hasBridge() && data.url) {
         const { Browser } = await import('@capacitor/browser');
         await Browser.open({ url: data.url });
       }

@@ -5,7 +5,7 @@ import { useMemo, useState, Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase, getURL } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { isNativeApp, setupDeepLinkListener, closeInAppBrowser } from '@/lib/capacitor';
+import { isNativeApp, hasBridge, setupDeepLinkListener, closeInAppBrowser } from '@/lib/capacitor';
 import Image from 'next/image';
 
 function SignupForm() {
@@ -120,7 +120,7 @@ function SignupForm() {
         provider: 'google',
         options: {
           redirectTo: oauthRedirect,
-          skipBrowserRedirect: isNativeApp(),
+          skipBrowserRedirect: hasBridge(),
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -132,8 +132,8 @@ function SignupForm() {
         throw error;
       }
 
-      // For native app, open the auth URL in the in-app browser
-      if (isNativeApp() && data.url) {
+      // For native app with bridge, open the auth URL in the in-app browser
+      if (hasBridge() && data.url) {
         const { Browser } = await import('@capacitor/browser');
         await Browser.open({ url: data.url });
       }
