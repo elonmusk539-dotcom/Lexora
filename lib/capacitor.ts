@@ -37,10 +37,16 @@ export const isNativeApp = (): boolean => {
 // and Capacitor plugins (Browser, App, etc.) can be called.
 export const hasBridge = (): boolean => {
   try {
-    return Capacitor.isNativePlatform();
+    if (Capacitor.isNativePlatform()) return true;
   } catch {
-    return false;
+    // Bridge not available
   }
+  
+  if (typeof window !== 'undefined' && typeof (window as any).Capacitor !== 'undefined') {
+    return true;
+  }
+
+  return false;
 };
 
 // Setup deep link listener for OAuth callback
@@ -78,7 +84,6 @@ export const setupDeepLinkListener = (onUrl: (url: string) => void) => {
   };
 };
 
-// Open URL in in-app browser (for OAuth)
 export const openInAppBrowser = async (url: string) => {
   if (!hasBridge()) {
     // On web or WebView without bridge, just redirect normally
@@ -86,12 +91,27 @@ export const openInAppBrowser = async (url: string) => {
     return;
   }
 
-  // On native with bridge, use Capacitor Browser
-  await Browser.open({
-    url,
-    windowName: '_self',
-    presentationStyle: 'popover'
-  });
+  // Try to force the native Browser plugin directly.
+  // When platform is 'web' (due to remote server.url), the standard Browser.open()
+  // falls back to window.open(), which keeps OAuth in the WebView and gets blocked by Google.
+  // By calling the injected native proxy directly, we force a Chrome Custom Tab.
+  const nativeBrowser = typeof window !== 'undefined' ? (window as any).Capacitor?.Plugins?.Browser : null;
+  
+  if (nativeBrowser && nativeBrowser.open) {
+    try {
+      await nativeBrowser.open({
+        url,
+        windowName: '_self',
+        presentationStyle: 'popover'
+      });
+      return;
+    } catch (e) {
+      console.warn('Native browser plugin failed, falling back', e);
+    }
+  }
+
+  // Fallback to standard web navigation
+  window.location.href = url;
 };
 
 // Close in-app browser
