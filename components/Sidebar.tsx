@@ -17,6 +17,7 @@ export function Sidebar({ children }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isNative, setIsNative] = useState(false);
   const [dueCount, setDueCount] = useState(0);
   const scrollPositionRef = useRef(0);
   const previousStylesRef = useRef<{
@@ -112,6 +113,11 @@ export function Sidebar({ children }: SidebarProps) {
     return () => clearInterval(interval);
   }, []);
 
+  // Check if running in native app
+  useEffect(() => {
+    setIsNative(isNativeApp());
+  }, []);
+
   // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
@@ -196,7 +202,7 @@ export function Sidebar({ children }: SidebarProps) {
         >
           {(!collapsed || isMobile) ? (
             <div className="flex items-center gap-2">
-              {!isNativeApp() && (
+              {!isNative && (
                 <Link href="/premium" onClick={() => setMobileOpen(false)} className="flex-1">
                   <button
                     className="w-full h-12 px-4 bg-gradient-to-r from-coral-500 to-coral-400 text-white font-semibold rounded-xl shadow-glow-coral transition-all text-base whitespace-nowrap flex items-center justify-center gap-2 active:scale-[0.98]"

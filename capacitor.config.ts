@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Lexora',
   webDir: 'public',
   server: {
-    url: 'https://lexora-nu.vercel.app', // TODO: Update this to your production URL
+    url: 'http://192.168.0.105:3000', // Local dev server IP for testing
     cleartext: true
   }
 };

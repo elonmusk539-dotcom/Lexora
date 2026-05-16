@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSubscription } from '@/lib/subscription/useSubscription';
 import { motion } from 'framer-motion';
 import { Check, Crown, Zap, Infinity, List, FileText, Loader2 } from 'lucide-react';
@@ -12,7 +12,11 @@ export default function PremiumPage() {
   const { subscription, isPro, loading: subLoading } = useSubscription();
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
   const [processingSubscription, setProcessingSubscription] = useState(false);
-  const isNativeAndroid = isAndroid();
+  const [isNativeAndroid, setIsNativeAndroid] = useState(false);
+
+  useEffect(() => {
+    setIsNativeAndroid(isAndroid());
+  }, []);
 
   const handleSubscribeClick = async () => {
     try {
