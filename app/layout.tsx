@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     title: "Lexora - Learn Japanese Vocabulary",
     description: "Learn Japanese vocabulary with a clean and minimal vocab learning app with images, examples, and interactive quizzes!",
     type: "website",
-    locale: "en_US",
+    locale: "ja_JP",
     siteName: "Lexora",
   },
   twitter: {
@@ -35,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="ja" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
