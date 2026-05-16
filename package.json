@@ -14,6 +14,7 @@
     "@capacitor/browser": "^8.0.0",
     "@capacitor/cli": "^8.0.0",
     "@capacitor/core": "^8.0.0",
+    "@capgo/capacitor-social-login": "^8.3.22",
     "@google-cloud/text-to-speech": "^6.3.1",
     "@revenuecat/purchases-capacitor": "^11.3.1",
     "@supabase/ssr": "^0.7.0",

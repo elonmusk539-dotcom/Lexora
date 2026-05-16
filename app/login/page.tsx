@@ -2,10 +2,10 @@
 
 import { motion } from 'framer-motion';
 import { useMemo, useState, Suspense, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { supabase, getURL } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { isNativeApp, hasBridge, setupDeepLinkListener, closeInAppBrowser } from '@/lib/capacitor';
+import { isNativeApp, hasBridge, setupDeepLinkListener, closeInAppBrowser, signInWithNativeGoogle, initializeNativeGoogleAuth } from '@/lib/capacitor';
 import Image from 'next/image';
 
 function LoginForm() {
@@ -15,7 +15,15 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Handle deep link callbacks for OAuth in native app
+  // Initialize native Google auth on mount if in native app
+  useEffect(() => {
+    if (isNativeApp()) {
+      // The user must provide the Web Client ID via environment variable
+      initializeNativeGoogleAuth(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com');
+    }
+  }, []);
+
+  // Handle deep link callbacks for OAuth in native app (Fallback for implicit flow)
   useEffect(() => {
     const cleanup = setupDeepLinkListener(async (url) => {
       // Handle browser finished event (Android 15+ fallback)
@@ -105,30 +113,54 @@ function LoginForm() {
 
   const handleGoogleLogin = async () => {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: getOAuthRedirect(),
-          skipBrowserRedirect: hasBridge(),
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
+      if (isNativeApp()) {
+        // --- NATIVE GOOGLE LOGIN ---
+        setLoading(true);
+        const nativeResult = await signInWithNativeGoogle();
+        
+        if (nativeResult.idToken) {
+          // Exchange the native id_token with Supabase
+          const { data, error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: nativeResult.idToken,
+          });
+          
+          if (error) throw error;
+          if (data.session) {
+            window.location.href = '/';
+            return;
+          }
+        } else {
+          throw new Error('No ID token returned from Google');
+        }
+      } else {
+        // --- WEB GOOGLE LOGIN ---
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: getOAuthRedirect(),
+            skipBrowserRedirect: hasBridge(),
+            queryParams: {
+              access_type: 'offline',
+              prompt: 'consent',
+            },
           },
-        },
-      });
+        });
 
-      if (error) {
-        throw error;
-      }
+        if (error) {
+          throw error;
+        }
 
-      // For native app with bridge, open the auth URL in the in-app browser
-      if (hasBridge() && data.url) {
-        const { Browser } = await import('@capacitor/browser');
-        await Browser.open({ url: data.url });
+        // For web app with bridge (should not be reached if isNativeApp works), fallback
+        if (hasBridge() && data.url) {
+          const { Browser } = await import('@capacitor/browser');
+          await Browser.open({ url: data.url });
+        }
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred with Google login';
       setError(errorMessage);
+      setLoading(false);
     }
   };
 

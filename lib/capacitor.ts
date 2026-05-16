@@ -127,3 +127,46 @@ export const closeInAppBrowser = async () => {
     }
   }
 };
+
+// --- Native Google Sign-In via @capgo/capacitor-social-login ---
+let isSocialLoginInitialized = false;
+
+export const initializeNativeGoogleAuth = async (webClientId: string) => {
+  if (!hasBridge()) return;
+  if (isSocialLoginInitialized) return;
+
+  try {
+    const { SocialLogin } = await import('@capgo/capacitor-social-login');
+    await SocialLogin.initialize({
+      google: {
+        webClientId: webClientId,
+      }
+    });
+    isSocialLoginInitialized = true;
+    console.log('[Capacitor] Native Google Auth initialized');
+  } catch (error) {
+    console.error('[Capacitor] Failed to initialize Native Google Auth', error);
+  }
+};
+
+export const signInWithNativeGoogle = async () => {
+  if (!hasBridge()) throw new Error('Not running in native app');
+
+  try {
+    const { SocialLogin } = await import('@capgo/capacitor-social-login');
+    const result = await SocialLogin.login({
+      provider: 'google',
+      options: {
+        scopes: ['email', 'profile'],
+      }
+    });
+
+    if (result.provider === 'google') {
+      return result.result; // Returns { accessToken, idToken, profile }
+    }
+    throw new Error('Invalid provider result');
+  } catch (error) {
+    console.error('[Capacitor] Native Google Sign-In failed', error);
+    throw error;
+  }
+};
