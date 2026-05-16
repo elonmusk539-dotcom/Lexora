@@ -40,6 +40,13 @@ function SignupForm() {
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) {
+          // If the code exchange fails (often due to duplicate deep link events consuming the PKCE verifier),
+          // verify if the user actually successfully logged in via the first event.
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            window.location.href = '/';
+            return;
+          }
           setError(error.message);
         } else {
           window.location.href = '/';
