@@ -91,22 +91,25 @@ export const openInAppBrowser = async (url: string) => {
     return;
   }
 
-  // Try to force the native Browser plugin directly.
-  // When platform is 'web' (due to remote server.url), the standard Browser.open()
-  // falls back to window.open(), which keeps OAuth in the WebView and gets blocked by Google.
-  // By calling the injected native proxy directly, we force a Chrome Custom Tab.
-  const nativeBrowser = typeof window !== 'undefined' ? (window as any).Capacitor?.Plugins?.Browser : null;
-  
-  if (nativeBrowser && nativeBrowser.open) {
+  // To bypass the Google 403 error, we MUST open the OAuth flow in a Chrome Custom Tab.
+  // Because server.url forces the platform to "web", the official Browser plugin defaults
+  // to the web implementation (which opens inside the WebView and gets blocked).
+  // We can force the plugin to use the native Android bridge by temporarily setting the platform.
+  if (typeof window !== 'undefined' && (window as any).Capacitor) {
+    const originalPlatform = (window as any).Capacitor.platform;
+    
     try {
-      await nativeBrowser.open({
-        url,
-        windowName: '_self',
-        presentationStyle: 'popover'
-      });
+      // Trick Capacitor into routing the call to the native Java code
+      (window as any).Capacitor.platform = 'android';
+      
+      // Use _blank to ensure it opens a Custom Tab, not the current WebView (_self)
+      await Browser.open({ url, windowName: '_blank', presentationStyle: 'popover' });
       return;
     } catch (e) {
-      console.warn('Native browser plugin failed, falling back', e);
+      console.warn('Native Browser.open failed, falling back', e);
+    } finally {
+      // Restore the original platform
+      (window as any).Capacitor.platform = originalPlatform;
     }
   }
 
