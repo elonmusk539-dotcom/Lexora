@@ -19,7 +19,7 @@ function LoginForm() {
   useEffect(() => {
     if (isNativeApp()) {
       // The user must provide the Web Client ID via environment variable
-      initializeNativeGoogleAuth(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com');
+      initializeNativeGoogleAuth(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '536600600129-5m23ckomlolfff3tlpo90p2ip92l4qmg.apps.googleusercontent.com');
     }
   }, []);
 

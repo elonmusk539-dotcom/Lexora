@@ -20,7 +20,7 @@ function SignupForm() {
   // Initialize native Google auth on mount if in native app
   useEffect(() => {
     if (isNativeApp()) {
-      initializeNativeGoogleAuth(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com');
+      initializeNativeGoogleAuth(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '536600600129-5m23ckomlolfff3tlpo90p2ip92l4qmg.apps.googleusercontent.com');
     }
   }, []);
 
