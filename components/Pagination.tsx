@@ -59,60 +59,65 @@ export function Pagination({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 p-4 card">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 p-3 sm:p-4 rounded-2xl glass border border-[var(--color-border)] shadow-sm">
       {/* Items per page selector */}
-      <div className="flex items-center gap-2 text-sm">
-        <span className="text-[var(--color-text-muted)]">Show</span>
-        <select
-          value={itemsPerPage}
-          onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-          className="input py-1.5 px-2 text-sm min-w-[70px]"
-        >
-          {itemsPerPageOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        <span className="text-[var(--color-text-muted)]">
+      <div className="flex items-center gap-2 text-xs sm:text-sm">
+        <span className="text-[var(--color-text-muted)] font-medium">Show</span>
+        <div className="relative">
+          <select
+            value={itemsPerPage}
+            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+            className="appearance-none bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg py-1.5 pl-3 pr-8 text-[var(--color-text-primary)] font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:border-transparent transition-all cursor-pointer"
+          >
+            {itemsPerPageOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[var(--color-text-muted)]">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+          </div>
+        </div>
+        <span className="text-[var(--color-text-muted)] font-medium">
           of {totalItems}
         </span>
       </div>
 
       {/* Page navigation */}
-      <div className="flex items-center justify-center flex-wrap gap-1 sm:gap-2 mt-2 sm:mt-0">
-        {/* First page */}
+      <div className="flex items-center justify-center gap-1 sm:gap-2">
+        {/* First page (Hidden on mobile) */}
         <button
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
-          className="p-2 rounded-lg glass text-[var(--color-text-muted)] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+          className="hidden sm:flex items-center justify-center p-1.5 sm:p-2 rounded-lg hover:bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] disabled:opacity-30 disabled:hover:bg-transparent transition-all active:scale-95"
           aria-label="First page"
         >
-          <ChevronsLeft className="w-4 h-4" />
+          <ChevronsLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         {/* Previous page */}
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-2 rounded-lg glass text-[var(--color-text-muted)] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+          className="flex items-center justify-center p-1.5 sm:p-2 rounded-lg hover:bg-[var(--color-surface-overlay)] text-[var(--color-text-primary)] disabled:opacity-30 disabled:hover:bg-transparent transition-all active:scale-95"
           aria-label="Previous page"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         {/* Page numbers */}
-        <div className="flex items-center justify-center flex-wrap gap-1 mx-1">
+        <div className="flex items-center gap-1">
           {getPageNumbers().map((page, index) => (
             <span key={index}>
               {page === '...' ? (
-                <span className="px-2 text-[var(--color-text-muted)]">...</span>
+                <span className="px-1 sm:px-2 text-[var(--color-text-muted)] text-sm sm:text-base font-medium">...</span>
               ) : (
                 <button
                   onClick={() => onPageChange(page as number)}
-                  className={`w-9 h-9 rounded-lg font-medium transition-all active:scale-95 ${currentPage === page
-                    ? 'bg-gradient-to-r from-ocean-600 to-ocean-500 text-white shadow-glow'
-                    : 'glass text-[var(--color-text-secondary)]'
+                  className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl text-sm sm:text-base font-bold transition-all active:scale-95 ${currentPage === page
+                    ? 'bg-gradient-to-br from-ocean-500 to-ocean-600 text-white shadow-md shadow-ocean-500/30'
+                    : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] hover:text-[var(--color-text-primary)]'
                     }`}
                 >
                   {page}
@@ -126,20 +131,20 @@ export function Pagination({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-2 rounded-lg glass text-[var(--color-text-muted)] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+          className="flex items-center justify-center p-1.5 sm:p-2 rounded-lg hover:bg-[var(--color-surface-overlay)] text-[var(--color-text-primary)] disabled:opacity-30 disabled:hover:bg-transparent transition-all active:scale-95"
           aria-label="Next page"
         >
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
-        {/* Last page */}
+        {/* Last page (Hidden on mobile) */}
         <button
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
-          className="p-2 rounded-lg glass text-[var(--color-text-muted)] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+          className="hidden sm:flex items-center justify-center p-1.5 sm:p-2 rounded-lg hover:bg-[var(--color-surface-overlay)] text-[var(--color-text-muted)] disabled:opacity-30 disabled:hover:bg-transparent transition-all active:scale-95"
           aria-label="Last page"
         >
-          <ChevronsRight className="w-4 h-4" />
+          <ChevronsRight className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
     </div>
