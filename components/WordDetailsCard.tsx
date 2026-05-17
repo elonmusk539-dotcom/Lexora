@@ -5,7 +5,7 @@ import { Flag, Volume2, X, BookOpen } from 'lucide-react';
 import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { ShareWordCard } from './ShareWordCard';
+
 import { playPronunciation } from '@/lib/audio';
 
 export interface VocabularyExample {
@@ -181,10 +181,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                   <Flag className="w-5 h-5" />
                 </motion.button>
 
-                {/* Share button (only for non-custom words) */}
-                {word.word_type !== 'custom' && (
-                  <ShareWordCard word={word} examples={detailedExamples} />
-                )}
+
               </div>
 
               {/* Close button - aligned right */}
