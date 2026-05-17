@@ -156,9 +156,6 @@ export const signInWithNativeGoogle = async () => {
     const { SocialLogin } = await import('@capgo/capacitor-social-login');
     const result = await SocialLogin.login({
       provider: 'google',
-      options: {
-        scopes: ['email', 'profile'],
-      }
     });
 
     if (result.provider === 'google') {
