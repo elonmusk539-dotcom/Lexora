@@ -172,7 +172,7 @@ export function Sidebar({ children }: SidebarProps) {
   }
 
   return (
-    <div className="flex min-h-screen bg-mesh">
+    <div className="flex min-h-screen w-full overflow-x-hidden bg-mesh relative">
       {/* Mobile Overlay */}
       {mobileOpen && (
         <motion.div
