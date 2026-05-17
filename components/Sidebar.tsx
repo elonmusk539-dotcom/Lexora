@@ -283,6 +283,8 @@ export function Sidebar({ children }: SidebarProps) {
         {pathname !== '/login' && pathname !== '/signup' && (
           <div className={pathname === '/review' ? 'hidden sm:block' : ''}>
             <Header onMenuToggle={toggleMobileMenu} menuOpen={mobileOpen} />
+            {/* Spacer to push content below the fixed header */}
+            <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 56px)' }} />
           </div>
         )}
         {children}
