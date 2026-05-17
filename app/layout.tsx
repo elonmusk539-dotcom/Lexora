@@ -86,6 +86,11 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider>
+          {/* Solid background block for the transparent notification bar (safe area) */}
+          <div 
+            className="fixed top-0 left-0 right-0 z-[100] bg-[var(--color-bg-primary)]" 
+            style={{ height: 'env(safe-area-inset-top, 0px)' }} 
+          />
           <Sidebar>
             {children}
           </Sidebar>
