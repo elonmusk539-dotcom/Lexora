@@ -156,7 +156,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-night-400/70 dark:bg-night-500/80 z-40 backdrop-blur-md"
+            className="fixed inset-0 bg-night-400/70 dark:bg-night-500/80 z-[75] backdrop-blur-md"
           />
 
           {/* Card */}
@@ -165,7 +165,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl max-h-[80vh] sm:max-h-[85vh] overflow-y-auto glass-strong rounded-2xl shadow-xl z-[60] p-4 sm:p-6 scrollbar-hide mb-8 sm:mb-0"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl max-h-[80vh] sm:max-h-[85vh] overflow-y-auto glass-strong rounded-2xl shadow-xl z-[80] p-4 sm:p-6 scrollbar-hide mb-8 sm:mb-0"
           >
             {/* Action buttons row - All in one line */}
             <div className="flex gap-2 mb-4 pt-1 justify-between items-center">
@@ -321,7 +321,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={() => setShowReportModal(false)}
-                  className="fixed inset-0 bg-night-400/80 z-[65] backdrop-blur-md"
+                  className="fixed inset-0 bg-night-400/80 z-[85] backdrop-blur-md"
                 />
 
                 {/* Report Modal Card */}
@@ -330,7 +330,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: 20 }}
                   transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                  className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-md glass-strong rounded-2xl shadow-xl z-[70] p-4 sm:p-6"
+                  className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-md glass-strong rounded-2xl shadow-xl z-[90] p-4 sm:p-6"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <h3 className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)] mb-4">Report an Issue</h3>
