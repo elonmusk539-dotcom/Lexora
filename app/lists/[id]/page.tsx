@@ -194,14 +194,14 @@ export default function ListDetailPage() {
         >
           <Link
             href="/lists"
-            className="inline-flex items-center gap-2 text-[var(--color-accent-primary)] hover:opacity-80 mb-4"
+            className="inline-flex items-center gap-2 text-[var(--color-accent-primary)] hover:opacity-80 mb-5 text-sm font-medium"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Lists
           </Link>
-          <h2 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">{list.name}</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] leading-tight mb-1">{list.name}</h2>
           {list.description && (
-            <p className="text-[var(--color-text-muted)]">{list.description}</p>
+            <p className="text-sm text-[var(--color-text-muted)]">{list.description}</p>
           )}
         </motion.div>
 

@@ -371,28 +371,26 @@ export default function CustomListDetailPage() {
         >
           <Link
             href="/my-lists"
-            className="inline-flex items-center gap-2 text-[var(--color-accent-primary)] hover:opacity-80 mb-4"
+            className="inline-flex items-center gap-2 text-[var(--color-accent-primary)] hover:opacity-80 mb-5 text-sm font-medium"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to My Lists
           </Link>
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3">
-                <h2 className="text-3xl font-bold text-[var(--color-text-primary)]">{list.name}</h2>
-                <span className="px-3 py-1 bg-ocean-500/10 text-[var(--color-accent-primary)] text-sm font-medium rounded-full">
-                  Custom
-                </span>
-              </div>
-              {list.description && (
-                <p className="text-[var(--color-text-muted)] mt-2">{list.description}</p>
-              )}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] leading-tight">{list.name}</h2>
+              <span className="px-2.5 py-0.5 bg-ocean-500/10 text-[var(--color-accent-primary)] text-xs font-semibold rounded-full border border-ocean-500/20 whitespace-nowrap">
+                Custom
+              </span>
             </div>
+            {list.description && (
+              <p className="text-sm text-[var(--color-text-muted)]">{list.description}</p>
+            )}
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2 btn-primary"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-ocean-600 to-ocean-500 text-white text-sm font-semibold rounded-xl shadow-md shadow-ocean-500/20 active:scale-[0.97] transition-all"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
               Add Words
             </button>
           </div>
