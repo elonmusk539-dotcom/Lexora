@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useSubscription } from '@/lib/subscription/useSubscription';
 import { FREE_TIER_LISTS, canAccessList } from '@/lib/subscription/config';
 import { SearchBar } from '@/components/SearchBar';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface VocabularyList {
   id: string;
@@ -23,44 +24,33 @@ export default function ListsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const { subscription, isPro, loading: subLoading } = useSubscription();
 
   useEffect(() => {
-    checkUser();
-    fetchLists();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    if (authLoading) return;
     if (!user) {
       router.push('/login');
+      return;
     }
-  };
+    fetchLists();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading]);
 
   const fetchLists = async () => {
     try {
+      // Single query using embedded count — eliminates N+1 query pattern
       const { data: listsData, error } = await supabase
         .from('vocabulary_lists')
-        .select('*')
+        .select('*, vocabulary_words(count)')
         .order('created_at', { ascending: true });
 
       if (error) throw error;
 
-      // Get word count for each list
-      const listsWithCount = await Promise.all(
-        (listsData || []).map(async (list: VocabularyList) => {
-          const { count } = await supabase
-            .from('vocabulary_words')
-            .select('*', { count: 'exact', head: true })
-            .eq('list_id', list.id);
-
-          return {
-            ...list,
-            word_count: count || 0,
-          };
-        })
-      );
+      const listsWithCount = (listsData || []).map((list) => ({
+        ...list,
+        word_count: (list.vocabulary_words as unknown as { count: number }[])?.[0]?.count ?? 0,
+      }));
 
       setLists(listsWithCount);
     } catch (error) {
@@ -70,13 +60,14 @@ export default function ListsPage() {
     }
   };
 
-  if (loading || subLoading) {
+  if (loading || subLoading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-mesh">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
       </div>
     );
   }
+
 
   const filteredLists = lists.filter((list) => {
     if (searchQuery.trim()) {

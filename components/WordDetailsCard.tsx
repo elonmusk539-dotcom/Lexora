@@ -70,9 +70,6 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
 
       if (error) throw error;
 
-      // Debug: Log the fetched examples to console
-      console.log('Fetched examples for word:', word.id, data);
-
       setDetailedExamples(data || []);
     } catch (error) {
       console.error('Error fetching examples:', error);
@@ -203,7 +200,7 @@ export function WordDetailsCard({ word, onClose, isOpen }: WordDetailsCardProps)
                 alt={word.word}
                 fill
                 className="object-cover"
-                priority
+                sizes="(max-width: 640px) calc(100vw - 4rem), 448px"
               />
               {/* Subtle gradient overlay at bottom */}
               <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--color-bg-primary)]/40 to-transparent" />

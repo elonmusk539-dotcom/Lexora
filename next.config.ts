@@ -8,12 +8,11 @@ const nextConfig: NextConfig = {
     // Remove this once you generate proper types with: npx supabase gen types typescript
     ignoreBuildErrors: true,
   },
-  eslint: {
-    // Allow production builds to complete even with ESLint errors
-    // Fix these manually after deployment
-    ignoreDuringBuilds: true,
-  },
   images: {
+    // Enable modern image formats — serves AVIF first (50% smaller than WebP), then WebP
+    formats: ['image/avif', 'image/webp'],
+    // Cache optimized images for 30 days in the CDN/proxy
+    minimumCacheTTL: 60 * 60 * 24 * 30,
     remotePatterns: [
       {
         protocol: 'https',
@@ -34,6 +33,26 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      {
+        // Long-term cache for immutable Next.js static assets (_next/static)
+        source: '/_next/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        // Long-term cache for public folder static files — no capturing group (not allowed)
+        source: '/:file((?:[^.]+\.(?:ico|png|jpg|jpeg|gif|webp|avif|svg|woff|woff2|ttf|otf)))',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
       {
         // Apply security headers to all routes
         source: '/(.*)',

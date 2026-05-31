@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { FREE_TIER_LISTS } from '@/lib/subscription/config';
+import { useAuth } from '@/contexts/AuthContext';
 
 type QuizType = 'mcq' | 'flashcard';
 type QuizDuration = 5 | 10 | 15 | 20 | 'custom';
@@ -34,32 +35,32 @@ export default function QuizPage() {
   const [selectedLists, setSelectedLists] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [showListModal, setShowListModal] = useState(false);
-  const [userId, setUserId] = useState<string>('');
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    checkUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    if (authLoading) return;
     if (!user) {
       router.push('/login');
       return;
     }
-    setUserId(user.id);
+    initializeQuizPage(user.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading]);
 
-    // Load saved preferences
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('settings')
-      .eq('user_id', user.id)
-      .single();
+  const initializeQuizPage = async (userId: string) => {
+    // Load saved preferences and all lists in parallel
+    const [profileResult, subscriptionResult, defaultListsResult, customListsResult] = await Promise.all([
+      supabase.from('user_profiles').select('settings').eq('user_id', userId).single(),
+      supabase.from('subscriptions').select('status, current_period_end').eq('user_id', userId).single(),
+      supabase.from('vocabulary_lists').select('id, name, description').order('created_at', { ascending: true }),
+      supabase.from('user_custom_lists').select('id, name, description').eq('user_id', userId).order('created_at', { ascending: false }),
+    ]);
 
+    // Process saved preferences
     let savedListIds: string[] = [];
-    if (profile && profile.settings) {
-      const settings = profile.settings as UserSettings;
+    if (profileResult.data?.settings) {
+      const settings = profileResult.data.settings as UserSettings;
       if (settings.quiz) {
         if (settings.quiz.lastQuizType) setQuizType(settings.quiz.lastQuizType);
         if (settings.quiz.lastDuration) setDuration(settings.quiz.lastDuration);
@@ -71,66 +72,34 @@ export default function QuizPage() {
       }
     }
 
-    // Fetch lists after loading preferences
-    await fetchLists(savedListIds);
-  };
+    // Process subscription
+    const subscription = subscriptionResult.data;
+    const isPro = subscription?.status === 'active' &&
+      new Date(subscription.current_period_end) > new Date();
 
-  const fetchLists = async (savedListIds: string[] = []) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Fetch user's subscription status
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('status, current_period_end')
-        .eq('user_id', user.id)
-        .single();
-
-      const isPro = subscription?.status === 'active' &&
-        new Date(subscription.current_period_end) > new Date();
-
-      // Fetch default vocabulary lists
-      const { data: defaultLists, error: defaultError } = await supabase
-        .from('vocabulary_lists')
-        .select('id, name, description')
-        .order('created_at', { ascending: true });
-
-      if (defaultError) throw defaultError;
-
-      // Filter lists based on subscription tier
-      let filteredDefaultLists = defaultLists || [];
-      if (!isPro) {
-        filteredDefaultLists = filteredDefaultLists.filter(
-          (list: VocabularyList) => FREE_TIER_LISTS.includes(list.name)
-        );
-      }
-
-      // Fetch user's custom lists
-      const { data: customLists } = await supabase
-        .from('user_custom_lists')
-        .select('id, name, description')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      // Combine both lists
-      const allLists = [
-        ...filteredDefaultLists,
-        ...(customLists || []).map(list => ({ ...list, isCustom: true }))
-      ];
-
-      setLists(allLists);
-
-      // Only select all lists if there are no saved preferences
-      if (savedListIds.length === 0) {
-        setSelectedLists(allLists.map((list: VocabularyList) => list.id));
-      }
-    } catch (error) {
-      console.error('Error fetching lists:', error);
-    } finally {
-      setLoading(false);
+    // Filter default lists by subscription tier
+    let filteredDefaultLists = defaultListsResult.data || [];
+    if (!isPro) {
+      filteredDefaultLists = filteredDefaultLists.filter(
+        (list: VocabularyList) => FREE_TIER_LISTS.includes(list.name)
+      );
     }
+
+    // Combine lists
+    const allLists = [
+      ...filteredDefaultLists,
+      ...(customListsResult.data || []).map(list => ({ ...list, isCustom: true }))
+    ];
+
+    setLists(allLists);
+
+    if (savedListIds.length === 0) {
+      setSelectedLists(allLists.map((list: VocabularyList) => list.id));
+    }
+
+    setLoading(false);
   };
+
 
   const toggleList = (listId: string) => {
     setSelectedLists(prev =>
@@ -154,35 +123,27 @@ export default function QuizPage() {
       return;
     }
 
-    // Save preferences
-    try {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('settings')
-        .eq('user_id', userId)
-        .single();
-
-      const currentSettings = profile?.settings || {};
-      const updatedSettings = {
-        ...currentSettings,
-        quiz: {
-          lastQuizType: quizType,
-          lastDuration: duration,
-          customDuration: customDuration,
-          lastSelectedLists: selectedLists,
-        },
-      };
-
-      await supabase
-        .from('user_profiles')
-        .upsert({
-          user_id: userId,
-          settings: updatedSettings,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id' });
-    } catch (error) {
-      console.error('Error saving preferences:', error);
-      // Continue anyway
+    // Save preferences — upsert directly, no SELECT needed
+    if (user?.id) {
+      try {
+        await supabase
+          .from('user_profiles')
+          .upsert({
+            user_id: user.id,
+            settings: {
+              quiz: {
+                lastQuizType: quizType,
+                lastDuration: duration,
+                customDuration: customDuration,
+                lastSelectedLists: selectedLists,
+              },
+            },
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id' });
+      } catch (error) {
+        console.error('Error saving preferences:', error);
+        // Continue anyway
+      }
     }
 
     const listIds = selectedLists.join(',');

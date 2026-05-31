@@ -84,25 +84,10 @@ export default function SettingsPage() {
   const [success, setSuccess] = useState('');
   const [isNative, setIsNative] = useState(false);
   const [error, setError] = useState('');
-  const [debugInfo, setDebugInfo] = useState<string>('');
-
-
 
   useEffect(() => {
     checkUserAndLoadSettings();
     setIsNative(isNativeApp());
-    
-    // Collect debug info
-    if (typeof window !== 'undefined') {
-      const info = {
-        userAgent: navigator.userAgent,
-        isNativeAppFn: isNativeApp(),
-        hasBridgeFn: typeof (window as any).Capacitor !== 'undefined',
-        capacitorObj: !!(window as any).Capacitor,
-        platform: (window as any).Capacitor?.getPlatform?.(),
-      };
-      setDebugInfo(JSON.stringify(info, null, 2));
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -588,14 +573,6 @@ export default function SettingsPage() {
               </div>
             )}
             
-            {/* DEBUG SECTION */}
-            <div className="mt-8 pt-8 border-t border-[var(--color-border)]">
-              <h3 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">Debug Info</h3>
-              <pre className="p-4 bg-black/50 text-white rounded-xl overflow-auto text-xs whitespace-pre-wrap">
-                {debugInfo}
-              </pre>
-            </div>
-
             {/* Danger Zone */}
             <div className="mt-8 pt-8 border-t border-red-500/30">
               <h3 className="text-xl font-semibold text-red-500 mb-2">

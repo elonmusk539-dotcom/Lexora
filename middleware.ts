@@ -54,17 +54,23 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh the session — this keeps auth tokens alive
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const pathname = request.nextUrl.pathname;
 
-  // Check if the route is protected
+  // Check if the route is protected BEFORE making any auth network call
   const isProtectedRoute = protectedRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + '/')
   );
+  const isAuthRoute = pathname === '/login' || pathname === '/signup';
+
+  // For fully public routes, skip the auth check entirely (no Supabase network call)
+  if (!isProtectedRoute && !isAuthRoute) {
+    return supabaseResponse;
+  }
+
+  // Only validate auth for protected and auth routes
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // If the route is protected and the user is not authenticated, redirect to login
   if (isProtectedRoute && !user) {
@@ -75,7 +81,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // If user is authenticated and tries to visit login/signup, redirect to home
-  if (user && (pathname === '/login' || pathname === '/signup')) {
+  if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);

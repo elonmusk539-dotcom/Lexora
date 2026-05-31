@@ -19,11 +19,11 @@ export function useSubscription() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        setSubscription({ tier: 'free', status: 'none' });
         setLoading(false);
         return;
       }
 
-      // Check if user has active subscription
       const { data: subData, error } = await supabase
         .from('subscriptions')
         .select('*')
@@ -31,16 +31,10 @@ export function useSubscription() {
         .single();
 
       if (error || !subData) {
-        // No subscription found - user is on free tier
-        setSubscription({
-          tier: 'free',
-          status: 'none',
-        });
-        setLoading(false);
+        setSubscription({ tier: 'free', status: 'none' });
         return;
       }
 
-      // Check if subscription is active
       const data = subData as unknown as Record<string, unknown>;
       const isActive = data.status === 'active' || data.status === 'trialing';
 
@@ -51,12 +45,8 @@ export function useSubscription() {
         cancelAtPeriodEnd: data.cancel_at_period_end as boolean,
         interval: data.interval as 'month' | 'year',
       });
-    } catch (error) {
-      console.error('Error checking subscription:', error);
-      setSubscription({
-        tier: 'free',
-        status: 'none',
-      });
+    } catch {
+      setSubscription({ tier: 'free', status: 'none' });
     } finally {
       setLoading(false);
     }

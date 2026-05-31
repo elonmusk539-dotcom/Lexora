@@ -17,7 +17,8 @@ export function Sidebar({ children }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isNative, setIsNative] = useState(false);
+  // Use lazy initializer — isNativeApp() is synchronous, no need for useEffect
+  const [isNative] = useState(() => isNativeApp());
   const [dueCount, setDueCount] = useState(0);
   const scrollPositionRef = useRef(0);
   const previousStylesRef = useRef<{
@@ -34,15 +35,22 @@ export function Sidebar({ children }: SidebarProps) {
     setMobileOpen(!mobileOpen);
   };
 
-  // Detect mobile screen size
+  // Detect mobile screen size with debounced resize handler
   useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        setIsMobile(window.innerWidth < 768);
+      }, 150);
     };
 
-    checkMobile();
+    setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      clearTimeout(timeout);
+    };
   }, []);
 
   // Prevent body scroll when mobile menu is open
@@ -113,10 +121,7 @@ export function Sidebar({ children }: SidebarProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Check if running in native app
-  useEffect(() => {
-    setIsNative(isNativeApp());
-  }, []);
+  // Check if running in native app is now done via lazy useState initializer above
 
   // Close mobile menu on route change
   useEffect(() => {

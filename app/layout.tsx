@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Sidebar } from '@/components/Sidebar';
 
@@ -37,6 +38,10 @@ export default function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning>
       <head>
+        {/* Preconnect to critical third-party origins to reduce connection latency */}
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -85,19 +90,21 @@ export default function RootLayout({
         className={`${notoSansJP.variable} antialiased`}
         suppressHydrationWarning
       >
-        <ThemeProvider>
-          {/* Solid background block for the transparent notification bar (safe area) */}
-          <div 
-            className="fixed top-0 left-0 right-0 z-[100] bg-[var(--color-bg-primary)]" 
-            style={{ height: 'env(safe-area-inset-top, 0px)' }} 
-          >
-            {/* Subtle scrim to ensure white Android status bar icons are visible in light mode */}
-            <div className="absolute inset-0 bg-ocean-900/25 dark:bg-transparent pointer-events-none" />
-          </div>
-          <Sidebar>
-            {children}
-          </Sidebar>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            {/* Solid background block for the transparent notification bar (safe area) */}
+            <div 
+              className="fixed top-0 left-0 right-0 z-[100] bg-[var(--color-bg-primary)]" 
+              style={{ height: 'env(safe-area-inset-top, 0px)' }} 
+            >
+              {/* Subtle scrim to ensure white Android status bar icons are visible in light mode */}
+              <div className="absolute inset-0 bg-ocean-900/25 dark:bg-transparent pointer-events-none" />
+            </div>
+            <Sidebar>
+              {children}
+            </Sidebar>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

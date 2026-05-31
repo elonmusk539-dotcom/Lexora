@@ -9,6 +9,7 @@ import { WordListItem } from '@/components/WordListItem';
 import { WordDetailsCard, type Word } from '@/components/WordDetailsCard';
 import { FREE_TIER_LISTS, type SubscriptionTier } from '@/lib/subscription/config';
 import { SearchBar } from '@/components/SearchBar';
+import { useAuth } from '@/contexts/AuthContext';
 
 type FilterType = 'all' | 'started' | 'not-started' | 'mastered';
 
@@ -34,12 +35,19 @@ export default function Home() {
   const [itemsPerPage, setItemsPerPage] = useState(25);
 
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    checkUser();
-    fetchWordsAndProgress();
+    if (authLoading) return;
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    fetchWordsAndProgress(user.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user, authLoading]);
+
+
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -48,43 +56,46 @@ export default function Home() {
     }
   };
 
-  const fetchWordsAndProgress = async () => {
+  const fetchWordsAndProgress = async (userId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      // Fetch all data in parallel — no more sequential waterfall
+      const [
+        subscriptionResult,
+        regularWordsResult,
+        customWordsResult,
+        progressResult,
+      ] = await Promise.all([
+        supabase
+          .from('subscriptions')
+          .select('status, current_period_end')
+          .eq('user_id', userId)
+          .single(),
+        supabase
+          .from('vocabulary_words')
+          .select('*, vocabulary_lists!inner(name)')
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('user_custom_words')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('user_progress')
+          .select('word_id, correct_streak, is_mastered')
+          .eq('user_id', userId),
+      ]);
 
-      // Fetch user's subscription status
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('status, current_period_end')
-        .eq('user_id', user.id)
-        .single();
-
+      // Process subscription
+      const subscription = subscriptionResult.data;
       const isPro = subscription?.status === 'active' &&
         new Date(subscription.current_period_end) > new Date();
       setUserTier(isPro ? 'pro' : 'free');
 
-      // Fetch regular vocabulary words
-      const { data: regularWords, error: wordsError } = await supabase
-        .from('vocabulary_words')
-        .select(`
-          *,
-          vocabulary_lists!inner(name)
-        `)
-        .order('created_at', { ascending: true });
+      // Process words
+      if (regularWordsResult.error) throw regularWordsResult.error;
+      if (customWordsResult.error) throw customWordsResult.error;
+      if (progressResult.error) throw progressResult.error;
 
-      if (wordsError) throw wordsError;
-
-      // Fetch user's custom words
-      const { data: customWords, error: customError } = await supabase
-        .from('user_custom_words')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
-
-      if (customError) throw customError;
-
-      // Combine both types of words
       interface CustomWord {
         id: string;
         kanji: string;
@@ -110,16 +121,15 @@ export default function Home() {
       }
 
       const allWords = [
-        ...(regularWords || []).map((w: VocabularyWord) => ({
+        ...(regularWordsResult.data || []).map((w: VocabularyWord) => ({
           ...w,
           list_name: w.vocabulary_lists.name,
         } as Word & { list_name: string })),
-        ...(customWords || []).map((w: CustomWord) => ({
+        ...(customWordsResult.data || []).map((w: CustomWord) => ({
           ...w,
-          word: w.kanji, // Map kanji to word for consistency
+          word: w.kanji,
           reading: w.romaji,
           word_type: 'custom',
-          // Convert JSONB examples to string array format for WordDetailsCard
           examples: w.examples ?
             w.examples.map((ex) =>
               `${ex.kanji}|${ex.furigana}|${ex.romaji}|${ex.translation}`
@@ -129,16 +139,9 @@ export default function Home() {
 
       setWords(allWords);
 
-      // Fetch user progress
-      const { data: progressData, error: progressError } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (progressError) throw progressError;
-
+      // Process progress
       const progressMap: Record<string, UserProgress> = {};
-      (progressData || []).forEach((p: { word_id: string; correct_streak: number; is_mastered: boolean }) => {
+      (progressResult.data || []).forEach((p: { word_id: string; correct_streak: number; is_mastered: boolean }) => {
         progressMap[p.word_id] = {
           word_id: p.word_id,
           correct_streak: p.correct_streak,
@@ -152,6 +155,7 @@ export default function Home() {
       setLoading(false);
     }
   };
+
 
   const getProgress = (wordId: string) => {
     const wordProgress = progress[wordId];

@@ -8,9 +8,11 @@ import { User as SupabaseUser } from '@supabase/supabase-js';
 import { User, Mail, Image as ImageIcon, Save, LogOut, Upload, Trophy, BookPlus, GraduationCap } from 'lucide-react';
 import Image from 'next/image';
 import imageCompression from 'browser-image-compression';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { user: authUser, loading: authLoading } = useAuth();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -27,77 +29,63 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    checkUser();
+    if (authLoading) return;
+    if (!authUser) {
+      router.push('/login');
+      return;
+    }
+    setUser(authUser as unknown as SupabaseUser);
+    loadProfileAndStats(authUser.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authUser, authLoading]);
 
-  async function checkUser() {
+  async function loadProfileAndStats(userId: string) {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Fetch profile data and all 3 stats in parallel
+      const [
+        profileResult,
+        masteredResult,
+        customWordsResult,
+        learningResult,
+      ] = await Promise.all([
+        supabase
+          .from('user_profiles')
+          .select('username, avatar_url')
+          .eq('user_id', userId)
+          .single(),
+        supabase
+          .from('user_progress')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('is_mastered', true),
+        supabase
+          .from('user_custom_words')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId),
+        supabase
+          .from('user_progress')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('is_mastered', false),
+      ]);
 
-      if (!user) {
-        router.push('/login');
-        return;
+      if (!profileResult.error && profileResult.data) {
+        setUsername(profileResult.data.username || '');
+        setAvatarUrl(profileResult.data.avatar_url || '');
       }
 
-      setUser(user);
-
-      // Fetch profile data
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Error fetching profile:', profileError);
-      }
-
-      if (profile) {
-        setUsername(profile.username || '');
-        setAvatarUrl(profile.avatar_url || '');
-      }
-
-      // Load statistics
-      await loadStatistics(user.id);
+      setStats({
+        wordsMastered: masteredResult.count || 0,
+        userAddedWords: customWordsResult.count || 0,
+        wordsStartedLearning: learningResult.count || 0,
+      });
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error loading profile:', error);
     } finally {
       setLoading(false);
     }
   }
 
-  async function loadStatistics(userId: string) {
-    try {
-      // Words mastered (is_mastered = true)
-      const { count: masteredCount } = await supabase
-        .from('user_progress')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('is_mastered', true);
-
-      // User added words (custom words)
-      const { count: customWordsCount } = await supabase
-        .from('user_custom_words')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId);
-
-      // Words started learning (any progress exists, excluding mastered)
-      const { count: startedLearningCount } = await supabase
-        .from('user_progress')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('is_mastered', false);
-
-      setStats({
-        wordsMastered: masteredCount || 0,
-        userAddedWords: customWordsCount || 0,
-        wordsStartedLearning: startedLearningCount || 0,
-      });
-    } catch (error) {
-      console.error('Error loading statistics:', error);
-    }
-  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
