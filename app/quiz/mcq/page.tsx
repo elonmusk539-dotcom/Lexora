@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Volume2, X, Check, ArrowLeft } from 'lucide-react';
 import type { Word } from '@/components/WordDetailsCard';
 import { playPronunciation } from '@/lib/audio';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface QuizWord extends Word {
   options: string[];
@@ -36,65 +37,67 @@ function MCQQuiz() {
   const [userId, setUserId] = useState<string>('');
   const [settings, setSettings] = useState<UserSettings | null>(null);
 
-  useEffect(() => {
-    checkUserAndFetchWords();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { user, loading: authLoading } = useAuth();
 
-  const checkUserAndFetchWords = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+  useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       router.push('/login');
       return;
     }
     setUserId(user.id);
+    loadDataAndInitializeQuiz(user.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading]);
 
-    // Fetch user settings
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('settings')
-      .eq('user_id', user.id)
-      .single();
-
-    if (profile && profile.settings) {
-      setSettings(profile.settings as UserSettings);
-    }
-
-    await fetchWords();
-  };
-
-  const fetchWords = async () => {
+  const loadDataAndInitializeQuiz = async (uid: string) => {
     try {
       let allWords: Word[] = [];
+      let masteredWordIds = new Set<string>();
 
       if (listIdsParam) {
         const listIds = listIdsParam.split(',');
+        const [
+          profileResult,
+          defaultWordsResult,
+          customListWordsResult,
+          userCustomWordsResult,
+          masteredProgressResult
+        ] = await Promise.all([
+          supabase
+            .from('user_profiles')
+            .select('settings')
+            .eq('user_id', uid)
+            .single(),
+          supabase
+            .from('vocabulary_words')
+            .select('*')
+            .in('list_id', listIds),
+          supabase
+            .from('user_custom_list_words')
+            .select(`
+              word_id,
+              vocabulary_words (*)
+            `)
+            .in('list_id', listIds),
+          supabase
+            .from('user_custom_list_custom_words')
+            .select(`
+              custom_word_id,
+              user_custom_words (*)
+            `)
+            .in('list_id', listIds),
+          supabase
+            .from('user_progress')
+            .select('word_id')
+            .eq('user_id', uid)
+            .eq('is_mastered', true)
+        ]);
 
-        // Fetch from default vocabulary lists
-        const { data: defaultWords } = await supabase
-          .from('vocabulary_words')
-          .select('*')
-          .in('list_id', listIds);
+        if (profileResult.data && profileResult.data.settings) {
+          setSettings(profileResult.data.settings as UserSettings);
+        }
 
-        // Fetch regular words from custom lists
-        const { data: customListWords } = await supabase
-          .from('user_custom_list_words')
-          .select(`
-            word_id,
-            vocabulary_words (*)
-          `)
-          .in('list_id', listIds);
-
-        // Fetch user-created custom words from custom lists
-        const { data: userCustomWords } = await supabase
-          .from('user_custom_list_custom_words')
-          .select(`
-            custom_word_id,
-            user_custom_words (*)
-          `)
-          .in('list_id', listIds);
-
-        // Process user custom words to match vocabulary_words structure
         interface CustomWordItem {
           custom_word_id: string;
           user_custom_words: {
@@ -110,14 +113,13 @@ function MCQQuiz() {
           };
         }
 
-        const customWordItems = (userCustomWords ?? []) as unknown as CustomWordItem[];
+        const customWordItems = (userCustomWordsResult.data ?? []) as unknown as CustomWordItem[];
         const processedCustomWords = customWordItems.map((item) => {
           const word = item.user_custom_words;
           return {
             ...word,
             word: word.kanji,
             reading: word.romaji,
-            // Convert JSONB examples to string array format
             examples: word.examples ?
               word.examples.map((ex) =>
                 `${ex.kanji}|${ex.furigana}|${ex.romaji}|${ex.translation}`
@@ -130,20 +132,42 @@ function MCQQuiz() {
           vocabulary_words: Word;
         }
 
-        // Combine all words
-        const listWordItems = (customListWords ?? []) as unknown as ListWordItem[];
+        const listWordItems = (customListWordsResult.data ?? []) as unknown as ListWordItem[];
 
         allWords = [
-          ...((defaultWords ?? []) as Word[]),
+          ...((defaultWordsResult.data ?? []) as Word[]),
           ...listWordItems.map((item) => item.vocabulary_words),
           ...processedCustomWords
         ].filter((word): word is Word => word != null);
+
+        masteredWordIds = new Set((masteredProgressResult.data || []).map((p: { word_id: string }) => p.word_id));
       } else {
-        // Fetch all words if no lists specified
-        const { data } = await supabase
-          .from('vocabulary_words')
-          .select('*');
-        allWords = data || [];
+        const [
+          profileResult,
+          wordsResult,
+          masteredProgressResult
+        ] = await Promise.all([
+          supabase
+            .from('user_profiles')
+            .select('settings')
+            .eq('user_id', uid)
+            .single(),
+          supabase
+            .from('vocabulary_words')
+            .select('*'),
+          supabase
+            .from('user_progress')
+            .select('word_id')
+            .eq('user_id', uid)
+            .eq('is_mastered', true)
+        ]);
+
+        if (profileResult.data && profileResult.data.settings) {
+          setSettings(profileResult.data.settings as UserSettings);
+        }
+
+        allWords = (wordsResult.data || []) as Word[];
+        masteredWordIds = new Set((masteredProgressResult.data || []).map((p: { word_id: string }) => p.word_id));
       }
 
       if (allWords.length === 0) {
@@ -152,20 +176,7 @@ function MCQQuiz() {
         return;
       }
 
-      // Exclude mastered words
-      const { data: { user } } = await supabase.auth.getUser();
-      let availableWords = allWords;
-
-      if (user) {
-        const { data: masteredProgress } = await supabase
-          .from('user_progress')
-          .select('word_id')
-          .eq('user_id', user.id)
-          .eq('is_mastered', true);
-
-        const masteredWordIds = new Set((masteredProgress || []).map((p: { word_id: string }) => p.word_id));
-        availableWords = allWords.filter(w => !masteredWordIds.has(w.id));
-      }
+      const availableWords = allWords.filter(w => !masteredWordIds.has(w.id));
 
       if (availableWords.length === 0) {
         alert('All words are mastered! No words available for quiz.');
@@ -173,11 +184,9 @@ function MCQQuiz() {
         return;
       }
 
-      // Shuffle and take requested number of words
       const shuffled = [...availableWords].sort(() => Math.random() - 0.5);
       const selectedWords = shuffled.slice(0, Math.min(duration, shuffled.length));
 
-      // Generate options for each word
       const quizWords: QuizWord[] = selectedWords.map((word) => {
         const wrongOptions = availableWords
           .filter((w) => w.id !== word.id)

@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase/client';
 import { Volume2, ArrowLeft, RotateCcw } from 'lucide-react';
 import { WordDetailsCard } from '@/components/WordDetailsCard';
 import { playPronunciation } from '@/lib/audio';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Word {
   id: string;
@@ -55,43 +56,45 @@ function SRSReview() {
   });
   const [wordProgress, setWordProgress] = useState<Record<string, { interval: number; easeFactor: number; repetitions: number }>>({});
 
+  const { user, loading: authLoading } = useAuth();
+
   useEffect(() => {
-    checkUserAndLoadDueWords();
+    if (authLoading) return;
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    loadData(user.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user, authLoading]);
 
-  const checkUserAndLoadDueWords = async () => {
+  const loadData = async (userId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-
-      // Load user settings
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('settings')
-        .eq('user_id', user.id)
-        .single();
-
-      if (profile?.settings?.smartQuiz) {
-        const smartQuizSettings = {
-          showFuriganaOnFront: profile.settings.smartQuiz.showFuriganaOnFront ?? false,
-          showRomajiOnFront: profile.settings.smartQuiz.showRomajiOnFront ?? false,
-          showImageOnFront: profile.settings.smartQuiz.showImageOnFront ?? true,
-          showImageOnBack: profile.settings.smartQuiz.showImageOnBack ?? true,
-          showExamples: profile.settings.smartQuiz.showExamples ?? true,
-          numberOfExamples: profile.settings.smartQuiz.numberOfExamples ?? 3,
-        };
-        setSettings(smartQuizSettings);
-      }
-
       // Get query parameters
       const duration = parseInt(searchParams.get('duration') || '20');
       const listIds = searchParams.get('lists')?.split(',').filter(Boolean) || [];
 
-      await loadDueWords(user.id, duration, listIds);
+      // Parallelize profile settings and due words fetching
+      const [profileResult] = await Promise.all([
+        supabase
+          .from('user_profiles')
+          .select('settings')
+          .eq('user_id', userId)
+          .single(),
+        loadDueWords(userId, duration, listIds)
+      ]);
+
+      if (profileResult.data?.settings?.smartQuiz) {
+        const smartQuizSettings = {
+          showFuriganaOnFront: profileResult.data.settings.smartQuiz.showFuriganaOnFront ?? false,
+          showRomajiOnFront: profileResult.data.settings.smartQuiz.showRomajiOnFront ?? false,
+          showImageOnFront: profileResult.data.settings.smartQuiz.showImageOnFront ?? true,
+          showImageOnBack: profileResult.data.settings.smartQuiz.showImageOnBack ?? true,
+          showExamples: profileResult.data.settings.smartQuiz.showExamples ?? true,
+          numberOfExamples: profileResult.data.settings.smartQuiz.numberOfExamples ?? 3,
+        };
+        setSettings(smartQuizSettings);
+      }
     } catch (error) {
       console.error('Error loading due words:', error);
     } finally {
@@ -157,7 +160,7 @@ function SRSReview() {
           .from('vocabulary_words')
           .select('*')
           .in('id', dueWordIds)
-          .or(selectedListIds.map(id => `list_id.eq.${id}`).join(','));
+          .in('list_id', selectedListIds);
 
         dueWordsFromLists = dueWords || [];
       }
@@ -181,7 +184,7 @@ function SRSReview() {
         const { data: allWordsInLists } = await supabase
           .from('vocabulary_words')
           .select('id')
-          .or(selectedListIds.map(id => `list_id.eq.${id}`).join(','));
+          .in('list_id', selectedListIds);
 
         const allWordIdsInLists = allWordsInLists?.map(w => w.id) || [];
 
@@ -201,7 +204,7 @@ function SRSReview() {
         let query = supabase
           .from('vocabulary_words')
           .select('*')
-          .or(selectedListIds.map(id => `list_id.eq.${id}`).join(','))
+          .in('list_id', selectedListIds)
           .limit(remaining);
 
         // Exclude already included due words

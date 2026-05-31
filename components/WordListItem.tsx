@@ -13,7 +13,7 @@ interface WordListItemProps {
   onClick: () => void;
 }
 
-export function WordListItem({
+export const WordListItem = React.memo(function WordListItem({
   word,
   progress,
   isMastered,
@@ -61,4 +61,4 @@ export function WordListItem({
       </div>
     </div>
   );
-}
+});

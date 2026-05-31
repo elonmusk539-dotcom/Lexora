@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
 import { Brain, Clock, List, Info, Sparkles } from 'lucide-react';
 import { FREE_TIER_LISTS } from '@/lib/subscription/config';
+import { useAuth } from '@/contexts/AuthContext';
 
 type QuizDuration = 5 | 10 | 15 | 20 | 'custom';
 
@@ -49,68 +50,66 @@ export default function SmartQuizSetupPage() {
   // const [showDueWords, setShowDueWords] = useState(false);
   // const [loadingDueWords, setLoadingDueWords] = useState(false);
 
+  const { user, loading: authLoading } = useAuth();
+
   useEffect(() => {
-    checkUserAndLoadData();
+    if (authLoading) return;
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    setUserId(user.id);
+    loadAllData(user.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user, authLoading]);
 
-  const checkUserAndLoadData = async () => {
+  const loadAllData = async (uid: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-
-      const uid = user.id;
-      setUserId(uid);
-
-      // Load vocabulary lists
-      await loadLists(uid);
+      const [
+        profileResult,
+        subscriptionResult,
+        defaultListsResult,
+        customListsResult,
+      ] = await Promise.all([
+        supabase
+          .from('user_profiles')
+          .select('settings')
+          .eq('user_id', uid)
+          .single(),
+        supabase
+          .from('subscriptions')
+          .select('status, current_period_end')
+          .eq('user_id', uid)
+          .single(),
+        supabase
+          .from('vocabulary_lists')
+          .select('id, name, description')
+          .order('name'),
+        supabase
+          .from('user_custom_lists')
+          .select('id, name, description')
+          .eq('user_id', uid)
+          .order('created_at', { ascending: false }),
+      ]);
 
       // Load saved preferences
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('settings')
-        .eq('user_id', uid)
-        .single();
-
-      const settings = profile?.settings as UserSettings;
+      let lastSelected: string[] = [];
+      const settings = profileResult.data?.settings as UserSettings;
       if (settings?.review) {
         if (settings.review.lastDuration) setDuration(settings.review.lastDuration);
         if (settings.review.customDuration) setCustomDuration(settings.review.customDuration);
         if (settings.review.lastSelectedLists) {
-          setSelectedLists(settings.review.lastSelectedLists);
+          lastSelected = settings.review.lastSelectedLists;
         }
       }
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const loadLists = async (uid: string) => {
-    try {
       // Fetch user's subscription status
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('status, current_period_end')
-        .eq('user_id', uid)
-        .single();
-
+      const subscription = subscriptionResult.data;
       const isPro = subscription?.status === 'active' &&
         new Date(subscription.current_period_end) > new Date();
 
-      // Load default lists
-      const { data: defaultLists } = await supabase
-        .from('vocabulary_lists')
-        .select('id, name, description')
-        .order('name');
-
-      // Filter lists based on subscription tier
-      let filteredDefaultLists = defaultLists || [];
+      // Filter default lists based on subscription tier
+      let filteredDefaultLists = defaultListsResult.data || [];
       if (!isPro) {
         filteredDefaultLists = filteredDefaultLists.filter(
           (list: VocabularyList) => FREE_TIER_LISTS.includes(list.name)
@@ -118,25 +117,25 @@ export default function SmartQuizSetupPage() {
       }
 
       // Load custom lists
-      const { data: customLists } = await supabase
-        .from('user_custom_lists')
-        .select('id, name, description')
-        .eq('user_id', uid)
-        .order('created_at', { ascending: false });
+      const customLists = customListsResult.data || [];
 
       const allLists = [
         ...filteredDefaultLists,
-        ...(customLists || []).map(list => ({ ...list, isCustom: true })),
+        ...customLists.map(list => ({ ...list, isCustom: true })),
       ];
 
       setLists(allLists);
 
-      // Auto-select all lists if none selected
-      if (selectedLists.length === 0) {
+      // Auto-select lists
+      if (lastSelected.length > 0) {
+        setSelectedLists(lastSelected);
+      } else if (selectedLists.length === 0) {
         setSelectedLists(allLists.map(l => l.id));
       }
     } catch (error) {
-      console.error('Error loading lists:', error);
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 

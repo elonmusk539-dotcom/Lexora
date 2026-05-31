@@ -1,7 +1,7 @@
 'use client';
 
 import { Filter, Sparkles, Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Pagination } from '@/components/Pagination';
@@ -168,66 +168,70 @@ export default function Home() {
     };
   };
 
-  const filteredWords = words.filter((word) => {
-    const wordProgress = progress[word.id];
+  const filteredWords = useMemo(() => {
+    return words.filter((word) => {
+      const wordProgress = progress[word.id];
 
-    // Filter by subscription tier - free users only see words from free lists
-    if (userTier === 'free') {
-      const wordWithList = word as Word & { list_name?: string };
-      if (wordWithList.list_name && !FREE_TIER_LISTS.includes(wordWithList.list_name)) {
+      // Filter by subscription tier - free users only see words from free lists
+      if (userTier === 'free') {
+        const wordWithList = word as Word & { list_name?: string };
+        if (wordWithList.list_name && !FREE_TIER_LISTS.includes(wordWithList.list_name)) {
+          return false;
+        }
+      }
+
+      // Apply status filter
+      let matchesFilter = false;
+      switch (filter) {
+        case 'started':
+          matchesFilter = wordProgress && wordProgress.correct_streak > 0 && !wordProgress.is_mastered;
+          break;
+        case 'not-started':
+          matchesFilter = !wordProgress || wordProgress.correct_streak === 0;
+          break;
+        case 'mastered':
+          matchesFilter = wordProgress && wordProgress.is_mastered;
+          break;
+        case 'all':
+        default:
+          matchesFilter = true;
+      }
+
+      if (!matchesFilter) return false;
+
+      // Apply custom words filter
+      if (!showCustomWords && 'word_type' in word && word.word_type === 'custom') {
         return false;
       }
-    }
 
-    // Apply status filter
-    let matchesFilter = false;
-    switch (filter) {
-      case 'started':
-        matchesFilter = wordProgress && wordProgress.correct_streak > 0 && !wordProgress.is_mastered;
-        break;
-      case 'not-started':
-        matchesFilter = !wordProgress || wordProgress.correct_streak === 0;
-        break;
-      case 'mastered':
-        matchesFilter = wordProgress && wordProgress.is_mastered;
-        break;
-      case 'all':
-      default:
-        matchesFilter = true;
-    }
+      // Apply search query
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch =
+          (word.kanji?.toLowerCase().includes(query)) ||
+          (word.word?.toLowerCase().includes(query)) ||
+          (word.furigana?.toLowerCase().includes(query)) ||
+          (word.romaji?.toLowerCase().includes(query)) ||
+          (word.meaning?.toLowerCase().includes(query));
 
-    if (!matchesFilter) return false;
+        return matchesSearch;
+      }
 
-    // Apply custom words filter
-    if (!showCustomWords && 'word_type' in word && word.word_type === 'custom') {
-      return false;
-    }
-
-    // Apply search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch =
-        (word.kanji?.toLowerCase().includes(query)) ||
-        (word.word?.toLowerCase().includes(query)) ||
-        (word.furigana?.toLowerCase().includes(query)) ||
-        (word.romaji?.toLowerCase().includes(query)) ||
-        (word.meaning?.toLowerCase().includes(query));
-
-      return matchesSearch;
-    }
-
-    return true;
-  });
+      return true;
+    });
+  }, [words, progress, userTier, filter, showCustomWords, searchQuery]);
 
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [filter, searchQuery, showCustomWords]);
 
-  const paginatedWords = filteredWords.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedWords = useMemo(() => {
+    return filteredWords.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+  }, [filteredWords, currentPage, itemsPerPage]);
 
   if (loading) {
     return (

@@ -8,6 +8,7 @@ import { Volume2, RotateCw, Check, X, ArrowLeft } from 'lucide-react';
 import type { Word } from '@/components/WordDetailsCard';
 import { WordDetailsCard } from '@/components/WordDetailsCard';
 import { playPronunciation } from '@/lib/audio';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface UserSettings {
   flashcard?: {
@@ -33,65 +34,67 @@ function FlashcardQuiz() {
   const [selectedWord, setSelectedWord] = useState<Word | null>(null);
   const [isAnswering, setIsAnswering] = useState(false);
 
-  useEffect(() => {
-    checkUserAndFetchWords();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { user, loading: authLoading } = useAuth();
 
-  const checkUserAndFetchWords = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+  useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       router.push('/login');
       return;
     }
     setUserId(user.id);
+    loadDataAndInitializeQuiz(user.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading]);
 
-    // Fetch user settings
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('settings')
-      .eq('user_id', user.id)
-      .single();
-
-    if (profile && profile.settings) {
-      setSettings(profile.settings as UserSettings);
-    }
-
-    await fetchWords();
-  };
-
-  const fetchWords = async () => {
+  const loadDataAndInitializeQuiz = async (uid: string) => {
     try {
       let allWords: Word[] = [];
+      let masteredWordIds = new Set<string>();
 
       if (listIdsParam) {
         const listIds = listIdsParam.split(',');
+        const [
+          profileResult,
+          defaultWordsResult,
+          customListWordsResult,
+          userCustomWordsResult,
+          masteredProgressResult
+        ] = await Promise.all([
+          supabase
+            .from('user_profiles')
+            .select('settings')
+            .eq('user_id', uid)
+            .single(),
+          supabase
+            .from('vocabulary_words')
+            .select('*')
+            .in('list_id', listIds),
+          supabase
+            .from('user_custom_list_words')
+            .select(`
+              word_id,
+              vocabulary_words (*)
+            `)
+            .in('list_id', listIds),
+          supabase
+            .from('user_custom_list_custom_words')
+            .select(`
+              custom_word_id,
+              user_custom_words (*)
+            `)
+            .in('list_id', listIds),
+          supabase
+            .from('user_progress')
+            .select('word_id')
+            .eq('user_id', uid)
+            .eq('is_mastered', true)
+        ]);
 
-        // Fetch from default vocabulary lists
-        const { data: defaultWords } = await supabase
-          .from('vocabulary_words')
-          .select('*')
-          .in('list_id', listIds);
+        if (profileResult.data && profileResult.data.settings) {
+          setSettings(profileResult.data.settings as UserSettings);
+        }
 
-        // Fetch regular words from custom lists
-        const { data: customListWords } = await supabase
-          .from('user_custom_list_words')
-          .select(`
-            word_id,
-            vocabulary_words (*)
-          `)
-          .in('list_id', listIds);
-
-        // Fetch user-created custom words from custom lists
-        const { data: userCustomWords } = await supabase
-          .from('user_custom_list_custom_words')
-          .select(`
-            custom_word_id,
-            user_custom_words (*)
-          `)
-          .in('list_id', listIds);
-
-        // Process user custom words to match vocabulary_words structure
         interface CustomWordItem {
           custom_word_id: string;
           user_custom_words: {
@@ -107,14 +110,13 @@ function FlashcardQuiz() {
           };
         }
 
-        const customWordItems = (userCustomWords ?? []) as unknown as CustomWordItem[];
+        const customWordItems = (userCustomWordsResult.data ?? []) as unknown as CustomWordItem[];
         const processedCustomWords = customWordItems.map((item) => {
           const word = item.user_custom_words;
           return {
             ...word,
             word: word.kanji,
             reading: word.romaji,
-            // Convert JSONB examples to string array format
             examples: word.examples ?
               word.examples.map((ex) =>
                 `${ex.kanji}|${ex.furigana}|${ex.romaji}|${ex.translation}`
@@ -127,20 +129,42 @@ function FlashcardQuiz() {
           vocabulary_words: Word;
         }
 
-        // Combine all words
-        const listWordItems = (customListWords ?? []) as unknown as ListWordItem[];
+        const listWordItems = (customListWordsResult.data ?? []) as unknown as ListWordItem[];
 
         allWords = [
-          ...((defaultWords ?? []) as Word[]),
+          ...((defaultWordsResult.data ?? []) as Word[]),
           ...listWordItems.map((item) => item.vocabulary_words),
           ...processedCustomWords
         ].filter((word): word is Word => word != null);
+
+        masteredWordIds = new Set((masteredProgressResult.data || []).map((p: { word_id: string }) => p.word_id));
       } else {
-        // Fetch all words if no lists specified
-        const { data } = await supabase
-          .from('vocabulary_words')
-          .select('*');
-        allWords = data || [];
+        const [
+          profileResult,
+          wordsResult,
+          masteredProgressResult
+        ] = await Promise.all([
+          supabase
+            .from('user_profiles')
+            .select('settings')
+            .eq('user_id', uid)
+            .single(),
+          supabase
+            .from('vocabulary_words')
+            .select('*'),
+          supabase
+            .from('user_progress')
+            .select('word_id')
+            .eq('user_id', uid)
+            .eq('is_mastered', true)
+        ]);
+
+        if (profileResult.data && profileResult.data.settings) {
+          setSettings(profileResult.data.settings as UserSettings);
+        }
+
+        allWords = (wordsResult.data || []) as Word[];
+        masteredWordIds = new Set((masteredProgressResult.data || []).map((p: { word_id: string }) => p.word_id));
       }
 
       if (allWords.length === 0) {
@@ -149,20 +173,7 @@ function FlashcardQuiz() {
         return;
       }
 
-      // Exclude mastered words
-      const { data: { user } } = await supabase.auth.getUser();
-      let availableWords = allWords;
-
-      if (user) {
-        const { data: masteredProgress } = await supabase
-          .from('user_progress')
-          .select('word_id')
-          .eq('user_id', user.id)
-          .eq('is_mastered', true);
-
-        const masteredWordIds = new Set(masteredProgress?.map(p => p.word_id) || []);
-        availableWords = allWords.filter(w => !masteredWordIds.has(w.id));
-      }
+      const availableWords = allWords.filter(w => !masteredWordIds.has(w.id));
 
       if (availableWords.length === 0) {
         alert('All words are mastered! No words available for quiz.');
@@ -191,22 +202,19 @@ function FlashcardQuiz() {
   };
 
   const handleAnswer = async (correct: boolean) => {
-    if (isAnswering) return; // Prevent double-clicking
+    if (isAnswering) return;
     setIsAnswering(true);
 
     const currentWord = words[currentIndex];
 
-    // Update score
     const newScore = {
       correct: score.correct + (correct ? 1 : 0),
       incorrect: score.incorrect + (correct ? 0 : 1),
     };
     setScore(newScore);
 
-    // Update progress immediately
     await updateWordProgress(currentWord.id, correct);
 
-    // Move to next card
     if (currentIndex < words.length - 1) {
       setTimeout(() => {
         setCurrentIndex((prev) => prev + 1);
@@ -215,7 +223,6 @@ function FlashcardQuiz() {
         setIsAnswering(false);
       }, 100);
     } else {
-      // Pass the updated score to finishQuiz
       finishQuiz(newScore);
     }
   };
@@ -224,7 +231,6 @@ function FlashcardQuiz() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Log quiz activity
         const today = new Date().toISOString().split('T')[0];
         await supabase.from('user_activity_log').insert({
           user_id: user.id,
@@ -241,7 +247,6 @@ function FlashcardQuiz() {
       console.error('Error in finishQuiz:', error);
     }
 
-    // Store quiz session data in localStorage for results page
     const quizSession = {
       words: words.map(w => ({
         id: w.id,
@@ -257,9 +262,6 @@ function FlashcardQuiz() {
 
   const updateWordProgress = async (wordId: string, correct: boolean) => {
     try {
-      // Use unified SRS system for progress tracking
-      // Map correct/incorrect to quality ratings
-      // Correct: quality=3 (Good), Incorrect: quality=0 (Again)
       const quality = correct ? 3 : 0;
 
       await supabase.rpc('update_srs_progress', {
@@ -295,7 +297,6 @@ function FlashcardQuiz() {
   return (
     <div className="fixed inset-0 bg-mesh p-3 sm:p-4 md:p-6 overflow-hidden flex flex-col" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
       <div className="max-w-3xl w-full mx-auto flex-1 flex flex-col py-2 sm:py-4">
-        {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => router.push('/')}
@@ -310,7 +311,6 @@ function FlashcardQuiz() {
           </div>
         </div>
 
-        {/* Progress bar */}
         <div className="mb-4 sm:mb-6">
           <div className="flex flex-row justify-between text-xs sm:text-sm text-[var(--color-text-muted)] mb-2">
             <span>Progress</span>
@@ -329,64 +329,51 @@ function FlashcardQuiz() {
           </div>
         </div>
 
-        {/* Flashcard */}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="perspective"
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="w-full"
           >
-            <motion.div
-              animate={{ rotateY: isFlipped ? 180 : 0 }}
-              transition={{ duration: 0.6, type: 'spring' }}
-              className="relative w-full h-[340px] sm:h-[440px] md:h-[480px] cursor-pointer preserve-3d"
+            <div
+              className="card-elevated rounded-2xl p-4 sm:p-6 md:p-8 h-[340px] sm:h-[440px] md:h-[480px] cursor-pointer flex flex-col items-center justify-center relative select-none"
               onClick={handleFlip}
             >
-              {/* Front of card */}
-              <div className="absolute inset-0 backface-hidden">
-                <div className="card-elevated rounded-2xl p-4 sm:p-6 md:p-8 h-full flex flex-col items-center justify-center">
-                  <div className="flex flex-col items-center gap-4">
-                    {/* Main reading - always show kanji if available, fallback to word */}
-                    <div className="flex items-center gap-3">
-                      <h2 className="text-6xl font-bold text-[var(--color-text-primary)]">
-                        {currentWord.kanji || currentWord.word}
-                      </h2>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePlayPronunciation();
-                        }}
-                        className="p-3 rounded-full glass hover:bg-ocean-500/10 text-[var(--color-accent-primary)] transition-colors"
-                        aria-label="Play pronunciation"
-                      >
-                        <Volume2 className="w-7 h-7" />
-                      </button>
-                    </div>
-
-                    {/* Conditionally show furigana based on settings */}
-                    {settings?.flashcard?.showFuriganaOnFront && currentWord.furigana && (
-                      <p className="text-2xl text-[var(--color-text-secondary)]">{currentWord.furigana}</p>
-                    )}
-
-                    {/* Conditionally show romaji based on settings */}
-                    {settings?.flashcard?.showRomajiOnFront && (currentWord.romaji || currentWord.reading) && (
-                      <p className="text-xl text-[var(--color-text-muted)]">{currentWord.romaji || currentWord.reading}</p>
-                    )}
+              {!isFlipped ? (
+                <div className="flex flex-col items-center gap-4 w-full">
+                  <div className="flex items-center justify-center gap-3">
+                    <h2 className="text-4xl font-bold text-[var(--color-text-primary)]">
+                      {currentWord.kanji || currentWord.word}
+                    </h2>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePlayPronunciation();
+                      }}
+                      className="p-2.5 rounded-full glass hover:bg-ocean-500/10 text-[var(--color-accent-primary)] transition-colors"
+                      aria-label="Play pronunciation"
+                    >
+                      <Volume2 className="w-6 h-6" />
+                    </button>
                   </div>
+
+                  {settings?.flashcard?.showFuriganaOnFront && currentWord.furigana && (
+                    <p className="text-xl text-[var(--color-text-secondary)]">{currentWord.furigana}</p>
+                  )}
+
+                  {settings?.flashcard?.showRomajiOnFront && (currentWord.romaji || currentWord.reading) && (
+                    <p className="text-xl text-[var(--color-text-muted)]">{currentWord.romaji || currentWord.reading}</p>
+                  )}
 
                   <div className="flex items-center gap-2 text-[var(--color-text-muted)] mt-8">
                     <RotateCw className="w-5 h-5" />
-                    <p>Click to reveal answer</p>
+                    <p className="text-sm font-medium">Click to reveal answer</p>
                   </div>
                 </div>
-              </div>
-
-              {/* Back of card - show reading, furigana, romaji, meaning, pronunciation */}
-              <div className="absolute inset-0 backface-hidden rotate-y-180">
-                <div className="card-elevated rounded-2xl p-4 sm:p-6 md:p-8 h-full flex flex-col items-center justify-center relative">
-                  {/* Info Button */}
+              ) : (
+                <div className="flex flex-col items-center gap-4 w-full h-full justify-center">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -398,10 +385,9 @@ function FlashcardQuiz() {
                     i
                   </button>
 
-                  <div className="flex flex-col items-center gap-4">
-                    {/* Main Reading - Kanji */}
-                    <div className="flex items-center gap-3">
-                      <h2 className="text-6xl font-bold text-[var(--color-text-primary)]">
+                  <div className="flex flex-col items-center gap-4 w-full">
+                    <div className="flex items-center justify-center gap-3">
+                      <h2 className="text-4xl font-bold text-[var(--color-text-primary)]">
                         {currentWord.kanji || currentWord.word}
                       </h2>
                       <button
@@ -409,33 +395,29 @@ function FlashcardQuiz() {
                           e.stopPropagation();
                           handlePlayPronunciation();
                         }}
-                        className="p-3 rounded-full glass hover:bg-ocean-500/10 text-[var(--color-accent-primary)] transition-colors"
+                        className="p-2.5 rounded-full glass hover:bg-ocean-500/10 text-[var(--color-accent-primary)] transition-colors"
                         aria-label="Play pronunciation"
                       >
-                        <Volume2 className="w-7 h-7" />
+                        <Volume2 className="w-6 h-6" />
                       </button>
                     </div>
 
-                    {/* Furigana - same size as front */}
                     {currentWord.furigana && (
-                      <p className="text-2xl text-[var(--color-text-secondary)]">{currentWord.furigana}</p>
+                      <p className="text-xl text-[var(--color-text-secondary)]">{currentWord.furigana}</p>
                     )}
 
-                    {/* Romaji - same size as front */}
                     {(currentWord.romaji || currentWord.reading) && (
                       <p className="text-xl text-[var(--color-text-muted)]">{currentWord.romaji || currentWord.reading}</p>
                     )}
 
-                    {/* Meaning - slightly smaller than main reading */}
-                    <p className="text-4xl text-gray-900 dark:text-white font-bold text-center px-8 mt-2">
+                    <p className="text-3xl text-[var(--color-accent-primary)] font-semibold text-center px-8 mt-2">
                       {currentWord.meaning}
                     </p>
                   </div>
                 </div>
-              </div>
-            </motion.div>
+              )}
+            </div>
 
-            {/* Answer buttons */}
             {showAnswer && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -466,7 +448,6 @@ function FlashcardQuiz() {
         </AnimatePresence>
       </div>
 
-      {/* Word Details Card Modal */}
       {selectedWord && (
         <WordDetailsCard
           word={selectedWord}
@@ -474,21 +455,6 @@ function FlashcardQuiz() {
           onClose={() => setSelectedWord(null)}
         />
       )}
-
-      <style jsx>{`
-        .perspective {
-          perspective: 1000px;
-        }
-        .preserve-3d {
-          transform-style: preserve-3d;
-        }
-        .backface-hidden {
-          backface-visibility: hidden;
-        }
-        .rotate-y-180 {
-          transform: rotateY(180deg);
-        }
-      `}</style>
     </div>
   );
 }

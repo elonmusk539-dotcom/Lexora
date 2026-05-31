@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { BookOpen, Lock, Crown, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
@@ -25,7 +24,7 @@ export default function ListsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { subscription, isPro, loading: subLoading } = useSubscription();
+  const { subscription, isPro, loading: subLoading } = useSubscription(user?.id, true);
 
   useEffect(() => {
     if (authLoading) return;
