@@ -495,7 +495,7 @@ function SRSReview() {
             {/* Info Button */}
             <button
               onClick={() => setSelectedWord(currentWord)}
-              className="absolute top-2 right-2 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-gradient-to-r from-ocean-600 to-ocean-500 text-white rounded-full hover:from-ocean-700 hover:to-ocean-600 transition-all z-10 shadow-glow font-bold text-sm sm:text-base font-serif italic"
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-gradient-to-r from-ocean-600 to-ocean-500 text-white rounded-full hover:from-ocean-700 hover:to-ocean-600 transition-all z-10 shadow-glow font-semibold text-sm sm:text-base"
               aria-label="Show Details"
             >
               i

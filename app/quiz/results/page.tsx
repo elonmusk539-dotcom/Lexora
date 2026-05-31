@@ -93,11 +93,11 @@ function QuizResults() {
   };
 
   return (
-    <div className="min-h-screen bg-mesh flex items-center justify-center p-3 sm:p-4 md:p-6">
+    <div className={showWordsList ? "min-h-screen bg-mesh flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto" : "h-[100dvh] bg-mesh flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-hidden"}>
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="card-elevated p-4 sm:p-6 md:p-8 max-w-2xl w-full"
+        className={showWordsList ? "card-elevated p-4 sm:p-6 md:p-8 max-w-2xl w-full my-4" : "card-elevated p-4 sm:p-6 md:p-8 max-w-2xl w-full"}
       >
         {/* Trophy Icon */}
         <motion.div

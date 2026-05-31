@@ -89,8 +89,8 @@ function ReviewComplete() {
   };
 
   return (
-    <div className="min-h-screen bg-mesh">
-      <div className="max-w-2xl mx-auto px-4 py-16">
+    <div className={showWordsList ? "min-h-screen bg-mesh overflow-y-auto" : "h-[100dvh] bg-mesh overflow-hidden flex items-center justify-center p-4 sm:p-6"}>
+      <div className={showWordsList ? "max-w-2xl mx-auto px-4 py-6" : "max-w-2xl w-full mx-auto"}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}

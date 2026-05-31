@@ -377,7 +377,7 @@ function FlashcardQuiz() {
                       e.stopPropagation();
                       setSelectedWord(currentWord);
                     }}
-                    className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-gradient-to-r from-ocean-600 to-ocean-500 text-white rounded-full hover:from-ocean-700 hover:to-ocean-600 transition-all shadow-glow font-bold font-serif italic"
+                    className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-gradient-to-r from-ocean-600 to-ocean-500 text-white rounded-full hover:from-ocean-700 hover:to-ocean-600 transition-all shadow-glow font-bold font-sans"
                     aria-label="Show Details"
                   >
                     i

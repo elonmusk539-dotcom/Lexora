@@ -310,8 +310,8 @@ function MCQQuiz() {
   const progress = ((currentIndex + 1) / words.length) * 100;
 
   return (
-    <div className="min-h-screen bg-mesh p-3 sm:p-4 md:p-6" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
-      <div className="max-w-3xl mx-auto py-4 sm:py-6 md:py-8">
+    <div className="h-[100dvh] bg-mesh p-3 sm:p-4 md:p-6 overflow-hidden flex flex-col" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
+      <div className="max-w-3xl w-full mx-auto flex-1 flex flex-col justify-center py-2 sm:py-4">
         {/* Progress bar */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row justify-between text-xs sm:text-sm text-[var(--color-text-muted)] mb-2 gap-1 sm:gap-0">
