@@ -8,8 +8,6 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { WordListItem } from '@/components/WordListItem';
 import { WordDetailsCard, type Word } from '@/components/WordDetailsCard';
-import { StreakPopup } from '@/components/StreakPopup';
-import { MilestonePopup } from '@/components/MilestonePopup';
 
 interface WordProgress {
   correct_streak: number;
@@ -26,11 +24,6 @@ function ReviewComplete() {
   const [reviewWords, setReviewWords] = useState<Word[]>([]);
   const [wordProgress, setWordProgress] = useState<Record<string, WordProgress>>({});
   const [selectedWord, setSelectedWord] = useState<Word | null>(null);
-  const [showStreakPopup, setShowStreakPopup] = useState(false);
-  const [currentStreak, setCurrentStreak] = useState(0);
-  const [showMilestonePopup, setShowMilestonePopup] = useState(false);
-  const [milestoneType, setMilestoneType] = useState<'streak' | 'words_mastered'>('streak');
-  const [milestoneValue, setMilestoneValue] = useState(0);
 
   useEffect(() => {
     const statsParam = searchParams.get('stats');
@@ -42,84 +35,7 @@ function ReviewComplete() {
       }
     }
 
-    // Fetch user streak and show popup
-    const fetchStreak = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
 
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('streak_count, last_activity_date, last_shown_streak_milestone, last_shown_words_milestone')
-        .eq('user_id', user.id)
-        .single();
-
-      if (profile) {
-        setCurrentStreak(profile.streak_count || 0);
-
-        // Check if this is the first quiz of the day
-        const today = new Date().toISOString().split('T')[0];
-        const lastActivity = profile.last_activity_date;
-
-        if (lastActivity !== today && profile.streak_count > 0) {
-          // Show streak popup after a short delay
-          setTimeout(() => setShowStreakPopup(true), 500);
-
-          // Check for streak milestones
-          const streakMilestones = [7, 14, 21, 30, 60, 90];
-          const lastShownStreak = profile.last_shown_streak_milestone || 0;
-
-          for (const milestone of streakMilestones) {
-            if (profile.streak_count >= milestone && lastShownStreak < milestone) {
-              // Update database
-              await supabase
-                .from('user_profiles')
-                .update({ last_shown_streak_milestone: milestone })
-                .eq('user_id', user.id);
-
-              setTimeout(() => {
-                setShowStreakPopup(false);
-                setMilestoneType('streak');
-                setMilestoneValue(milestone);
-                setShowMilestonePopup(true);
-              }, 3000);
-              break;
-            }
-          }
-        }
-
-        // Check for words mastered milestones
-        const { count } = await supabase
-          .from('user_progress')
-          .select('*', { count: 'exact' })
-          .eq('user_id', user.id)
-          .eq('is_mastered', true);
-
-        if (count !== null && count > 0) {
-          const wordsMilestones = [50, 100, 250, 500, 1000];
-          const lastShownWords = profile.last_shown_words_milestone || 0;
-
-          for (const milestone of wordsMilestones) {
-            if (count >= milestone && lastShownWords < milestone) {
-              // Update database
-              await supabase
-                .from('user_profiles')
-                .update({ last_shown_words_milestone: milestone })
-                .eq('user_id', user.id);
-
-              setTimeout(() => {
-                setShowStreakPopup(false);
-                setMilestoneType('words_mastered');
-                setMilestoneValue(milestone);
-                setShowMilestonePopup(true);
-              }, 3500);
-              break;
-            }
-          }
-        }
-      }
-    };
-
-    fetchStreak();
 
     // Load reviewed words from session storage
     const loadReviewedWords = async () => {
@@ -327,20 +243,6 @@ function ReviewComplete() {
         />
       )}
 
-      {/* Streak Popup */}
-      <StreakPopup
-        isOpen={showStreakPopup}
-        streakCount={currentStreak}
-        onClose={() => setShowStreakPopup(false)}
-      />
-
-      {/* Milestone Popup */}
-      <MilestonePopup
-        isOpen={showMilestonePopup}
-        type={milestoneType}
-        milestone={milestoneValue}
-        onClose={() => setShowMilestonePopup(false)}
-      />
     </div>
   );
 }

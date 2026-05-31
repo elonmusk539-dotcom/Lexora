@@ -360,13 +360,10 @@ function SRSReview() {
         }, 300);
       } else {
         // Finish review session
-        // Update streak and log activity
+        // Log activity
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
-            // Update user streak
-            await supabase.rpc('update_user_streak', { p_user_id: user.id });
-
             // Log quiz activity
             const today = new Date().toISOString().split('T')[0];
             await supabase.from('user_activity_log').insert({
@@ -378,7 +375,8 @@ function SRSReview() {
                 words_reviewed: session.words.length,
                 stats: updatedStats,
               }
-            });            // Store session data for results page
+            });
+            // Store session data for results page
             const reviewSession = {
               words: session.words.map(w => ({
                 id: w.id,
@@ -396,7 +394,7 @@ function SRSReview() {
             sessionStorage.setItem('reviewSession', JSON.stringify(reviewSession));
           }
         } catch (error) {
-          console.error('Error updating streak:', error);
+          console.error('Error logging review activity:', error);
         }
 
         router.push('/review/complete?stats=' + encodeURIComponent(JSON.stringify(updatedStats)));

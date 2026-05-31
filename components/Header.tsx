@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { LogOut, User, Menu, X, Crown } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { StreakDisplay } from './StreakDisplay';
 import { useSubscription } from '@/lib/subscription/useSubscription';
 
 interface UserProfile {
@@ -99,9 +98,6 @@ export function Header({ onMenuToggle, menuOpen }: HeaderProps = {}) {
             </Link>
           </div>
           <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
-            {/* Streak Display */}
-            <StreakDisplay compact />
-
             {/* Profile Avatar and Username */}
             <Link href="/profile" className="relative group flex items-center gap-2 sm:gap-3">
               {profile?.username && (

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
-import { User, Mail, Image as ImageIcon, Save, LogOut, Upload, Trophy, Flame, BookPlus, GraduationCap } from 'lucide-react';
+import { User, Mail, Image as ImageIcon, Save, LogOut, Upload, Trophy, BookPlus, GraduationCap } from 'lucide-react';
 import Image from 'next/image';
 import imageCompression from 'browser-image-compression';
 
@@ -22,7 +22,6 @@ export default function ProfilePage() {
   const [success, setSuccess] = useState('');
   const [stats, setStats] = useState({
     wordsMastered: 0,
-    longestStreak: 0,
     userAddedWords: 0,
     wordsStartedLearning: 0,
   });
@@ -77,13 +76,6 @@ export default function ProfilePage() {
         .eq('user_id', userId)
         .eq('is_mastered', true);
 
-      // Longest streak (from user_profiles table)
-      const { data: profileData } = await supabase
-        .from('user_profiles')
-        .select('longest_streak')
-        .eq('user_id', userId)
-        .single();
-
       // User added words (custom words)
       const { count: customWordsCount } = await supabase
         .from('user_custom_words')
@@ -99,7 +91,6 @@ export default function ProfilePage() {
 
       setStats({
         wordsMastered: masteredCount || 0,
-        longestStreak: profileData?.longest_streak || 0,
         userAddedWords: customWordsCount || 0,
         wordsStartedLearning: startedLearningCount || 0,
       });
@@ -413,7 +404,7 @@ export default function ProfilePage() {
               Learning Statistics
             </h3>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Words Mastered */}
               <div className="p-4 sm:p-5 glass rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20">
                 <div className="flex items-center gap-3 mb-3">
@@ -425,15 +416,15 @@ export default function ProfilePage() {
                 <p className="text-2xl sm:text-3xl font-bold text-green-500">{stats.wordsMastered}</p>
               </div>
 
-              {/* Longest Streak */}
-              <div className="p-4 sm:p-5 glass rounded-xl bg-gradient-to-br from-orange-500/10 to-coral-500/10 border border-orange-500/20">
+              {/* Words Started Learning */}
+              <div className="p-4 sm:p-5 glass rounded-xl bg-gradient-to-br from-ocean-500/10 to-cyan-500/10 border border-ocean-500/20">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-gradient-to-br from-orange-500 to-coral-500 rounded-xl shadow-lg">
-                    <Flame className="w-5 h-5 text-white" />
+                  <div className="p-2 bg-gradient-to-br from-ocean-500 to-cyan-500 rounded-xl shadow-lg">
+                    <GraduationCap className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-sm font-medium text-[var(--color-text-muted)]">Best Streak</span>
+                  <span className="text-sm font-medium text-[var(--color-text-muted)]">Learning</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-orange-500">{stats.longestStreak}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-ocean-500">{stats.wordsStartedLearning}</p>
               </div>
 
               {/* User Added Words */}
@@ -445,17 +436,6 @@ export default function ProfilePage() {
                   <span className="text-sm font-medium text-[var(--color-text-muted)]">Custom Words</span>
                 </div>
                 <p className="text-2xl sm:text-3xl font-bold text-purple-500">{stats.userAddedWords}</p>
-              </div>
-
-              {/* Words Started Learning */}
-              <div className="p-4 sm:p-5 glass rounded-xl bg-gradient-to-br from-ocean-500/10 to-cyan-500/10 border border-ocean-500/20">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-gradient-to-br from-ocean-500 to-cyan-500 rounded-xl shadow-lg">
-                    <GraduationCap className="w-5 h-5 text-white" />
-                  </div>
-                  <span className="text-sm font-medium text-[var(--color-text-muted)]">Learning</span>
-                </div>
-                <p className="text-2xl sm:text-3xl font-bold text-ocean-500">{stats.wordsStartedLearning}</p>
               </div>
             </div>
           </motion.div>

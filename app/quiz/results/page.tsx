@@ -4,8 +4,6 @@ import { motion } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Trophy, Home, RotateCw, ChevronDown, ChevronUp } from 'lucide-react';
-import { StreakPopup } from '@/components/StreakPopup';
-import { MilestonePopup } from '@/components/MilestonePopup';
 import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { WordListItem } from '@/components/WordListItem';
@@ -23,105 +21,16 @@ function QuizResults() {
   const router = useRouter();
   const correct = parseInt(searchParams.get('correct') || '0');
   const total = parseInt(searchParams.get('total') || '1');
-  const streak = parseInt(searchParams.get('streak') || '0');
-
-  const [showStreakPopup, setShowStreakPopup] = useState(false);
   const [showWordsList, setShowWordsList] = useState(false);
   const [quizWords, setQuizWords] = useState<Word[]>([]);
   const [wordProgress, setWordProgress] = useState<Record<string, WordProgress>>({});
   const [loading, setLoading] = useState(true);
   const [selectedWord, setSelectedWord] = useState<Word | null>(null);
-  const [showMilestonePopup, setShowMilestonePopup] = useState(false);
-  const [milestoneType, setMilestoneType] = useState<'streak' | 'words_mastered'>('streak');
-  const [milestoneValue, setMilestoneValue] = useState(0);
 
   const percentage = Math.round((correct / total) * 100);
   const passed = percentage >= 70;
 
-  useEffect(() => {
-    // Show streak popup only on first quiz of the day
-    if (streak > 0) {
-      const today = new Date().toISOString().split('T')[0];
-      const lastStreakShown = localStorage.getItem('lastStreakShown');
 
-      if (lastStreakShown !== today) {
-        // First quiz of the day - show streak popup
-        const timer = setTimeout(() => {
-          localStorage.setItem('lastStreakShown', today);
-          setShowStreakPopup(true);
-        }, 800);
-
-        // Check for streak milestones
-        const checkMilestones = async () => {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) return;
-
-          // Get profile data
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('last_shown_streak_milestone, last_shown_words_milestone')
-            .eq('user_id', user.id)
-            .single();
-
-          // Check streak milestones
-          const streakMilestones = [7, 14, 21, 30, 60, 90];
-          const lastShownStreak = profile?.last_shown_streak_milestone || 0;
-
-          for (const milestone of streakMilestones) {
-            if (streak >= milestone && lastShownStreak < milestone) {
-              // Update database
-              await supabase
-                .from('user_profiles')
-                .update({ last_shown_streak_milestone: milestone })
-                .eq('user_id', user.id);
-
-              setTimeout(() => {
-                setShowStreakPopup(false);
-                setMilestoneType('streak');
-                setMilestoneValue(milestone);
-                setShowMilestonePopup(true);
-              }, 3000);
-              break;
-            }
-          }
-
-          // Check words mastered milestones
-          const { count } = await supabase
-            .from('user_progress')
-            .select('*', { count: 'exact' })
-            .eq('user_id', user.id)
-            .eq('is_mastered', true);
-
-          if (count !== null && count > 0) {
-            const wordsMilestones = [50, 100, 250, 500, 1000];
-            const lastShownWords = profile?.last_shown_words_milestone || 0;
-
-            for (const milestone of wordsMilestones) {
-              if (count >= milestone && lastShownWords < milestone) {
-                // Update database
-                await supabase
-                  .from('user_profiles')
-                  .update({ last_shown_words_milestone: milestone })
-                  .eq('user_id', user.id);
-
-                setTimeout(() => {
-                  setShowStreakPopup(false);
-                  setMilestoneType('words_mastered');
-                  setMilestoneValue(milestone);
-                  setShowMilestonePopup(true);
-                }, 3500);
-                break;
-              }
-            }
-          }
-        };
-
-        checkMilestones();
-
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [streak]);
 
   useEffect(() => {
     loadQuizSession();
@@ -345,20 +254,7 @@ function QuizResults() {
         </motion.div>
       </motion.div>
 
-      {/* Streak Popup */}
-      <StreakPopup
-        isOpen={showStreakPopup}
-        streakCount={streak}
-        onClose={() => setShowStreakPopup(false)}
-      />
 
-      {/* Milestone Popup */}
-      <MilestonePopup
-        isOpen={showMilestonePopup}
-        type={milestoneType}
-        milestone={milestoneValue}
-        onClose={() => setShowMilestonePopup(false)}
-      />
 
       {/* Word Details Modal */}
       {selectedWord && (

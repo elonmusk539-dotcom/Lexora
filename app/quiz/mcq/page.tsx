@@ -232,20 +232,9 @@ function MCQQuiz() {
   };
 
   const finishQuiz = async () => {
-    // Update streak
-    let updatedStreak = 0;
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Update user streak and get the new streak value
-        const { data: streakValue, error: streakError } = await supabase.rpc('update_user_streak', { p_user_id: user.id });
-
-        if (streakError) {
-          console.error('Error updating streak:', streakError);
-        } else {
-          updatedStreak = streakValue || 0;
-        }
-
         // Log quiz activity
         const today = new Date().toISOString().split('T')[0];
         await supabase.from('user_activity_log').insert({
@@ -275,7 +264,7 @@ function MCQQuiz() {
     localStorage.setItem('lastQuizSession', JSON.stringify(quizSession));
 
     // Navigate to results page
-    router.push(`/quiz/results?correct=${score.correct}&total=${words.length}&streak=${updatedStreak}`);
+    router.push(`/quiz/results?correct=${score.correct}&total=${words.length}`);
 
     // Update progress in background
     for (const answer of answers) {

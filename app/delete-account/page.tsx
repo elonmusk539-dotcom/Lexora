@@ -143,7 +143,7 @@ export default function DeleteAccountPage() {
                     </li>
                     <li className="flex items-start gap-2">
                       <Trash2 className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
-                      Streak data and activity log
+                      Activity log and history
                     </li>
                     <li className="flex items-start gap-2">
                       <Trash2 className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
