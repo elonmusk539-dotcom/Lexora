@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState, Suspense } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Volume2, X, Check } from 'lucide-react';
+import { Volume2, X, Check, ArrowLeft } from 'lucide-react';
 import type { Word } from '@/components/WordDetailsCard';
 import { playPronunciation } from '@/lib/audio';
 
@@ -312,10 +312,25 @@ function MCQQuiz() {
   return (
     <div className="fixed inset-0 bg-mesh p-3 sm:p-4 md:p-6 overflow-hidden flex flex-col" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
       <div className="max-w-3xl w-full mx-auto flex-1 flex flex-col py-2 sm:py-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-medium">Back</span>
+          </button>
+
+          <div className="text-sm font-medium text-[var(--color-text-muted)]">
+            {currentIndex + 1} / {words.length}
+          </div>
+        </div>
+
         {/* Progress bar */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row justify-between text-xs sm:text-sm text-[var(--color-text-muted)] mb-2 gap-1 sm:gap-0">
-            <span>Question {currentIndex + 1} of {words.length}</span>
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-row justify-between text-xs sm:text-sm text-[var(--color-text-muted)] mb-2">
+            <span>Progress</span>
             <div className="flex gap-3 sm:gap-4">
               <span className="text-green-500">{score.correct} correct</span>
               <span className="text-coral-500">{score.incorrect} incorrect</span>

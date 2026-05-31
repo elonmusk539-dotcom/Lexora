@@ -89,21 +89,21 @@ function ReviewComplete() {
   };
 
   return (
-    <div className={showWordsList ? "min-h-screen bg-mesh overflow-y-auto" : "h-[100dvh] bg-mesh overflow-hidden flex items-center justify-center p-4 sm:p-6"}>
+    <div className={showWordsList ? "min-h-screen bg-mesh overflow-y-auto" : "h-[100dvh] bg-mesh overflow-hidden flex items-center justify-center p-3 sm:p-6"}>
       <div className={showWordsList ? "max-w-2xl mx-auto px-4 py-6" : "max-w-2xl w-full mx-auto"}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="card-elevated p-4 sm:p-6 md:p-8"
+          className="card-elevated p-3 sm:p-6 md:p-8"
         >
           {/* Trophy Icon */}
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring' }}
-            className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-green-500/20 to-ocean-500/20 rounded-2xl flex items-center justify-center"
+            className="w-14 h-14 sm:w-24 sm:h-24 mx-auto mb-3 sm:mb-6 bg-gradient-to-br from-green-500/20 to-ocean-500/20 rounded-2xl flex items-center justify-center"
           >
-            <Trophy className="w-12 h-12 text-green-500" />
+            <Trophy className="w-7 h-7 sm:w-12 sm:h-12 text-green-500" />
           </motion.div>
 
           {/* Title */}
@@ -111,7 +111,7 @@ function ReviewComplete() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-4xl font-bold text-gray-900 dark:text-white text-center mb-4"
+            className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white text-center mb-2"
           >
             Review Complete! 🎉
           </motion.h1>
@@ -120,7 +120,7 @@ function ReviewComplete() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-gray-600 dark:text-gray-400 text-center mb-8"
+            className="text-sm sm:text-base text-gray-600 dark:text-gray-400 text-center mb-3 sm:mb-8"
           >
             Great job! You reviewed {total} word{total !== 1 ? 's' : ''} today.
           </motion.p>
@@ -130,13 +130,13 @@ function ReviewComplete() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5 }}
-            className="glass rounded-xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8 bg-gradient-to-r from-green-500/10 to-ocean-500/10"
+            className="glass rounded-xl p-3 sm:p-6 md:p-8 mb-3 sm:mb-6 md:mb-8 bg-gradient-to-r from-green-500/10 to-ocean-500/10"
           >
             <div className="text-center">
-              <div className="text-7xl font-bold text-green-500 mb-2">
+              <div className="text-5xl sm:text-7xl font-bold text-green-500 mb-1">
                 {total}
               </div>
-              <div className="text-xl text-[var(--color-text-secondary)]">
+              <div className="text-sm sm:text-xl text-[var(--color-text-secondary)]">
                 words reviewed today
               </div>
             </div>
@@ -148,19 +148,19 @@ function ReviewComplete() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="mb-8"
+              className="mb-3 sm:mb-8"
             >
               <button
                 onClick={() => setShowWordsList(!showWordsList)}
-                className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-xl hover:from-green-100 hover:to-blue-100 dark:hover:from-green-900/30 dark:hover:to-blue-900/30 transition-all"
+                className="w-full flex items-center justify-between p-2.5 sm:p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-xl hover:from-green-100 hover:to-blue-100 dark:hover:from-green-900/30 dark:hover:to-blue-900/30 transition-all"
               >
-                <span className="font-semibold text-gray-900 dark:text-white">
+                <span className="text-xs sm:text-base font-semibold text-gray-900 dark:text-white">
                   Words Reviewed in This Quiz ({reviewWords.length})
                 </span>
                 {showWordsList ? (
-                  <ChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" />
                 )}
               </button>
 
@@ -169,7 +169,7 @@ function ReviewComplete() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mt-4 space-y-3 max-h-96 overflow-y-auto scrollbar-hide pb-3"
+                  className="mt-2 sm:mt-4 space-y-1.5 sm:space-y-3 max-h-80 sm:max-h-96 overflow-y-auto scrollbar-hide pb-2"
                 >
                   {reviewWords.map((word, index) => {
                     const progress = wordProgress[word.id];
@@ -202,20 +202,20 @@ function ReviewComplete() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="grid grid-cols-2 gap-4"
+            className="grid grid-cols-2 gap-3 sm:gap-4"
           >
             <Link
               href="/"
-              className="flex items-center justify-center gap-2 py-3 btn-ghost font-semibold"
+              className="flex items-center justify-center gap-2 py-2 sm:py-3 btn-ghost text-xs sm:text-base font-semibold"
             >
-              <Home className="w-5 h-5" />
+              <Home className="w-4 h-4 sm:w-5 sm:h-5" />
               Home
             </Link>
             <button
               onClick={() => router.push('/review')}
-              className="flex items-center justify-center gap-2 py-3 btn-primary"
+              className="flex items-center justify-center gap-2 py-2 sm:py-3 btn-primary text-xs sm:text-base"
             >
-              <RotateCcw className="w-5 h-5" />
+              <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
               Review More
             </button>
           </motion.div>
@@ -225,9 +225,9 @@ function ReviewComplete() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl"
+            className="mt-3 sm:mt-6 p-2.5 sm:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl"
           >
-            <p className="text-sm text-gray-700 dark:text-gray-300 text-center">
+            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 text-center">
               Words will appear again based on your ratings. Keep reviewing daily for best results!
             </p>
           </motion.div>

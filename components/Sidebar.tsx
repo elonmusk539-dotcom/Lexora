@@ -279,14 +279,18 @@ export function Sidebar({ children }: SidebarProps) {
       <div
         className={`flex-1 transition-all duration-300 ml-0 md:ml-20 ${collapsed ? '' : 'lg:ml-[260px]'}`}
       >
-        {/* Don't show Header on login/signup/smart-quiz pages (smart quiz only on mobile) */}
-        {pathname !== '/login' && pathname !== '/signup' && (
-          <div className={pathname === '/review' ? 'hidden sm:block' : ''}>
-            <Header onMenuToggle={toggleMobileMenu} menuOpen={mobileOpen} />
-            {/* Spacer to push content below the fixed header */}
-            <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 56px)' }} />
-          </div>
-        )}
+        {/* Don't show Header on login/signup/quiz-mcq/quiz-flashcard/smart-quiz pages */}
+        {pathname !== '/login' &&
+          pathname !== '/signup' &&
+          pathname !== '/quiz/mcq' &&
+          pathname !== '/quiz/flashcard' &&
+          pathname !== '/review' && (
+            <div>
+              <Header onMenuToggle={toggleMobileMenu} menuOpen={mobileOpen} />
+              {/* Spacer to push content below the fixed header */}
+              <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 56px)' }} />
+            </div>
+          )}
         {children}
       </div>
     </div>

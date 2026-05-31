@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState, Suspense } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Volume2, RotateCw, Check, X } from 'lucide-react';
+import { Volume2, RotateCw, Check, X, ArrowLeft } from 'lucide-react';
 import type { Word } from '@/components/WordDetailsCard';
 import { WordDetailsCard } from '@/components/WordDetailsCard';
 import { playPronunciation } from '@/lib/audio';
@@ -293,13 +293,28 @@ function FlashcardQuiz() {
   const progress = ((currentIndex + 1) / words.length) * 100;
 
   return (
-    <div className="min-h-screen bg-mesh p-4" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
-      <div className="max-w-3xl mx-auto py-8">
+    <div className="fixed inset-0 bg-mesh p-3 sm:p-4 md:p-6 overflow-hidden flex flex-col" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
+      <div className="max-w-3xl w-full mx-auto flex-1 flex flex-col py-2 sm:py-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="font-medium">Back</span>
+          </button>
+
+          <div className="text-sm font-medium text-[var(--color-text-muted)]">
+            {currentIndex + 1} / {words.length}
+          </div>
+        </div>
+
         {/* Progress bar */}
-        <div className="mb-8">
-          <div className="flex justify-between text-sm text-[var(--color-text-muted)] mb-2">
-            <span>Card {currentIndex + 1} of {words.length}</span>
-            <div className="flex gap-4">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-row justify-between text-xs sm:text-sm text-[var(--color-text-muted)] mb-2">
+            <span>Progress</span>
+            <div className="flex gap-3 sm:gap-4">
               <span className="text-green-500">{score.correct} correct</span>
               <span className="text-coral-500">{score.incorrect} incorrect</span>
             </div>
@@ -326,7 +341,7 @@ function FlashcardQuiz() {
             <motion.div
               animate={{ rotateY: isFlipped ? 180 : 0 }}
               transition={{ duration: 0.6, type: 'spring' }}
-              className="relative w-full h-[500px] cursor-pointer preserve-3d"
+              className="relative w-full h-[340px] sm:h-[440px] md:h-[480px] cursor-pointer preserve-3d"
               onClick={handleFlip}
             >
               {/* Front of card */}
