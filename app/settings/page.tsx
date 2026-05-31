@@ -146,10 +146,15 @@ export default function SettingsPage() {
         .single();
 
       if (existingProfile) {
+        const mergedSettings = {
+          ...(existingProfile.settings || {}),
+          ...settings,
+        };
+
         const { error: updateError } = await supabase
           .from('user_profiles')
           .update({
-            settings,
+            settings: mergedSettings,
             updated_at: new Date().toISOString(),
           })
           .eq('user_id', user.id);

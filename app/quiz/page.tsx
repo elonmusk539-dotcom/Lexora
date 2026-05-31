@@ -123,21 +123,31 @@ export default function QuizPage() {
       return;
     }
 
-    // Save preferences — upsert directly, no SELECT needed
+    // Save preferences
     if (user?.id) {
       try {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('settings')
+          .eq('user_id', user.id)
+          .single();
+
+        const currentSettings = profile?.settings || {};
+        const updatedSettings = {
+          ...currentSettings,
+          quiz: {
+            lastQuizType: quizType,
+            lastDuration: duration,
+            customDuration: customDuration,
+            lastSelectedLists: selectedLists,
+          },
+        };
+
         await supabase
           .from('user_profiles')
           .upsert({
             user_id: user.id,
-            settings: {
-              quiz: {
-                lastQuizType: quizType,
-                lastDuration: duration,
-                customDuration: customDuration,
-                lastSelectedLists: selectedLists,
-              },
-            },
+            settings: updatedSettings,
             updated_at: new Date().toISOString(),
           }, { onConflict: 'user_id' });
       } catch (error) {

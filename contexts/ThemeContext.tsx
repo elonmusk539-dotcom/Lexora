@@ -49,10 +49,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const saveThemeToDatabase = useCallback(async (userId: string, newTheme: Theme) => {
     try {
+      // Fetch existing profile settings first to avoid overwriting them
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('settings')
+        .eq('user_id', userId)
+        .single();
+
+      const currentSettings = profile?.settings || {};
+      const updatedSettings = {
+        ...currentSettings,
+        theme: newTheme,
+      };
+
       await supabase
         .from('user_profiles')
         .update({
-          settings: { theme: newTheme },
+          settings: updatedSettings,
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', userId);
