@@ -310,8 +310,8 @@ function MCQQuiz() {
   const progress = ((currentIndex + 1) / words.length) * 100;
 
   return (
-    <div className="h-[100dvh] bg-mesh p-3 sm:p-4 md:p-6 overflow-hidden flex flex-col" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
-      <div className="max-w-3xl w-full mx-auto flex-1 flex flex-col justify-center py-2 sm:py-4">
+    <div className="fixed inset-0 bg-mesh p-3 sm:p-4 md:p-6 overflow-hidden flex flex-col" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
+      <div className="max-w-3xl w-full mx-auto flex-1 flex flex-col py-2 sm:py-4">
         {/* Progress bar */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row justify-between text-xs sm:text-sm text-[var(--color-text-muted)] mb-2 gap-1 sm:gap-0">
@@ -402,16 +402,21 @@ function MCQQuiz() {
               })}
             </div>
 
-            {showResult && (
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                onClick={handleNext}
-                className="w-full mt-4 sm:mt-6 py-3 btn-primary text-sm sm:text-base"
-              >
-                {currentIndex < words.length - 1 ? 'Next Question' : 'Finish Quiz'}
-              </motion.button>
-            )}
+            <div className="mt-4 sm:mt-6 h-12 relative">
+              <AnimatePresence>
+                {showResult && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    onClick={handleNext}
+                    className="absolute inset-0 w-full py-3 btn-primary text-sm sm:text-base font-semibold shadow-glow"
+                  >
+                    {currentIndex < words.length - 1 ? 'Next Question' : 'Finish Quiz'}
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>
