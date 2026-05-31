@@ -382,7 +382,7 @@ export default function QuizPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowListModal(false)}
-              className="fixed inset-0 bg-night-400/70 z-40 backdrop-blur-md"
+              className="fixed inset-0 bg-night-400/70 z-[100] backdrop-blur-md"
             />
 
             {/* Modal */}
@@ -391,7 +391,7 @@ export default function QuizPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl glass-strong rounded-2xl shadow-xl z-50 flex flex-col max-h-[80vh]"
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl glass-strong rounded-2xl shadow-xl z-[110] flex flex-col max-h-[80vh]"
             >
               <div className="flex items-center justify-between p-5 sm:p-6 border-b border-[var(--color-border)] flex-shrink-0">
                 <h3 className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)]">Select Lists</h3>

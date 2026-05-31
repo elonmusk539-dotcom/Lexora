@@ -636,13 +636,13 @@ export default function MyListsPage() {
                   setNewListName('');
                   setNewListDescription('');
                 }}
-                className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+                className="fixed inset-0 bg-black/50 z-[100] backdrop-blur-sm"
               />
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-md card-elevated z-[60] p-4 sm:p-6"
+                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-md card-elevated z-[110] p-4 sm:p-6"
               >
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
                   <h3 className="text-2xl font-bold text-[var(--color-text-primary)]">
@@ -718,13 +718,13 @@ export default function MyListsPage() {
                   setSearchQuery('');
                   setSearchResults([]);
                 }}
-                className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+                className="fixed inset-0 bg-black/50 z-[100] backdrop-blur-sm"
               />
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl max-h-[90vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[60] p-4 sm:p-6 overflow-y-auto"
+                className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl max-h-[90vh] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-[110] p-4 sm:p-6 overflow-y-auto"
               >
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedList.name}</h3>
