@@ -315,7 +315,7 @@ export function AddCustomWord({ isOpen, onClose, listId, onWordAdded }: AddCusto
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed left-1/2 -translate-x-1/2 top-4 bottom-4 sm:top-1/2 sm:bottom-auto sm:-translate-y-1/2 w-[calc(100%-2rem)] max-w-3xl sm:max-h-[90vh] glass-strong rounded-2xl shadow-xl z-[110] overflow-hidden flex flex-col"
+            className="fixed left-1/2 -translate-x-1/2 top-[calc(env(safe-area-inset-top,0px)+16px)] bottom-4 sm:top-1/2 sm:bottom-auto sm:-translate-y-1/2 w-[calc(100%-2rem)] max-w-3xl sm:max-h-[90vh] glass-strong rounded-2xl shadow-xl z-[110] overflow-hidden flex flex-col"
           >
             {/* Header */}
             <div className="sticky top-0 glass-strong border-b border-[var(--color-border)] px-6 py-4 z-10">
