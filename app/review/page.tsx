@@ -492,12 +492,13 @@ function SRSReview() {
             exit={{ opacity: 0, scale: 0.95 }}
             className="card-elevated p-4 sm:p-8 mb-6 relative"
           >
-            {/* Show Details Button - moved to avoid overlap */}
+            {/* Info Button */}
             <button
               onClick={() => setSelectedWord(currentWord)}
-              className="absolute top-2 right-2 sm:top-4 sm:right-4 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gradient-to-r from-ocean-600 to-ocean-500 text-white rounded-lg hover:from-ocean-700 hover:to-ocean-600 transition-all z-10 shadow-glow"
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-gradient-to-r from-ocean-600 to-ocean-500 text-white rounded-full hover:from-ocean-700 hover:to-ocean-600 transition-all z-10 shadow-glow font-bold text-sm sm:text-base font-serif italic"
+              aria-label="Show Details"
             >
-              Show Details
+              i
             </button>
 
             {/* Word Image */}
@@ -589,10 +590,11 @@ function SRSReview() {
                       })}
                     </div>
                   ) : (
-                    <div className="text-xs text-[var(--color-text-muted)] mt-4">
-                      {!settings.showExamples && '(Examples hidden in settings)'}
-                      {settings.showExamples && (!currentWord.examples || currentWord.examples.length === 0) && '(No examples available for this word)'}
-                    </div>
+                    settings.showExamples && (!currentWord.examples || currentWord.examples.length === 0) && (
+                      <div className="text-xs text-[var(--color-text-muted)] mt-4">
+                        (No examples available for this word)
+                      </div>
+                    )
                   )}
                 </motion.div>
 

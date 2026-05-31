@@ -371,15 +371,16 @@ function FlashcardQuiz() {
               {/* Back of card - show reading, furigana, romaji, meaning, pronunciation */}
               <div className="absolute inset-0 backface-hidden rotate-y-180">
                 <div className="card-elevated rounded-2xl p-4 sm:p-6 md:p-8 h-full flex flex-col items-center justify-center relative">
-                  {/* Show Details Button */}
+                  {/* Info Button */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedWord(currentWord);
                     }}
-                    className="absolute top-4 right-4 px-4 py-2 text-sm bg-gradient-to-r from-ocean-600 to-ocean-500 text-white rounded-lg hover:from-ocean-700 hover:to-ocean-600 transition-all shadow-glow"
+                    className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-gradient-to-r from-ocean-600 to-ocean-500 text-white rounded-full hover:from-ocean-700 hover:to-ocean-600 transition-all shadow-glow font-bold font-serif italic"
+                    aria-label="Show Details"
                   >
-                    Show Details
+                    i
                   </button>
 
                   <div className="flex flex-col items-center gap-4">
