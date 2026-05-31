@@ -279,12 +279,14 @@ export function Sidebar({ children }: SidebarProps) {
       <div
         className={`flex-1 transition-all duration-300 ml-0 md:ml-20 ${collapsed ? '' : 'lg:ml-[260px]'}`}
       >
-        {/* Don't show Header on login/signup/quiz-mcq/quiz-flashcard/smart-quiz pages */}
+        {/* Don't show Header on login/signup/quiz/review session and results pages */}
         {pathname !== '/login' &&
           pathname !== '/signup' &&
           pathname !== '/quiz/mcq' &&
           pathname !== '/quiz/flashcard' &&
-          pathname !== '/review' && (
+          pathname !== '/quiz/results' &&
+          pathname !== '/review' &&
+          pathname !== '/review/complete' && (
             <div>
               <Header onMenuToggle={toggleMobileMenu} menuOpen={mobileOpen} />
               {/* Spacer to push content below the fixed header */}
