@@ -233,7 +233,7 @@ export default function Home() {
     );
   }, [filteredWords, currentPage, itemsPerPage]);
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-mesh">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
@@ -261,10 +261,10 @@ export default function Home() {
               <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg">
                 <Sparkles className="w-4 h-4 text-coral-500" />
                 <span className="text-sm font-semibold text-[var(--color-text-secondary)]">
-                  {filteredWords.length}
+                  {loading ? '...' : filteredWords.length}
                 </span>
                 <span className="text-sm text-[var(--color-text-muted)]">
-                  word{filteredWords.length !== 1 ? 's' : ''}
+                  {loading ? 'words' : `word${filteredWords.length !== 1 ? 's' : ''}`}
                 </span>
               </div>
             </div>
@@ -326,7 +326,23 @@ export default function Home() {
             )}
         </div>
 
-        {filteredWords.length === 0 ? (
+        {loading ? (
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5 card bg-[var(--color-surface)]/40 border border-[var(--color-border)]/40 rounded-2xl animate-pulse h-[100px]"
+              >
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 bg-[var(--color-border)]/50 rounded-md w-1/4"></div>
+                  <div className="h-3.5 bg-[var(--color-border)]/30 rounded-md w-1/2"></div>
+                  <div className="h-4 bg-[var(--color-border)]/40 rounded-md w-2/3"></div>
+                </div>
+                <div className="w-12 h-12 rounded-full bg-[var(--color-border)]/50 flex-shrink-0"></div>
+              </div>
+            ))}
+          </div>
+        ) : filteredWords.length === 0 ? (
           <div
             className="text-center py-16"
           >

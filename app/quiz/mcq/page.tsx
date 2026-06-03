@@ -303,7 +303,7 @@ function MCQQuiz() {
     playPronunciation(currentWord.pronunciation_url);
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-mesh">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
@@ -311,12 +311,12 @@ function MCQQuiz() {
     );
   }
 
-  if (words.length === 0) {
+  if (words.length === 0 && !loading) {
     return null;
   }
 
-  const currentWord = words[currentIndex];
-  const progress = ((currentIndex + 1) / words.length) * 100;
+  const currentWord = words[currentIndex] || null;
+  const progress = words.length > 0 ? ((currentIndex + 1) / words.length) * 100 : 0;
 
   return (
     <div className="fixed inset-0 bg-mesh p-3 sm:p-4 md:p-6 overflow-hidden flex flex-col" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
@@ -332,7 +332,7 @@ function MCQQuiz() {
           </button>
 
           <div className="text-sm font-medium text-[var(--color-text-muted)]">
-            {currentIndex + 1} / {words.length}
+            {loading ? '... / ...' : `${currentIndex + 1} / ${words.length}`}
           </div>
         </div>
 
@@ -341,8 +341,8 @@ function MCQQuiz() {
           <div className="flex flex-row justify-between text-xs sm:text-sm text-[var(--color-text-muted)] mb-2">
             <span>Progress</span>
             <div className="flex gap-3 sm:gap-4">
-              <span className="text-green-500">{score.correct} correct</span>
-              <span className="text-coral-500">{score.incorrect} incorrect</span>
+              <span className="text-green-500">{loading ? '...' : score.correct} correct</span>
+              <span className="text-coral-500">{loading ? '...' : score.incorrect} incorrect</span>
             </div>
           </div>
           <div className="w-full bg-[var(--color-border)] rounded-full h-2">
@@ -355,93 +355,108 @@ function MCQQuiz() {
           </div>
         </div>
 
-        {/* Question Card */}
         <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            className="card-elevated p-4 sm:p-6 md:p-8"
-          >
-            {/* Word */}
-            <div className="text-center mb-6 sm:mb-8">
-              <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--color-text-primary)]">{currentWord.kanji || currentWord.word}</h2>
-                <button
-                  onClick={handlePlayPronunciation}
-                  className="p-2 sm:p-3 rounded-full glass hover:bg-ocean-500/10 text-[var(--color-accent-primary)] transition-colors"
-                  aria-label="Play pronunciation"
-                >
-                  <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
-                </button>
+          {loading ? (
+            <div className="card-elevated p-4 sm:p-6 md:p-8 animate-pulse space-y-6">
+              <div className="text-center mb-6 sm:mb-8 space-y-3 flex flex-col items-center">
+                <div className="h-10 bg-[var(--color-border)]/55 rounded-md w-1/3 mb-2" />
+                <div className="h-6 bg-[var(--color-border)]/35 rounded-md w-1/4" />
+                <div className="h-5 bg-[var(--color-border)]/30 rounded-md w-1/5" />
               </div>
-              {/* Conditionally show furigana based on settings */}
-              {settings?.mcq?.showFurigana && currentWord.furigana && (
-                <p className="text-lg sm:text-xl md:text-2xl text-[var(--color-text-secondary)] mb-1">{currentWord.furigana}</p>
-              )}
-              {/* Conditionally show romaji based on settings */}
-              {settings?.mcq?.showRomaji && (currentWord.romaji || currentWord.reading) && (
-                <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-muted)]">{currentWord.romaji || currentWord.reading}</p>
-              )}
+              <p className="h-6 bg-[var(--color-border)]/30 rounded-md w-1/2 mx-auto" />
+              <div className="grid gap-2 sm:gap-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-14 bg-[var(--color-border)]/35 rounded-xl w-full" />
+                ))}
+              </div>
             </div>
-
-            {/* Question */}
-            <p className="text-center text-base sm:text-lg text-[var(--color-text-secondary)] mb-4 sm:mb-6">
-              What does this word mean?
-            </p>
-
-            {/* Options */}
-            <div className="grid gap-2 sm:gap-3">
-              {currentWord.options.map((option, index) => {
-                const isSelected = selectedAnswer === option;
-                const isCorrect = option === currentWord.correctAnswer;
-                const showCorrect = showResult && isCorrect;
-                const showIncorrect = showResult && isSelected && !isCorrect;
-
-                return (
-                  <motion.button
-                    key={index}
-                    whileHover={!showResult ? { scale: 1.02 } : {}}
-                    whileTap={!showResult ? { scale: 0.98 } : {}}
-                    onClick={() => handleAnswer(option)}
-                    disabled={showResult}
-                    className={`p-3 sm:p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${showCorrect
-                      ? 'border-green-500 bg-green-50 dark:bg-green-900/30'
-                      : showIncorrect
-                        ? 'border-coral-500 bg-coral-50 dark:bg-coral-900/30'
-                        : isSelected
-                          ? 'border-ocean-500 bg-ocean-50 dark:bg-ocean-900/30'
-                          : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-border-focus)] hover:bg-[var(--color-surface-overlay)]'
-                      }`}
+          ) : currentWord ? (
+            <motion.div
+              key={currentIndex}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              className="card-elevated p-4 sm:p-6 md:p-8"
+            >
+              {/* Word */}
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--color-text-primary)]">{currentWord.kanji || currentWord.word}</h2>
+                  <button
+                    onClick={handlePlayPronunciation}
+                    className="p-2 sm:p-3 rounded-full glass hover:bg-ocean-500/10 text-[var(--color-accent-primary)] transition-colors"
+                    aria-label="Play pronunciation"
                   >
-                    <span className={`text-sm sm:text-base font-medium ${showCorrect ? 'text-green-700 dark:text-green-400' : showIncorrect ? 'text-coral-700 dark:text-coral-400' : 'text-[var(--color-text-primary)]'
-                      }`}>
-                      {option}
-                    </span>
-                    {showCorrect && <Check className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400 flex-shrink-0" />}
-                    {showIncorrect && <X className="w-5 h-5 sm:w-6 sm:h-6 text-coral-600 dark:text-coral-400 flex-shrink-0" />}
-                  </motion.button>
-                );
-              })}
-            </div>
-
-            <div className="mt-4 sm:mt-6 h-12 relative">
-              <AnimatePresence>
-                {showResult && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    onClick={handleNext}
-                    className="absolute inset-0 w-full py-3 btn-primary text-sm sm:text-base font-semibold shadow-glow"
-                  >
-                    {currentIndex < words.length - 1 ? 'Next Question' : 'Finish Quiz'}
-                  </motion.button>
+                    <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </button>
+                </div>
+                {/* Conditionally show furigana based on settings */}
+                {settings?.mcq?.showFurigana && currentWord.furigana && (
+                  <p className="text-lg sm:text-xl md:text-2xl text-[var(--color-text-secondary)] mb-1">{currentWord.furigana}</p>
                 )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
+                {/* Conditionally show romaji based on settings */}
+                {settings?.mcq?.showRomaji && (currentWord.romaji || currentWord.reading) && (
+                  <p className="text-base sm:text-lg md:text-xl text-[var(--color-text-muted)]">{currentWord.romaji || currentWord.reading}</p>
+                )}
+              </div>
+
+              {/* Question */}
+              <p className="text-center text-base sm:text-lg text-[var(--color-text-secondary)] mb-4 sm:mb-6">
+                What does this word mean?
+              </p>
+
+              {/* Options */}
+              <div className="grid gap-2 sm:gap-3">
+                {currentWord.options.map((option, index) => {
+                  const isSelected = selectedAnswer === option;
+                  const isCorrect = option === currentWord.correctAnswer;
+                  const showCorrect = showResult && isCorrect;
+                  const showIncorrect = showResult && isSelected && !isCorrect;
+
+                  return (
+                    <motion.button
+                      key={index}
+                      whileHover={!showResult ? { scale: 1.02 } : {}}
+                      whileTap={!showResult ? { scale: 0.98 } : {}}
+                      onClick={() => handleAnswer(option)}
+                      disabled={showResult}
+                      className={`p-3 sm:p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${showCorrect
+                        ? 'border-green-500 bg-green-50 dark:bg-green-900/30'
+                        : showIncorrect
+                          ? 'border-coral-500 bg-coral-50 dark:bg-coral-900/30'
+                          : isSelected
+                            ? 'border-ocean-500 bg-ocean-50 dark:bg-ocean-900/30'
+                            : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-border-focus)] hover:bg-[var(--color-surface-overlay)]'
+                        }`}
+                    >
+                      <span className={`text-sm sm:text-base font-medium ${showCorrect ? 'text-green-700 dark:text-green-400' : showIncorrect ? 'text-coral-700 dark:text-coral-400' : 'text-[var(--color-text-primary)]'
+                        }`}>
+                        {option}
+                      </span>
+                      {showCorrect && <Check className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400 flex-shrink-0" />}
+                      {showIncorrect && <X className="w-5 h-5 sm:w-6 sm:h-6 text-coral-600 dark:text-coral-400 flex-shrink-0" />}
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-4 sm:mt-6 h-12 relative">
+                <AnimatePresence>
+                  {showResult && (
+                    <motion.button
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      onClick={handleNext}
+                      className="absolute inset-0 w-full py-3 btn-primary text-sm sm:text-base font-semibold shadow-glow"
+                    >
+                      {currentIndex < words.length - 1 ? 'Next Question' : 'Finish Quiz'}
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          ) : null}
         </AnimatePresence>
       </div>
     </div>

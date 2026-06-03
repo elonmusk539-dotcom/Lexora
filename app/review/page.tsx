@@ -415,7 +415,7 @@ function SRSReview() {
     }
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-mesh">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
@@ -423,7 +423,7 @@ function SRSReview() {
     );
   }
 
-  if (session.words.length === 0) {
+  if (session.words.length === 0 && !loading) {
     return (
       <div className="min-h-screen bg-mesh">
         <div className="max-w-2xl mx-auto px-4 py-16">
@@ -453,8 +453,8 @@ function SRSReview() {
     );
   }
 
-  const currentWord = session.words[session.currentIndex];
-  const progress = ((session.currentIndex + 1) / session.words.length) * 100;
+  const currentWord = session.words[session.currentIndex] || null;
+  const progress = session.words.length > 0 ? ((session.currentIndex + 1) / session.words.length) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-mesh" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
@@ -470,7 +470,7 @@ function SRSReview() {
           </button>
 
           <div className="text-sm font-medium text-[var(--color-text-muted)]">
-            {session.currentIndex + 1} / {session.words.length}
+            {loading ? '... / ...' : `${session.currentIndex + 1} / ${session.words.length}`}
           </div>
         </div>
 
@@ -488,13 +488,21 @@ function SRSReview() {
 
         {/* Review Card */}
         <AnimatePresence mode="wait">
-          <motion.div
-            key={session.currentIndex}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="card-elevated p-4 sm:p-8 mb-6 relative"
-          >
+          {loading ? (
+            <div className="card-elevated p-4 sm:p-8 mb-6 animate-pulse space-y-6 flex flex-col items-center justify-center min-h-[300px]">
+              <div className="h-10 bg-[var(--color-border)]/55 rounded-md w-1/3 mb-2" />
+              <div className="h-6 bg-[var(--color-border)]/35 rounded-md w-1/4" />
+              <div className="h-5 bg-[var(--color-border)]/30 rounded-md w-1/5" />
+              <div className="h-12 bg-[var(--color-border)]/35 rounded-xl w-full max-w-xs mt-6" />
+            </div>
+          ) : currentWord ? (
+            <motion.div
+              key={session.currentIndex}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="card-elevated p-4 sm:p-8 mb-6 relative"
+            >
             {/* Info Button */}
             <button
               onClick={() => setSelectedWord(currentWord)}
@@ -647,6 +655,7 @@ function SRSReview() {
               </>
             )}
           </motion.div>
+          ) : null}
         </AnimatePresence>
       </div>
 

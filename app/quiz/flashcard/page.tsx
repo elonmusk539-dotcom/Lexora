@@ -279,7 +279,7 @@ function FlashcardQuiz() {
     playPronunciation(currentWord.pronunciation_url);
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-mesh">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
@@ -287,12 +287,12 @@ function FlashcardQuiz() {
     );
   }
 
-  if (words.length === 0) {
+  if (words.length === 0 && !loading) {
     return null;
   }
 
-  const currentWord = words[currentIndex];
-  const progress = ((currentIndex + 1) / words.length) * 100;
+  const currentWord = words[currentIndex] || null;
+  const progress = words.length > 0 ? ((currentIndex + 1) / words.length) * 100 : 0;
 
   return (
     <div className="fixed inset-0 bg-mesh p-3 sm:p-4 md:p-6 overflow-hidden flex flex-col" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}>
@@ -307,7 +307,7 @@ function FlashcardQuiz() {
           </button>
 
           <div className="text-sm font-medium text-[var(--color-text-muted)]">
-            {currentIndex + 1} / {words.length}
+            {loading ? '... / ...' : `${currentIndex + 1} / ${words.length}`}
           </div>
         </div>
 
@@ -315,8 +315,8 @@ function FlashcardQuiz() {
           <div className="flex flex-row justify-between text-xs sm:text-sm text-[var(--color-text-muted)] mb-2">
             <span>Progress</span>
             <div className="flex gap-3 sm:gap-4">
-              <span className="text-green-500">{score.correct} correct</span>
-              <span className="text-coral-500">{score.incorrect} incorrect</span>
+              <span className="text-green-500">{loading ? '...' : score.correct} correct</span>
+              <span className="text-coral-500">{loading ? '...' : score.incorrect} incorrect</span>
             </div>
           </div>
           <div className="w-full bg-[var(--color-border)] rounded-full h-2">
@@ -330,61 +330,30 @@ function FlashcardQuiz() {
         </div>
 
         <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="w-full"
-          >
-            <div
-              className="card-elevated rounded-2xl p-4 sm:p-6 md:p-8 h-[340px] sm:h-[440px] md:h-[480px] cursor-pointer flex flex-col items-center justify-center relative select-none"
-              onClick={handleFlip}
-            >
-              {!isFlipped ? (
+          {loading ? (
+            <div className="w-full">
+              <div className="card-elevated rounded-2xl p-4 sm:p-6 md:p-8 h-[340px] sm:h-[440px] md:h-[480px] flex flex-col items-center justify-center relative select-none animate-pulse">
                 <div className="flex flex-col items-center gap-4 w-full">
-                  <div className="flex items-center justify-center gap-3">
-                    <h2 className="text-4xl font-bold text-[var(--color-text-primary)]">
-                      {currentWord.kanji || currentWord.word}
-                    </h2>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePlayPronunciation();
-                      }}
-                      className="p-2.5 rounded-full glass hover:bg-ocean-500/10 text-[var(--color-accent-primary)] transition-colors"
-                      aria-label="Play pronunciation"
-                    >
-                      <Volume2 className="w-6 h-6" />
-                    </button>
-                  </div>
-
-                  {settings?.flashcard?.showFuriganaOnFront && currentWord.furigana && (
-                    <p className="text-xl text-[var(--color-text-secondary)]">{currentWord.furigana}</p>
-                  )}
-
-                  {settings?.flashcard?.showRomajiOnFront && (currentWord.romaji || currentWord.reading) && (
-                    <p className="text-xl text-[var(--color-text-muted)]">{currentWord.romaji || currentWord.reading}</p>
-                  )}
-
-                  <div className="flex items-center gap-2 text-[var(--color-text-muted)] mt-8">
-                    <RotateCw className="w-5 h-5" />
-                    <p className="text-sm font-medium">Click to reveal answer</p>
-                  </div>
+                  <div className="h-10 bg-[var(--color-border)]/55 rounded-md w-1/3 mb-2" />
+                  <div className="h-6 bg-[var(--color-border)]/35 rounded-md w-1/4 mb-1" />
+                  <div className="h-5 bg-[var(--color-border)]/30 rounded-md w-1/5 mb-8" />
+                  <div className="h-5 bg-[var(--color-border)]/30 rounded-md w-1/3" />
                 </div>
-              ) : (
-                <div className="flex flex-col items-center gap-4 w-full h-full justify-center">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedWord(currentWord);
-                    }}
-                    className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-gradient-to-r from-ocean-600 to-ocean-500 text-white rounded-full hover:from-ocean-700 hover:to-ocean-600 transition-all shadow-glow font-bold font-sans"
-                    aria-label="Show Details"
-                  >
-                    i
-                  </button>
-
+              </div>
+            </div>
+          ) : currentWord ? (
+            <motion.div
+              key={currentIndex}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full"
+            >
+              <div
+                className="card-elevated rounded-2xl p-4 sm:p-6 md:p-8 h-[340px] sm:h-[440px] md:h-[480px] cursor-pointer flex flex-col items-center justify-center relative select-none"
+                onClick={handleFlip}
+              >
+                {!isFlipped ? (
                   <div className="flex flex-col items-center gap-4 w-full">
                     <div className="flex items-center justify-center gap-3">
                       <h2 className="text-4xl font-bold text-[var(--color-text-primary)]">
@@ -402,49 +371,93 @@ function FlashcardQuiz() {
                       </button>
                     </div>
 
-                    {currentWord.furigana && (
+                    {settings?.flashcard?.showFuriganaOnFront && currentWord.furigana && (
                       <p className="text-xl text-[var(--color-text-secondary)]">{currentWord.furigana}</p>
                     )}
 
-                    {(currentWord.romaji || currentWord.reading) && (
+                    {settings?.flashcard?.showRomajiOnFront && (currentWord.romaji || currentWord.reading) && (
                       <p className="text-xl text-[var(--color-text-muted)]">{currentWord.romaji || currentWord.reading}</p>
                     )}
 
-                    <p className="text-3xl text-[var(--color-accent-primary)] font-semibold text-center px-8 mt-2">
-                      {currentWord.meaning}
-                    </p>
+                    <div className="flex items-center gap-2 text-[var(--color-text-muted)] mt-8">
+                      <RotateCw className="w-5 h-5" />
+                      <p className="text-sm font-medium">Click to reveal answer</p>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-4 w-full h-full justify-center">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedWord(currentWord);
+                      }}
+                      className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-gradient-to-r from-ocean-600 to-ocean-500 text-white rounded-full hover:from-ocean-700 hover:to-ocean-600 transition-all shadow-glow font-bold font-sans"
+                      aria-label="Show Details"
+                    >
+                      i
+                    </button>
 
-            {showAnswer && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-6 grid grid-cols-2 gap-4"
-              >
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleAnswer(false)}
-                  className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-coral-600 to-coral-500 text-white rounded-xl font-semibold shadow-glow-coral transition-all"
+                    <div className="flex flex-col items-center gap-4 w-full">
+                      <div className="flex items-center justify-center gap-3">
+                        <h2 className="text-4xl font-bold text-[var(--color-text-primary)]">
+                          {currentWord.kanji || currentWord.word}
+                        </h2>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePlayPronunciation();
+                          }}
+                          className="p-2.5 rounded-full glass hover:bg-ocean-500/10 text-[var(--color-accent-primary)] transition-colors"
+                          aria-label="Play pronunciation"
+                        >
+                          <Volume2 className="w-6 h-6" />
+                        </button>
+                      </div>
+
+                      {currentWord.furigana && (
+                        <p className="text-xl text-[var(--color-text-secondary)]">{currentWord.furigana}</p>
+                      )}
+
+                      {(currentWord.romaji || currentWord.reading) && (
+                        <p className="text-xl text-[var(--color-text-muted)]">{currentWord.romaji || currentWord.reading}</p>
+                      )}
+
+                      <p className="text-3xl text-[var(--color-accent-primary)] font-semibold text-center px-8 mt-2">
+                        {currentWord.meaning}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {showAnswer && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 grid grid-cols-2 gap-4"
                 >
-                  <X className="w-5 h-5" />
-                  Incorrect
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleAnswer(true)}
-                  className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl font-semibold shadow-lg transition-all"
-                >
-                  <Check className="w-5 h-5" />
-                  Correct
-                </motion.button>
-              </motion.div>
-            )}
-          </motion.div>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleAnswer(false)}
+                    className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-coral-600 to-coral-500 text-white rounded-xl font-semibold shadow-glow-coral transition-all"
+                  >
+                    <X className="w-5 h-5" />
+                    Incorrect
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleAnswer(true)}
+                    className="flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl font-semibold shadow-lg transition-all"
+                  >
+                    <Check className="w-5 h-5" />
+                    Correct
+                  </motion.button>
+                </motion.div>
+              )}
+            </motion.div>
+          ) : null}
         </AnimatePresence>
       </div>
 

@@ -59,7 +59,7 @@ export default function ListsPage() {
     }
   };
 
-  if (loading || subLoading || authLoading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-mesh">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
@@ -96,7 +96,7 @@ export default function ListsPage() {
                 <div className="flex items-center gap-2 text-sm">
                   <Sparkles className="w-3.5 h-3.5 text-coral-500" />
                   <span className="text-[var(--color-text-muted)]">
-                    {filteredLists.length} list{filteredLists.length !== 1 ? 's' : ''}
+                    {loading || subLoading ? '...' : filteredLists.length} list{loading || subLoading ? 's' : (filteredLists.length !== 1 ? 's' : '')}
                   </span>
                 </div>
               </div>
@@ -122,7 +122,23 @@ export default function ListsPage() {
           </div>
         </div>
 
-        {filteredLists.length === 0 ? (
+        {loading || subLoading ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="p-5 sm:p-6 card animate-pulse h-[160px] flex flex-col justify-between bg-[var(--color-surface)]/40 border border-[var(--color-border)]/40 rounded-2xl">
+                <div className="space-y-2">
+                  <div className="h-6 bg-[var(--color-border)]/50 rounded-md w-2/3"></div>
+                  <div className="h-4 bg-[var(--color-border)]/30 rounded-md w-full"></div>
+                  <div className="h-4 bg-[var(--color-border)]/30 rounded-md w-5/6"></div>
+                </div>
+                <div className="flex justify-between items-center pt-2">
+                  <div className="h-4 bg-[var(--color-border)]/45 rounded-md w-1/4"></div>
+                  <div className="h-4 bg-[var(--color-border)]/50 rounded-md w-1/6"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredLists.length === 0 ? (
           <div
             className="text-center py-16"
           >

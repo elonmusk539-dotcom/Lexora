@@ -161,7 +161,7 @@ export default function QuizPage() {
     router.push(`/quiz/${quizType}?duration=${actualDuration}&lists=${listIds}`);
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-mesh">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
@@ -240,24 +240,31 @@ export default function QuizPage() {
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               type="button"
-              onClick={() => setShowListModal(true)}
-              className="w-full p-5 sm:p-6 rounded-xl glass border-2 border-[var(--color-border)] hover:border-[var(--color-border-focus)] transition-all text-left"
+              onClick={() => !loading && setShowListModal(true)}
+              disabled={loading}
+              className="w-full p-5 sm:p-6 rounded-xl glass border-2 border-[var(--color-border)] hover:border-[var(--color-border-focus)] transition-all text-left disabled:opacity-75 disabled:cursor-not-allowed"
             >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold text-[var(--color-text-primary)] mb-1">
-                    {selectedLists.length === 0
+                    {loading
+                      ? 'Loading lists...'
+                      : selectedLists.length === 0
                       ? 'No lists selected'
                       : `${selectedLists.length} list${selectedLists.length === 1 ? '' : 's'} selected`}
                   </p>
-                  <p className="text-sm text-[var(--color-text-muted)] line-clamp-1">
-                    {selectedLists.length === 0
-                      ? 'Click to select lists'
-                      : lists
-                        .filter(list => selectedLists.includes(list.id))
-                        .map(list => list.name)
-                        .join(', ')}
-                  </p>
+                  {loading ? (
+                    <div className="h-4 bg-[var(--color-border)]/45 rounded w-48 animate-pulse mt-1.5" />
+                  ) : (
+                    <p className="text-sm text-[var(--color-text-muted)] line-clamp-1">
+                      {selectedLists.length === 0
+                        ? 'Click to select lists'
+                        : lists
+                          .filter(list => selectedLists.includes(list.id))
+                          .map(list => list.name)
+                          .join(', ')}
+                    </p>
+                  )}
                 </div>
                 <div className="p-2 rounded-lg glass">
                   <List className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -335,7 +342,8 @@ export default function QuizPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={startQuiz}
-            className="w-full py-4 bg-gradient-to-r from-coral-500 to-coral-400 text-white rounded-xl font-bold text-lg shadow-glow-coral transition-all flex items-center justify-center gap-2"
+            disabled={loading || selectedLists.length === 0}
+            className="w-full py-4 bg-gradient-to-r from-coral-500 to-coral-400 text-white rounded-xl font-bold text-lg shadow-glow-coral transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Sparkles className="w-5 h-5" />
             Start Quiz

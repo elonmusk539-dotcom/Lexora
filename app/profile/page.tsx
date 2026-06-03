@@ -217,7 +217,7 @@ export default function ProfilePage() {
     }
   }
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-mesh">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent-primary)]"></div>
@@ -245,7 +245,9 @@ export default function ProfilePage() {
             {/* Avatar Preview */}
             <div className="flex justify-center mb-8">
               <div className="relative">
-                {avatarUrl ? (
+                {loading ? (
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl bg-[var(--color-border)]/55 animate-pulse ring-4 ring-[var(--color-accent-primary)]/10" />
+                ) : avatarUrl ? (
                   <Image
                     src={avatarUrl}
                     alt="Profile avatar"
@@ -260,20 +262,22 @@ export default function ProfilePage() {
                   </div>
                 )}
                 {/* Upload button overlay */}
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  className="absolute -bottom-2 -right-2 p-2.5 bg-gradient-to-br from-coral-500 to-coral-400 text-white rounded-xl shadow-glow-coral disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {uploading ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <Upload className="w-5 h-5" />
-                  )}
-                </motion.button>
+                {!loading && (
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="absolute -bottom-2 -right-2 p-2.5 bg-gradient-to-br from-coral-500 to-coral-400 text-white rounded-xl shadow-glow-coral disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {uploading ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <Upload className="w-5 h-5" />
+                    )}
+                  </motion.button>
+                )}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -314,12 +318,16 @@ export default function ProfilePage() {
                   <Mail className="w-4 h-4" />
                   Email
                 </label>
-                <input
-                  type="email"
-                  value={user?.email || ''}
-                  disabled
-                  className="input w-full py-3 opacity-60 cursor-not-allowed"
-                />
+                {loading ? (
+                  <div className="h-12 w-full bg-[var(--color-border)]/35 rounded-xl animate-pulse" />
+                ) : (
+                  <input
+                    type="email"
+                    value={user?.email || ''}
+                    disabled
+                    className="input w-full py-3 opacity-60 cursor-not-allowed"
+                  />
+                )}
                 <p className="text-xs text-[var(--color-text-muted)] mt-1">Email cannot be changed</p>
               </div>
 
@@ -329,14 +337,18 @@ export default function ProfilePage() {
                   <User className="w-4 h-4" />
                   Username
                 </label>
-                <input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username"
-                  className="input w-full py-3"
-                />
+                {loading ? (
+                  <div className="h-12 w-full bg-[var(--color-border)]/35 rounded-xl animate-pulse" />
+                ) : (
+                  <input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your username"
+                    className="input w-full py-3"
+                  />
+                )}
               </div>
 
               {/* Avatar Upload Info */}
@@ -358,7 +370,7 @@ export default function ProfilePage() {
               <div className="flex gap-3 pt-2">
                 <motion.button
                   type="submit"
-                  disabled={saving}
+                  disabled={saving || loading}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="flex-1 btn-primary py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -401,7 +413,11 @@ export default function ProfilePage() {
                   </div>
                   <span className="text-sm font-medium text-[var(--color-text-muted)]">Mastered</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-green-500">{stats.wordsMastered}</p>
+                {loading ? (
+                  <div className="h-8 bg-green-500/20 rounded-md w-12 animate-pulse" />
+                ) : (
+                  <p className="text-2xl sm:text-3xl font-bold text-green-500">{stats.wordsMastered}</p>
+                )}
               </div>
 
               {/* Words Started Learning */}
@@ -412,7 +428,11 @@ export default function ProfilePage() {
                   </div>
                   <span className="text-sm font-medium text-[var(--color-text-muted)]">Learning</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-ocean-500">{stats.wordsStartedLearning}</p>
+                {loading ? (
+                  <div className="h-8 bg-ocean-500/20 rounded-md w-12 animate-pulse" />
+                ) : (
+                  <p className="text-2xl sm:text-3xl font-bold text-ocean-500">{stats.wordsStartedLearning}</p>
+                )}
               </div>
 
               {/* User Added Words */}
@@ -423,7 +443,11 @@ export default function ProfilePage() {
                   </div>
                   <span className="text-sm font-medium text-[var(--color-text-muted)]">Custom Words</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-purple-500">{stats.userAddedWords}</p>
+                {loading ? (
+                  <div className="h-8 bg-purple-500/20 rounded-md w-12 animate-pulse" />
+                ) : (
+                  <p className="text-2xl sm:text-3xl font-bold text-purple-500">{stats.userAddedWords}</p>
+                )}
               </div>
             </div>
           </motion.div>
