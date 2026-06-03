@@ -1,14 +1,35 @@
 apply plugin: 'com.android.application'
 
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
 android {
     namespace = "com.lexoraapp.japanese"
     compileSdk = rootProject.ext.compileSdkVersion
+    
+    signingConfigs {
+        release {
+            def storeFilePath = localProperties.getProperty('release.storeFile')
+            if (storeFilePath) {
+                storeFile file(storeFilePath)
+                storePassword localProperties.getProperty('release.storePassword')
+                keyAlias localProperties.getProperty('release.keyAlias')
+                keyPassword localProperties.getProperty('release.keyPassword')
+            }
+        }
+    }
+
     defaultConfig {
         applicationId "com.lexoraapp.japanese"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
-        versionName "1.0.2"
+        versionCode 4
+        versionName "1.0.3"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -19,6 +40,10 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+            def storeFilePath = localProperties.getProperty('release.storeFile')
+            if (storeFilePath) {
+                signingConfig signingConfigs.release
+            }
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
