@@ -2,11 +2,11 @@
 -- SUBSCRIPTIONS TABLE SCHEMA
 -- =====================================================
 -- This table manages user subscription data for Lexora Pro
--- Updated for Dodo Payments
+-- Configured for Google Play Store billing (via RevenueCat)
 -- =====================================================
 
 -- Drop existing table if you need to recreate (BE CAREFUL - THIS DELETES DATA!)
-DROP TABLE IF EXISTS subscriptions CASCADE;
+-- DROP TABLE IF EXISTS subscriptions CASCADE;
 
 -- Create subscriptions table
 CREATE TABLE IF NOT EXISTS subscriptions (
@@ -14,13 +14,9 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
   
-  -- Dodo Payments subscription details
-  dodo_subscription_id TEXT UNIQUE,   -- Dodo subscription ID
-  dodo_plan_id TEXT,                  -- Dodo plan/product ID
-  
-  -- Subscription status
-  -- Possible values: 'active', 'canceled', 'past_due', 'trialing', 'none'
-  status TEXT NOT NULL DEFAULT 'none',
+  -- Subscription status and provider
+  provider TEXT NOT NULL DEFAULT 'google_play',        -- 'google_play', 'internal', etc.
+  status TEXT NOT NULL DEFAULT 'none',                 -- 'active', 'canceled', 'past_due', 'none'
   
   -- Billing details
   interval TEXT CHECK (interval IN ('month', 'year')), -- Billing interval
@@ -41,10 +37,6 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 -- Index on user_id for fast lookups
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id 
 ON subscriptions(user_id);
-
--- Index on Dodo subscription ID for webhook processing
-CREATE INDEX IF NOT EXISTS idx_subscriptions_dodo_subscription_id 
-ON subscriptions(dodo_subscription_id);
 
 -- Index on status for filtering active subscriptions
 CREATE INDEX IF NOT EXISTS idx_subscriptions_status 
@@ -89,7 +81,7 @@ USING (true); -- API uses service role key
 -- TRIGGERS FOR AUTOMATIC TIMESTAMP UPDATES
 -- =====================================================
 
--- Function to update updated_at timestamp
+-- Function to update updated_at timestamp (only if it doesn't exist)
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -104,26 +96,3 @@ CREATE TRIGGER update_subscriptions_updated_at
 BEFORE UPDATE ON subscriptions
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
-
--- =====================================================
--- HELPFUL QUERIES FOR SUBSCRIPTION MANAGEMENT
--- =====================================================
-
--- Query to get all active subscriptions
--- SELECT * FROM subscriptions WHERE status = 'active';
-
--- Query to get subscriptions expiring soon (within 7 days)
--- SELECT * FROM subscriptions 
--- WHERE status = 'active' 
--- AND current_period_end < NOW() + INTERVAL '7 days';
-
--- Query to get canceled subscriptions that haven't expired yet
--- SELECT * FROM subscriptions 
--- WHERE cancel_at_period_end = true 
--- AND current_period_end > NOW();
-
--- Query to count subscriptions by status
--- SELECT status, COUNT(*) FROM subscriptions GROUP BY status;
-
--- Query to get subscription details for a specific user
--- SELECT * FROM subscriptions WHERE user_id = 'USER_UUID_HERE';

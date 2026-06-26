@@ -40,8 +40,13 @@ export default function PremiumPage() {
       // Determine package identifier based on billing interval
       const packageId = billingInterval === 'month' ? 'monthly' : 'yearly';
 
+      // If the user is already Pro, specify the old product ID for Android upgrades/downgrades
+      const oldProductId = isPro
+        ? (subscription?.interval === 'month' ? 'lexora_pro_monthly' : 'lexora_pro_yearly')
+        : undefined;
+
       // Purchase via RevenueCat (Google Play Billing)
-      const result = await purchaseSubscription(packageId);
+      const result = await purchaseSubscription(packageId, oldProductId);
 
       if (result) {
         // Sync to Supabase
@@ -51,7 +56,8 @@ export default function PremiumPage() {
           body: JSON.stringify({
             userId: user.id,
             platform: 'google_play',
-            productId: result.customerInfo.entitlements.active.pro?.productIdentifier,
+            productId: result.productIdentifier || result.customerInfo.entitlements.active.pro?.productIdentifier,
+            planId: result.customerInfo.entitlements.active.pro?.productPlanIdentifier || null,
           }),
         });
 
@@ -95,30 +101,27 @@ export default function PremiumPage() {
           </div>
         )}
 
-        {/* Billing Toggle */}
-        {!isPro && (
-          <div className="flex justify-center items-center gap-4 mb-8 sm:mb-12">
-            <span className={`text-sm sm:text-base font-medium ${billingInterval === 'month' ? 'text-[var(--color-accent-primary)]' : 'text-[var(--color-text-muted)]'}`}>
-              Monthly
-            </span>
-            <button
-              onClick={() => setBillingInterval(billingInterval === 'month' ? 'year' : 'month')}
-              className={`relative inline-flex h-7 w-14 sm:h-8 sm:w-16 items-center rounded-full transition-colors ${billingInterval === 'year' ? 'bg-gradient-to-r from-ocean-600 to-ocean-500' : 'bg-[var(--color-border)]'
+        <div className="flex justify-center items-center gap-4 mb-8 sm:mb-12">
+          <span className={`text-sm sm:text-base font-medium ${billingInterval === 'month' ? 'text-[var(--color-accent-primary)]' : 'text-[var(--color-text-muted)]'}`}>
+            Monthly
+          </span>
+          <button
+            onClick={() => setBillingInterval(billingInterval === 'month' ? 'year' : 'month')}
+            className={`relative inline-flex h-7 w-14 sm:h-8 sm:w-16 items-center rounded-full transition-colors ${billingInterval === 'year' ? 'bg-gradient-to-r from-ocean-600 to-ocean-500' : 'bg-[var(--color-border)]'
+              }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 sm:h-6 sm:w-6 transform rounded-full bg-white transition-transform ${billingInterval === 'year' ? 'translate-x-8 sm:translate-x-9' : 'translate-x-1'
                 }`}
-            >
-              <span
-                className={`inline-block h-5 w-5 sm:h-6 sm:w-6 transform rounded-full bg-white transition-transform ${billingInterval === 'year' ? 'translate-x-8 sm:translate-x-9' : 'translate-x-1'
-                  }`}
-              />
-            </button>
-            <span className={`text-sm sm:text-base font-medium ${billingInterval === 'year' ? 'text-[var(--color-accent-primary)]' : 'text-[var(--color-text-muted)]'}`}>
-              Yearly
-              <span className="ml-2 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
-                Save 17%
-              </span>
+            />
+          </button>
+          <span className={`text-sm sm:text-base font-medium ${billingInterval === 'year' ? 'text-[var(--color-accent-primary)]' : 'text-[var(--color-text-muted)]'}`}>
+            Yearly
+            <span className="ml-2 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
+              Save 17%
             </span>
-          </div>
-        )}
+          </span>
+        </div>
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-2 gap-6 sm:gap-8 mb-12 sm:mb-16">
@@ -228,13 +231,25 @@ export default function PremiumPage() {
               </li>
             </ul>
 
-            {isPro ? (
+            {isPro && subscription.interval === billingInterval ? (
               <button
                 disabled
                 className="w-full py-3 bg-[var(--color-surface)] text-[var(--color-text-muted)] rounded-xl font-bold text-base sm:text-lg cursor-not-allowed border border-[var(--color-border)] flex items-center justify-center gap-2"
               >
                 Current Plan
               </button>
+            ) : !isNativeAndroid ? (
+              <div className="space-y-3">
+                <button
+                  disabled
+                  className="w-full py-3 bg-white/20 text-white/60 rounded-xl font-bold text-base sm:text-lg cursor-not-allowed border border-white/10 flex items-center justify-center gap-2"
+                >
+                  {isPro ? 'Change Plan on Android App' : 'Subscribe on Android App'}
+                </button>
+                <p className="text-xs text-ocean-100 text-center bg-ocean-700/30 py-2 px-3 rounded-lg border border-ocean-600/20">
+                  Plan management is processed securely via Google Play. Please use the Lexora app on your Android device to manage your subscription.
+                </p>
+              </div>
             ) : (
               <button
                 onClick={handleSubscribeClick}
@@ -246,6 +261,8 @@ export default function PremiumPage() {
                     <Loader2 className="w-5 h-5 animate-spin" />
                     Processing...
                   </>
+                ) : isPro ? (
+                  subscription.interval === 'month' ? 'Upgrade to Yearly' : 'Switch to Monthly'
                 ) : (
                   'Subscribe Now'
                 )}

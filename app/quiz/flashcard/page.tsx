@@ -52,11 +52,44 @@ function FlashcardQuiz() {
       let allWords: Word[] = [];
       let masteredWordIds = new Set<string>();
 
+      const fetchVocabularyWords = async (listIds?: string[]) => {
+        let allWordsList: any[] = [];
+        let page = 0;
+        const pageSize = 1000;
+        let hasMore = true;
+
+        while (hasMore) {
+          let query = supabase
+            .from('vocabulary_words')
+            .select('*')
+            .range(page * pageSize, (page + 1) * pageSize - 1);
+
+          if (listIds) {
+            query = query.in('list_id', listIds);
+          }
+
+          const { data, error } = await query;
+
+          if (error) throw error;
+          if (data && data.length > 0) {
+            allWordsList = [...allWordsList, ...data];
+            if (data.length < pageSize) {
+              hasMore = false;
+            } else {
+              page++;
+            }
+          } else {
+            hasMore = false;
+          }
+        }
+        return allWordsList;
+      };
+
       if (listIdsParam) {
         const listIds = listIdsParam.split(',');
         const [
           profileResult,
-          defaultWordsResult,
+          defaultWords,
           customListWordsResult,
           userCustomWordsResult,
           masteredProgressResult
@@ -66,10 +99,7 @@ function FlashcardQuiz() {
             .select('settings')
             .eq('user_id', uid)
             .single(),
-          supabase
-            .from('vocabulary_words')
-            .select('*')
-            .in('list_id', listIds),
+          fetchVocabularyWords(listIds),
           supabase
             .from('user_custom_list_words')
             .select(`
@@ -95,34 +125,26 @@ function FlashcardQuiz() {
           setSettings(profileResult.data.settings as UserSettings);
         }
 
-        interface CustomWordItem {
-          custom_word_id: string;
-          user_custom_words: {
-            id: string;
-            kanji: string;
-            furigana: string | null;
-            romaji: string | null;
-            meaning: string;
-            pronunciation_url: string;
-            image_url: string;
-            examples: Array<{ kanji: string; furigana: string; romaji: string; translation: string }> | null;
-            [key: string]: unknown;
-          };
-        }
-
-        const customWordItems = (userCustomWordsResult.data ?? []) as unknown as CustomWordItem[];
-        const processedCustomWords = customWordItems.map((item) => {
-          const word = item.user_custom_words;
-          return {
-            ...word,
-            word: word.kanji,
-            reading: word.romaji,
-            examples: word.examples ?
-              word.examples.map((ex) =>
-                `${ex.kanji}|${ex.furigana}|${ex.romaji}|${ex.translation}`
-              ) : []
-          } as Word;
-        });
+        // Process custom words
+        const processedCustomWords: Word[] = (userCustomWordsResult.data || [])
+          .map((item) => {
+            const cw = item.user_custom_words as unknown as Record<string, unknown>;
+            if (!cw) return null;
+            return {
+              id: cw.id as string,
+              word: (cw.kanji as string) || '',
+              reading: (cw.romaji as string) || '',
+              meaning: (cw.meaning as string) || '',
+              pronunciation_url: (cw.pronunciation_url as string) || '',
+              image_url: (cw.image_url as string) || '',
+              word_type: 'custom' as const,
+              examples: cw.examples ?
+                (cw.examples as Array<{ kanji: string; furigana: string; romaji: string; translation: string }>).map((ex) =>
+                  `${ex.kanji}|${ex.furigana}|${ex.romaji}|${ex.translation}`
+                ) : []
+            };
+          })
+          .filter((w): w is Word => w != null);
 
         interface ListWordItem {
           word_id: string;
@@ -132,7 +154,7 @@ function FlashcardQuiz() {
         const listWordItems = (customListWordsResult.data ?? []) as unknown as ListWordItem[];
 
         allWords = [
-          ...((defaultWordsResult.data ?? []) as Word[]),
+          ...(defaultWords as Word[]),
           ...listWordItems.map((item) => item.vocabulary_words),
           ...processedCustomWords
         ].filter((word): word is Word => word != null);
@@ -141,7 +163,7 @@ function FlashcardQuiz() {
       } else {
         const [
           profileResult,
-          wordsResult,
+          wordsList,
           masteredProgressResult
         ] = await Promise.all([
           supabase
@@ -149,9 +171,7 @@ function FlashcardQuiz() {
             .select('settings')
             .eq('user_id', uid)
             .single(),
-          supabase
-            .from('vocabulary_words')
-            .select('*'),
+          fetchVocabularyWords(),
           supabase
             .from('user_progress')
             .select('word_id')
@@ -163,7 +183,7 @@ function FlashcardQuiz() {
           setSettings(profileResult.data.settings as UserSettings);
         }
 
-        allWords = (wordsResult.data || []) as Word[];
+        allWords = (wordsList || []) as Word[];
         masteredWordIds = new Set((masteredProgressResult.data || []).map((p: { word_id: string }) => p.word_id));
       }
 

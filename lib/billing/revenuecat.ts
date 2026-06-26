@@ -1,4 +1,4 @@
-import { Purchases, LOG_LEVEL } from '@revenuecat/purchases-capacitor';
+import { Purchases, LOG_LEVEL, PRORATION_MODE } from '@revenuecat/purchases-capacitor';
 import { Capacitor } from '@capacitor/core';
 
 // RevenueCat API Keys (get these from RevenueCat dashboard)
@@ -31,6 +31,8 @@ export async function initializeRevenueCat() {
       console.warn('[RevenueCat] No API key configured');
       return;
     }
+
+    console.log('[RevenueCat] Initializing SDK with API Key:', apiKey);
 
     await Purchases.configure({
       apiKey,
@@ -104,20 +106,47 @@ export async function getSubscriptionProducts() {
 /**
  * Purchase a subscription
  */
-export async function purchaseSubscription(packageId: string) {
+export async function purchaseSubscription(packageId: string, oldProductIdentifier?: string | null) {
   if (!Capacitor.isNativePlatform()) {
     throw new Error('Purchases only available on mobile');
   }
 
   try {
     const offerings = await Purchases.getOfferings();
-    const pkg = offerings.current?.availablePackages.find(p => p.identifier === packageId);
+    console.log('[RevenueCat] Raw offerings object:', JSON.stringify(offerings));
+    console.log('[RevenueCat] Current offering:', JSON.stringify(offerings.current));
+    console.log('[RevenueCat] Available packages:', JSON.stringify(offerings.current?.availablePackages));
+
+    const pkg = offerings.current?.availablePackages.find(p => {
+      if (packageId === 'yearly' || packageId === 'annual') {
+        return p.identifier === 'yearly' || p.identifier === 'annual' || p.identifier === '$rc_yearly' || p.identifier === '$rc_annual';
+      }
+      if (packageId === 'monthly') {
+        return p.identifier === 'monthly' || p.identifier === '$rc_monthly';
+      }
+      return p.identifier === packageId;
+    });
 
     if (!pkg) {
       throw new Error('Package not found');
     }
 
-    const result = await Purchases.purchasePackage({ aPackage: pkg });
+    const purchaseOptions: any = { aPackage: pkg };
+
+    if (Capacitor.getPlatform() === 'android' && oldProductIdentifier) {
+      const isUpgrade = packageId === 'yearly' || packageId === 'annual';
+      const prorationMode = isUpgrade 
+        ? PRORATION_MODE.IMMEDIATE_AND_CHARGE_FULL_PRICE 
+        : PRORATION_MODE.DEFERRED;
+
+      purchaseOptions.googleProductChangeInfo = {
+        oldProductIdentifier: oldProductIdentifier,
+        prorationMode: prorationMode
+      };
+      console.log(`[RevenueCat] Android upgrade/downgrade: oldProductIdentifier=${oldProductIdentifier}, prorationMode=${prorationMode}`);
+    }
+
+    const result = await Purchases.purchasePackage(purchaseOptions);
     console.log('[RevenueCat] Purchase successful:', result);
     return result;
   } catch (error) {
@@ -145,6 +174,7 @@ export async function getSubscriptionStatus() {
       isPro: hasPro,
       expirationDate: hasPro ? entitlements['pro'].expirationDate : null,
       productIdentifier: hasPro ? entitlements['pro'].productIdentifier : null,
+      productPlanIdentifier: hasPro ? entitlements['pro'].productPlanIdentifier : null,
     };
   } catch (error) {
     console.error('[RevenueCat] Error getting subscription status:', error);

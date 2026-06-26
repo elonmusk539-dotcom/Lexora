@@ -9,65 +9,8 @@ import { useRouter } from 'next/navigation';
 
 export function SubscriptionManagement() {
   const { subscription, isPro, loading } = useSubscription();
-  const [cancelling, setCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
   const router = useRouter();
-
-  const handleCancelSubscription = async () => {
-    setCancelling(true);
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        alert('Please log in to cancel your subscription');
-        setCancelling(false);
-        return;
-      }
-
-      console.log('Sending cancel request for user:', user.id);
-
-      const response = await fetch('/api/dodo/cancel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          reason: cancelReason.trim() || 'No reason provided',
-        }),
-      });
-
-      console.log('Cancel response status:', response.status);
-
-      let data;
-      try {
-        data = await response.json();
-      } catch (e) {
-        console.error('Failed to parse response JSON:', e);
-        data = { error: 'Invalid response from server' };
-      }
-
-      console.log('Cancel response data:', data);
-
-      if (!response.ok) {
-        const errorMessage = data.error || data.details || 'Failed to cancel subscription';
-        console.error('Cancel subscription error:', { status: response.status, data });
-        throw new Error(errorMessage);
-      }
-
-      alert(data.message || 'Subscription cancelled successfully');
-      setShowCancelModal(false);
-      setCancelReason('');
-
-      router.refresh();
-      window.location.reload();
-    } catch (error) {
-      console.error('Error cancelling subscription:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to cancel subscription. Please try again or contact support.';
-      alert(errorMessage);
-    } finally {
-      setCancelling(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -206,47 +149,25 @@ export function SubscriptionManagement() {
             </h3>
 
             <p className="text-[var(--color-text-muted)] mb-4">
-              We&apos;re sorry to see you go! You&apos;ll retain Pro access until the end of your current billing period ({currentPeriodEnd}).
+              Since your subscription is managed through the Google Play Store, you must cancel it directly through Google Play:
             </p>
 
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
-                Please tell us why you&apos;re cancelling (optional):
-              </label>
-              <textarea
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="Your feedback helps us improve..."
-                className="input w-full resize-none"
-                rows={4}
-              />
-            </div>
+            <ol className="list-decimal list-inside space-y-2 text-sm text-[var(--color-text-secondary)] mb-6">
+              <li>Open the <strong>Google Play Store</strong> app on your Android device.</li>
+              <li>Tap your profile icon in the top right corner.</li>
+              <li>Tap <strong>Payments & subscriptions</strong>, then <strong>Subscriptions</strong>.</li>
+              <li>Select <strong>Lexora</strong>.</li>
+              <li>Tap <strong>Cancel subscription</strong> and follow the prompts.</li>
+            </ol>
 
             <div className="flex gap-3">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setShowCancelModal(false)}
-                disabled={cancelling}
-                className="flex-1 btn-ghost disabled:opacity-50"
+                className="w-full btn-primary"
               >
-                Keep Pro
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleCancelSubscription}
-                disabled={cancelling}
-                className="flex-1 px-4 py-2 bg-coral-500 text-white rounded-xl font-medium disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {cancelling ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Cancelling...
-                  </>
-                ) : (
-                  'Cancel Subscription'
-                )}
+                Got It
               </motion.button>
             </div>
           </motion.div>

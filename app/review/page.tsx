@@ -180,11 +180,35 @@ function SRSReview() {
 
         const newOrFutureWordIds = newProgressData?.map(p => p.word_id) || [];
 
-        // Also get word IDs that have NO progress record at all
-        const { data: allWordsInLists } = await supabase
-          .from('vocabulary_words')
-          .select('id')
-          .in('list_id', selectedListIds);
+        const fetchAllWordIds = async () => {
+          let allIds: any[] = [];
+          let page = 0;
+          const pageSize = 1000;
+          let hasMore = true;
+
+          while (hasMore) {
+            const { data, error } = await supabase
+              .from('vocabulary_words')
+              .select('id')
+              .in('list_id', selectedListIds)
+              .range(page * pageSize, (page + 1) * pageSize - 1);
+
+            if (error) throw error;
+            if (data && data.length > 0) {
+              allIds = [...allIds, ...data];
+              if (data.length < pageSize) {
+                hasMore = false;
+              } else {
+                page++;
+              }
+            } else {
+              hasMore = false;
+            }
+          }
+          return allIds;
+        };
+
+        const allWordsInLists = await fetchAllWordIds();
 
         const allWordIdsInLists = allWordsInLists?.map(w => w.id) || [];
 

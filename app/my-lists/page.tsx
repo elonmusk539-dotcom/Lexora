@@ -316,25 +316,48 @@ export default function MyListsPage() {
         return;
       }
 
-      const { data: allVocabWords, error: vocabError } = await supabase
-        .from('vocabulary_words')
-        .select(`
-          id,
-          kanji,
-          furigana,
-          romaji,
-          meaning,
-          image_url,
-          pronunciation_url,
-          list_id,
-          vocabulary_lists (
-            id,
-            name
-          )
-        `)
-        .order('created_at', { ascending: true });
+      const fetchAllVocabWords = async () => {
+        let allWords: any[] = [];
+        let page = 0;
+        const pageSize = 1000;
+        let hasMore = true;
 
-      if (vocabError) throw vocabError;
+        while (hasMore) {
+          const { data, error } = await supabase
+            .from('vocabulary_words')
+            .select(`
+              id,
+              kanji,
+              furigana,
+              romaji,
+              meaning,
+              image_url,
+              pronunciation_url,
+              list_id,
+              vocabulary_lists (
+                id,
+                name
+              )
+            `)
+            .order('created_at', { ascending: true })
+            .range(page * pageSize, (page + 1) * pageSize - 1);
+
+          if (error) throw error;
+          if (data && data.length > 0) {
+            allWords = [...allWords, ...data];
+            if (data.length < pageSize) {
+              hasMore = false;
+            } else {
+              page++;
+            }
+          } else {
+            hasMore = false;
+          }
+        }
+        return allWords;
+      };
+
+      const allVocabWords = await fetchAllVocabWords();
 
       type WordWithList = Word & {
         list_id?: string;

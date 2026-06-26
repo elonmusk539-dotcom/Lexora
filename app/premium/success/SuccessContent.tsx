@@ -43,38 +43,6 @@ export function SuccessContent() {
           return;
         }
 
-        // Check for ANY subscription for this user (pending_payment or otherwise)
-        const { data: anySub, error: anyError } = await supabase
-          .from('subscriptions')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (anyError) {
-          // No subscription found
-        } else if (anySub) {
-          // If there's a subscription with pending_payment status, try to verify
-          if (anySub.status === 'pending_payment') {
-            try {
-              const verifyRes = await fetch('/api/dodo/verify-user', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.id })
-              });
-              const verifyData = await verifyRes.json();
-
-              if (verifyRes.ok && verifyData.verified) {
-                setSubscriptionValid(true);
-                setError(null);
-                setLoading(false);
-                return;
-              }
-            } catch {
-              // Verification request failed
-            }
-          }
-        }
-
         setError('Payment verification failed. If you were charged, please contact support.');
         setSubscriptionValid(false);
       } catch {

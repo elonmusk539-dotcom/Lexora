@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { supabase } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
+import { initializeRevenueCat, setRevenueCatUser, logoutRevenueCat } from '@/lib/billing/revenuecat';
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -20,6 +22,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+      if (user) {
+        setRevenueCatUser(user.id);
+      }
     } catch {
       setUser(null);
     } finally {
@@ -28,14 +33,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // Initialize RevenueCat SDK on mount
+    initializeRevenueCat();
+
     // Initial fetch
     fetchUser();
 
     // Subscribe to auth state changes (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setUser(session?.user ?? null);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
         setLoading(false);
+
+        if (currentUser) {
+          setRevenueCatUser(currentUser.id);
+        } else {
+          logoutRevenueCat();
+        }
       }
     );
 

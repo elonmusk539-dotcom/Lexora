@@ -10,6 +10,7 @@ import { WordDetailsCard, type Word } from '@/components/WordDetailsCard';
 import { FREE_TIER_LISTS, type SubscriptionTier } from '@/lib/subscription/config';
 import { SearchBar } from '@/components/SearchBar';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/lib/subscription/useSubscription';
 
 type FilterType = 'all' | 'started' | 'not-started' | 'mastered';
 
@@ -27,7 +28,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCustomWords, setShowCustomWords] = useState(true);
-  const [userTier, setUserTier] = useState<SubscriptionTier>('free');
   const [showFilters, setShowFilters] = useState(false);
 
   // Pagination state
@@ -36,6 +36,7 @@ export default function Home() {
 
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { isPro, loading: subLoading } = useSubscription(user?.id, authLoading || !user);
 
   useEffect(() => {
     if (authLoading) return;
@@ -55,25 +56,43 @@ export default function Home() {
       router.push('/login');
     }
   };
-
   const fetchWordsAndProgress = async (userId: string) => {
     try {
-      // Fetch all data in parallel — no more sequential waterfall
+      const fetchAllVocabularyWords = async () => {
+        let allWords: any[] = [];
+        let page = 0;
+        const pageSize = 1000;
+        let hasMore = true;
+
+        while (hasMore) {
+          const { data, error } = await supabase
+            .from('vocabulary_words')
+            .select('*, vocabulary_lists!inner(name)')
+            .order('created_at', { ascending: true })
+            .range(page * pageSize, (page + 1) * pageSize - 1);
+
+          if (error) throw error;
+          if (data && data.length > 0) {
+            allWords = [...allWords, ...data];
+            if (data.length < pageSize) {
+              hasMore = false;
+            } else {
+              page++;
+            }
+          } else {
+            hasMore = false;
+          }
+        }
+        return allWords;
+      };
+
+      // Fetch regular words, custom words, and progress in parallel
       const [
-        subscriptionResult,
-        regularWordsResult,
+        regularWords,
         customWordsResult,
         progressResult,
       ] = await Promise.all([
-        supabase
-          .from('subscriptions')
-          .select('status, current_period_end')
-          .eq('user_id', userId)
-          .single(),
-        supabase
-          .from('vocabulary_words')
-          .select('*, vocabulary_lists!inner(name)')
-          .order('created_at', { ascending: true }),
+        fetchAllVocabularyWords(),
         supabase
           .from('user_custom_words')
           .select('*')
@@ -85,14 +104,7 @@ export default function Home() {
           .eq('user_id', userId),
       ]);
 
-      // Process subscription
-      const subscription = subscriptionResult.data;
-      const isPro = subscription?.status === 'active' &&
-        new Date(subscription.current_period_end) > new Date();
-      setUserTier(isPro ? 'pro' : 'free');
-
       // Process words
-      if (regularWordsResult.error) throw regularWordsResult.error;
       if (customWordsResult.error) throw customWordsResult.error;
       if (progressResult.error) throw progressResult.error;
 
@@ -121,7 +133,7 @@ export default function Home() {
       }
 
       const allWords = [
-        ...(regularWordsResult.data || []).map((w: VocabularyWord) => ({
+        ...(regularWords || []).map((w: VocabularyWord) => ({
           ...w,
           list_name: w.vocabulary_lists.name,
         } as Word & { list_name: string })),
@@ -173,7 +185,7 @@ export default function Home() {
       const wordProgress = progress[word.id];
 
       // Filter by subscription tier - free users only see words from free lists
-      if (userTier === 'free') {
+      if (!isPro) {
         const wordWithList = word as Word & { list_name?: string };
         if (wordWithList.list_name && !FREE_TIER_LISTS.includes(wordWithList.list_name)) {
           return false;
@@ -219,7 +231,7 @@ export default function Home() {
 
       return true;
     });
-  }, [words, progress, userTier, filter, showCustomWords, searchQuery]);
+  }, [words, progress, isPro, filter, showCustomWords, searchQuery]);
 
   // Reset page when filters change
   useEffect(() => {

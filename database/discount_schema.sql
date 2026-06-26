@@ -23,7 +23,7 @@ ALTER TABLE discount_codes ENABLE ROW LEVEL SECURITY;
 DO $$ 
 BEGIN 
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'subscriptions' AND column_name = 'provider') THEN 
-        ALTER TABLE subscriptions ADD COLUMN provider TEXT DEFAULT 'dodo'; 
+        ALTER TABLE subscriptions ADD COLUMN provider TEXT DEFAULT 'google_play'; 
     END IF;
     
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'subscriptions' AND column_name = 'discount_code') THEN

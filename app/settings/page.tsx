@@ -563,20 +563,18 @@ export default function SettingsPage() {
               </div>
             </form>
 
-            {/* Subscription Management Section - hidden on native Android */}
-            {!isNative && (
-              <div className="mt-8 pt-8 border-t border-[var(--color-border)]">
-                <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
-                    Subscription
-                  </h3>
-                  <p className="text-[var(--color-text-muted)]">
-                    Manage your Lexora Pro subscription
-                  </p>
-                </div>
-                <SubscriptionManagement />
+            {/* Subscription Management Section */}
+            <div className="mt-8 pt-8 border-t border-[var(--color-border)]">
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
+                  Subscription
+                </h3>
+                <p className="text-[var(--color-text-muted)]">
+                  Manage your Lexora Pro subscription
+                </p>
               </div>
-            )}
+              <SubscriptionManagement />
+            </div>
             
             {/* Danger Zone */}
             <div className="mt-8 pt-8 border-t border-red-500/30">

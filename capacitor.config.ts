@@ -5,9 +5,9 @@ const config: CapacitorConfig = {
   appName: 'Lexora',
   webDir: 'public',
   server: {
-    url: 'https://lexora-nu.vercel.app', // TODO: Update this to your production URL
-    cleartext: true,
+    url: 'https://lexora-nu.vercel.app',
     allowNavigation: [
+      'localhost',
       'lexora-nu.vercel.app',
       '*.vercel.app',
       '*.supabase.co'
